@@ -32,7 +32,6 @@ sig
     | Snd of exp
     | Where of { body : exp; is_rec : bool; defs : def list; }
     | Const of Const.const
-    | BoxApp of exp * exp
     | Shift of exp * Clock_type.t * Types.ty
     | Scale of { body : exp; dr : Clock_type.t; locals : decl list; }
     | Annot of exp * Types.ty
@@ -116,7 +115,6 @@ struct
     | Snd of exp
     | Where of { body : exp; is_rec : bool; defs : def list; }
     | Const of Const.const
-    | BoxApp of exp * exp
     | Shift of exp * Clock_type.t * Types.ty
     | Scale of { body : exp; dr : Clock_type.t; locals : decl list; }
     | Annot of exp * Types.ty
@@ -166,11 +164,6 @@ struct
         print_exp e
     | Const c ->
       Const.print_const fmt c
-    | BoxApp (e1, e2) ->
-      Format.fprintf fmt "@[<v>%a %a@ %a@]"
-        print_exp e1
-        Pp.print_bapp ()
-        print_exp e2
     | Shift (e, ck, ty) ->
       Format.fprintf fmt "@[shift %a@ to %a@]"
         print_exp e
@@ -212,10 +205,9 @@ struct
         | Snd _ -> 5
         | Where _ -> 6
         | Const _ -> 7
-        | BoxApp _ -> 8
-        | Shift _ -> 9
-        | Scale _ -> 10
-        | Annot _ -> 11
+        | Shift _ -> 8
+        | Scale _ -> 9
+        | Annot _ -> 10
       in
       match ed1, ed2 with
       | Var v1, Var v2 ->
@@ -225,11 +217,10 @@ struct
           (Clock.Utils.compare_string x x')
           (fun () -> compare_exp e e')
       | App (e1, e2), App (e1', e2')
-      | Pair (e1, e2), Pair (e1', e2')
-      | BoxApp (e1, e2), BoxApp (e1', e2') ->
-        Clock.Utils.compare_both
-          (compare_exp e1 e1')
-          (fun () -> compare_exp e2 e2')
+      | Pair (e1, e2), Pair (e1', e2') ->
+         Clock.Utils.compare_both
+           (compare_exp e1 e1')
+           (fun () -> compare_exp e2 e2')
       | Fst e, Fst e' | Snd e, Snd e' ->
         compare_exp e e'
       | Where { body = e1; is_rec = r1; defs = b1; },
@@ -262,7 +253,7 @@ struct
           (Types.compare_ty ty ty')
           (fun () -> compare_exp e e')
       | (Var _ | Lam _ | App _ | Pair _ | Fst _ | Snd _ | Where _ | Const _ |
-          BoxApp _ | Shift _ | Scale _ | Annot _), _ ->
+          Shift _ | Scale _ | Annot _), _ ->
         Clock.Utils.compare_int (tag_to_int ed1) (tag_to_int ed2)
 
   and compare_def

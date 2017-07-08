@@ -103,7 +103,6 @@
 %token DIV
 %token WHEN
 %token MERGE
-%token BAPP
 %token SHIFT
 %token TO
 %token SCALE
@@ -131,7 +130,6 @@
 %left WHERE
 %left COLON
 %left APP
-%left BAPP
 %left WHEN
 
 %%
@@ -266,8 +264,6 @@ exp:
     { make_where $startpos $endpos e ir ld }
 | c = const_exp(paren(const))
     { c }
-| e1 = exp BAPP e2 = simple_exp
-    { Raw_tree.make_box_app e1 e2 }
 | SHIFT e = exp TO MOD ck = clock_ty ty = ty
     { make_shift $startpos $endpos e ck ty }
 | SCALE e = exp BY dr = clock_ty WITH LBRACE locals = local_decls RBRACE

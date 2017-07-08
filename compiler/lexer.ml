@@ -32,8 +32,6 @@ type token =
   | DIV
   | WHEN
   | MERGE
-  (* Box application *)
-  | BAPP
   (* Shift *)
   | SHIFT
   | TO
@@ -109,9 +107,6 @@ let print_token fmt tok =
     Format.fprintf fmt "WHEN"
   | MERGE ->
     Format.fprintf fmt "MERGE"
-  | BAPP ->
-    Format.fprintf fmt "BAPP (%a)"
-      Pp.print_bapp ()
   | SHIFT ->
     Format.fprintf fmt "SHIFT"
   | TO ->
@@ -356,8 +351,7 @@ let rec next_token ctx =
   | ":" -> COLON
   | "=" -> EQUAL
   | ";" -> SEMICOLON
-  | "<*>" | 0x229B -> BAPP
-  | "@" | 0x2022 -> MOD
+  | "<*>" | 0x229B -> MOD
   | "^" -> POWER
 
   | "+" -> PLUS

@@ -21,10 +21,3 @@ let make_app e1 e2 =
     loc = join_loc e1 e2;
     ann = ();
   }
-
-let make_box_app e1 e2 =
-  {
-    desc = BoxApp (e1, e2);
-    loc = join_loc e1 e2;
-    ann = ();
-  }

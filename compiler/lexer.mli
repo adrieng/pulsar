@@ -24,7 +24,6 @@ type token =
   | DIV
   | WHEN
   | MERGE
-  | BAPP
   | SHIFT
   | TO
   | SCALE
