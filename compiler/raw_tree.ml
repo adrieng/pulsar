@@ -2,7 +2,7 @@ module T = Source_tree.Make(
   struct
     type id = string
     let print_id fmt id = Format.fprintf fmt "%s" id
-    let compare_id = Clock.Utils.compare_string
+    let compare_id = Warp.Utils.compare_string
 
     type ann = unit
     let print_ann (_ : Format.formatter) () = (() : unit)

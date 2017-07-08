@@ -50,9 +50,9 @@
   let make_extremal_or_pattern prefix ppattern =
     (* This is where we distinguish 0 the extremal pattern from 0 the integer.
        This cannot be done cleanly in the lexer. *)
-    if Clock.Word.has_null_weight ppattern
-    then Clock.Periodic.(make_extremal ~prefix Zero)
-    else Clock.Periodic.make_pattern ~prefix ~ppattern
+    if Warp.Word.has_null_weight ppattern
+    then Warp.Periodic.(make_extremal ~prefix Zero)
+    else Warp.Periodic.make_pattern ~prefix ~ppattern
 
   let make_const start stop c =
     make_exp start stop (Raw_tree.T.Const c)
@@ -151,24 +151,24 @@ int:
 | i = LINT { i }
 
 singleton_or_brace_tword:
-| i = int { Clock.Word.singleton i }
+| i = int { Warp.Word.singleton i }
 | LBRACE w = nonempty_tword RBRACE { w }
 
 nonempty_tword:
 | l = separated_nonempty_list(COMMA, singleton_or_brace_tword)
-        { Clock.Word.concat l }
-| w = singleton_or_brace_tword POWER i = LINT { Clock.Word.power w i }
+        { Warp.Word.concat l }
+| w = singleton_or_brace_tword POWER i = LINT { Warp.Word.power w i }
 
 tword:
 | w = nonempty_tword { w }
-| { Clock.Word.empty }
+| { Warp.Word.empty }
 
 pword:
-| u = tword LPAREN v = OMEGA RPAREN { Clock.Periodic.make_extremal ~prefix:u Clock.Periodic.Omega }
+| u = tword LPAREN v = OMEGA RPAREN { Warp.Periodic.make_extremal ~prefix:u Warp.Periodic.Omega }
 | u = tword LPAREN v = nonempty_tword RPAREN { make_extremal_or_pattern u v }
 
 clock_ty:
-| TICK p = pword { Clock_type.make p }
+| TICK p = pword { Warp_type.make p }
 
 (* Types *)
 

@@ -44,7 +44,7 @@ let usage = "pulsar <options> <files>"
 let files = ref []
 
 let process filename =
-  match Clock.Utils.file_extension filename with
+  match Warp.Utils.file_extension filename with
   | ".pul" ->
     handle_internal_errors process_pulsar_file filename
   | _ ->

@@ -32,8 +32,8 @@ sig
     | Snd of exp
     | Where of { body : exp; is_rec : bool; defs : def list; }
     | Const of Const.const
-    | Shift of exp * Clock_type.t * Types.ty
-    | Scale of { body : exp; dr : Clock_type.t; locals : decl list; }
+    | Shift of exp * Warp_type.t * Types.ty
+    | Scale of { body : exp; dr : Warp_type.t; locals : decl list; }
     | Annot of exp * Types.ty
 
   (** Definitions "x : ty = e" *)
@@ -115,8 +115,8 @@ struct
     | Snd of exp
     | Where of { body : exp; is_rec : bool; defs : def list; }
     | Const of Const.const
-    | Shift of exp * Clock_type.t * Types.ty
-    | Scale of { body : exp; dr : Clock_type.t; locals : decl list; }
+    | Shift of exp * Warp_type.t * Types.ty
+    | Scale of { body : exp; dr : Warp_type.t; locals : decl list; }
     | Annot of exp * Types.ty
 
   and def =
@@ -155,7 +155,7 @@ struct
       Format.fprintf fmt "@[%a where%s@ {@[<v 2>%a@]}@]"
         print_exp body
         (if is_rec then " rec" else "")
-        (Clock.Utils.print_list_sep_r print_def ";") defs
+        (Warp.Utils.print_list_sep_r print_def ";") defs
     | Fst e ->
       Format.fprintf fmt "@[fst@ %a@]"
         print_exp e
@@ -171,8 +171,8 @@ struct
     | Scale { body; dr; locals; } ->
       Format.fprintf fmt "@[scale %a@ by %a@ with %a@]"
         print_exp body
-        Clock_type.print dr
-        (Clock.Utils.print_list_sep_r print_decl ";") locals
+        Warp_type.print dr
+        (Warp.Utils.print_list_sep_r print_decl ";") locals
     | Annot (e, ty) ->
       Format.fprintf fmt "@[%a@ : %a@]"
         print_exp e
@@ -211,64 +211,64 @@ struct
       in
       match ed1, ed2 with
       | Var v1, Var v2 ->
-        Clock.Utils.compare_string v1 v2
+        Warp.Utils.compare_string v1 v2
       | Lam (x, e), Lam (x', e') ->
-        Clock.Utils.compare_both
-          (Clock.Utils.compare_string x x')
+        Warp.Utils.compare_both
+          (Warp.Utils.compare_string x x')
           (fun () -> compare_exp e e')
       | App (e1, e2), App (e1', e2')
       | Pair (e1, e2), Pair (e1', e2') ->
-         Clock.Utils.compare_both
+         Warp.Utils.compare_both
            (compare_exp e1 e1')
            (fun () -> compare_exp e2 e2')
       | Fst e, Fst e' | Snd e, Snd e' ->
         compare_exp e e'
       | Where { body = e1; is_rec = r1; defs = b1; },
         Where { body = e2; is_rec = r2; defs = b2; } ->
-        Clock.Utils.compare_both
-          (Clock.Utils.compare_bool r1 r2)
+        Warp.Utils.compare_both
+          (Warp.Utils.compare_bool r1 r2)
           (fun () ->
-            Clock.Utils.compare_both
+            Warp.Utils.compare_both
               (compare_exp e1 e2)
-              (fun () -> Clock.Utils.compare_list compare_def b1 b2))
+              (fun () -> Warp.Utils.compare_list compare_def b1 b2))
       | Const c, Const c' ->
         Const.compare_const c c'
       | Shift (e, p, ty), Shift (e', p', ty') ->
-        Clock.Utils.compare_both
-          (Clock_type.compare p p')
+        Warp.Utils.compare_both
+          (Warp_type.compare p p')
           (fun () ->
-            Clock.Utils.compare_both
+            Warp.Utils.compare_both
               (Types.compare_ty ty ty')
               (fun () -> compare_exp e e'))
       | Scale { body = e; dr = p;  locals = l; },
         Scale { body = e'; dr = p'; locals = l'; } ->
-        Clock.Utils.compare_both
-          (Clock_type.compare p p')
+        Warp.Utils.compare_both
+          (Warp_type.compare p p')
           (fun () ->
-            Clock.Utils.compare_both
+            Warp.Utils.compare_both
               (compare_exp e e')
-              (fun () -> Clock.Utils.compare_list compare_decl l l'))
+              (fun () -> Warp.Utils.compare_list compare_decl l l'))
       | Annot (e, ty), Annot (e', ty') ->
-        Clock.Utils.compare_both
+        Warp.Utils.compare_both
           (Types.compare_ty ty ty')
           (fun () -> compare_exp e e')
       | (Var _ | Lam _ | App _ | Pair _ | Fst _ | Snd _ | Where _ | Const _ |
           Shift _ | Scale _ | Annot _), _ ->
-        Clock.Utils.compare_int (tag_to_int ed1) (tag_to_int ed2)
+        Warp.Utils.compare_int (tag_to_int ed1) (tag_to_int ed2)
 
   and compare_def
       { lhs = x1; tydf = ty1; rhs = e1; }
   { lhs = x2; tydf = ty2; rhs = e2; } =
-    Clock.Utils.compare_both
-      (Clock.Utils.compare_string x1 x2)
+    Warp.Utils.compare_both
+      (Warp.Utils.compare_string x1 x2)
       (fun () ->
-        Clock.Utils.compare_both
+        Warp.Utils.compare_both
           (Types.compare_ty ty1 ty2)
           (fun () -> compare_exp e1 e2))
 
   and compare_decl { name = x1; tydl = ty1; } { name = x2; tydl = ty2; } =
-    Clock.Utils.compare_both
-      (Clock.Utils.compare_string x1 x2)
+    Warp.Utils.compare_both
+      (Warp.Utils.compare_string x1 x2)
       (fun () -> Types.compare_ty ty1 ty2)
 
   type phr =
@@ -302,7 +302,7 @@ struct
   let compare_file
       { name = n1; phrases = body1; }
       { name = n2; phrases = body2; } =
-    Clock.Utils.compare_both
-      (Clock.Utils.compare_string n1 n2)
-      (fun () -> Clock.Utils.compare_list compare_phr body1 body2)
+    Warp.Utils.compare_both
+      (Warp.Utils.compare_string n1 n2)
+      (fun () -> Warp.Utils.compare_list compare_phr body1 body2)
 end

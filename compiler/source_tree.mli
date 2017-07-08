@@ -31,8 +31,8 @@ sig
     | Snd of exp
     | Where of { body : exp; is_rec : bool; defs : def list; }
     | Const of Const.const
-    | Shift of exp * Clock_type.t * Types.ty
-    | Scale of { body : exp; dr : Clock_type.t; locals : decl list; }
+    | Shift of exp * Warp_type.t * Types.ty
+    | Scale of { body : exp; dr : Warp_type.t; locals : decl list; }
     | Annot of exp * Types.ty
 
   (** Definitions "x : ty = e" *)

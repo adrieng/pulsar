@@ -194,7 +194,7 @@ let lexeme_ascii ctx =
   let n = Array.length a in
   let s = Bytes.make n '?' in
   for i = 0 to n - 1 do
-    if not (Clock.Utils.is_ascii a.(i)) then failwith "non-ascii character";
+    if not (Warp.Utils.is_ascii a.(i)) then failwith "non-ascii character";
     Bytes.set s i (Char.chr a.(i))
   done;
   Bytes.to_string s
@@ -232,7 +232,7 @@ let lexeme_char ctx =
   assert (Array.length a = 3);
   assert (a.(0) = Char.code '\'');
   assert (a.(2) = Char.code '\'');
-  if not (Clock.Utils.is_ascii a.(1)) then bad_token ctx;
+  if not (Warp.Utils.is_ascii a.(1)) then bad_token ctx;
   Char.chr a.(1)
 
 let lexeme_int ctx =
@@ -243,7 +243,7 @@ let lexeme_float ctx =
 
 let find_keyword =
   let keyword_table =
-    Clock.Utils.hashtable_of_assoc_list
+    Warp.Utils.hashtable_of_assoc_list
       [
         "where", WHERE;
         "rec", REC;

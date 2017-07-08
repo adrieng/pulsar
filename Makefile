@@ -1,7 +1,7 @@
 .PHONY: all clean watch
 
 all:
-	jbuilder build @install clock/clock.cma # clock.cma for toplevel use
+	jbuilder build @install warp/warp.cma # warp.cma for toplevel use
 
 clean:
 	rm -rf _build

@@ -4,7 +4,7 @@
  (
   (name pulsar)
   (public_name pulsar)
-  (libraries (clock unix str sedlex menhirLib))
+  (libraries (warp unix str sedlex menhirLib))
   (preprocess (per_module ((pps (sedlex.ppx)) (lexer))))
   ))
 

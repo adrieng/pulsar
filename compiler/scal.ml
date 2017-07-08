@@ -23,15 +23,15 @@ let compare s1 s2 =
     in
     match s1, s2 with
     | Bool b1, Bool b2 ->
-      Clock.Utils.compare_bool b1 b2
+      Warp.Utils.compare_bool b1 b2
     | Char c1, Char c2 ->
-      Clock.Utils.compare_char c1 c2
+      Warp.Utils.compare_char c1 c2
     | Int i1, Int i2 ->
-      Clock.Utils.compare_int i1 i2
+      Warp.Utils.compare_int i1 i2
     | Float f1, Float f2 ->
-      Clock.Utils.compare_float f1 f2
+      Warp.Utils.compare_float f1 f2
     | (Bool _ | Char _ | Int _ | Float _), _ ->
-      Clock.Utils.compare_int (tag_to_int s1) (tag_to_int s2)
+      Warp.Utils.compare_int (tag_to_int s1) (tag_to_int s2)
 
 let type_of s =
   match s with

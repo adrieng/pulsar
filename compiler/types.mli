@@ -20,7 +20,7 @@ type ty =
   | Stream of bty
   | Prod of ty * ty
   | Fun of ty * ty
-  | Box of Clock_type.t * ty
+  | Box of Warp_type.t * ty
 
 (** Pretty-print a type *)
 val print_ty : Format.formatter -> ty -> unit

@@ -10,4 +10,4 @@ val unit : t
 
 val on : t -> t -> t
 
-val make : Clock.Periodic.t -> t
+val make : Warp.Periodic.t -> t

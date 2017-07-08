@@ -30,7 +30,7 @@ let rec compare_bty bty1 bty2 =
     | Bool, Bool | Char, Char | Int, Int | Float, Float ->
       0
     | (Bool | Char | Int | Float), _ ->
-      Clock.Utils.compare_int (tag_to_int bty1) (tag_to_int bty2)
+      Warp.Utils.compare_int (tag_to_int bty1) (tag_to_int bty2)
 
 let equal_bty bty1 bty2 = compare_bty bty1 bty2 = 0
 
@@ -41,7 +41,7 @@ type ty =
   | Stream of bty
   | Prod of ty * ty
   | Fun of ty * ty
-  | Box of Clock_type.t * ty
+  | Box of Warp_type.t * ty
 
 let rec print_ty fmt ty =
   let in_pp_box f fmt x =
@@ -95,7 +95,7 @@ let rec print_ty fmt ty =
       in_pp_par print_fun_ty fmt ty
     | Box (ck, ty) ->
       Format.fprintf fmt "%a@ %a %a"
-        Clock_type.print ck
+        Warp_type.print ck
         Pp.print_mod ()
         print_box_ty ty
   in
@@ -113,7 +113,7 @@ let rec print_ty fmt ty =
 
 let rec normalize ty =
   let box p ty =
-    if Clock_type.is_unit p then ty else Box (p, ty)
+    if Warp_type.is_unit p then ty else Box (p, ty)
   in
 
   let rec push p ty =
@@ -127,10 +127,10 @@ let rec normalize ty =
     | Fun (ty1, ty2) ->
       box p (Fun (normalize ty1, normalize ty2))
     | Box (p', ty) ->
-      push (Clock_type.on p p') ty
+      push (Warp_type.on p p') ty
   in
 
-  push Clock_type.unit ty
+  push Warp_type.unit ty
 
 let rec compare_ty ty1 ty2 =
   if ty1 == ty2 then 0
@@ -150,15 +150,15 @@ let rec compare_ty ty1 ty2 =
       compare_bty bty1 bty2
     | Prod (ty1, ty2), Prod (ty1', ty2')
     | Fun (ty1, ty2), Fun (ty1', ty2') ->
-      Clock.Utils.compare_both
+      Warp.Utils.compare_both
         (compare_ty ty1 ty1')
         (fun () -> compare_ty ty2 ty2')
     | Box (ck, ty), Box (ck', ty') ->
-      Clock.Utils.compare_both
-        (Clock_type.compare ck ck')
+      Warp.Utils.compare_both
+        (Warp_type.compare ck ck')
         (fun () -> compare_ty ty ty')
     | (Unit | Stream _ | Prod _ | Fun _ | Box _), _ ->
-      Clock.Utils.compare_int (tag_to_int ty1) (tag_to_int ty2)
+      Warp.Utils.compare_int (tag_to_int ty1) (tag_to_int ty2)
 
 let equal_ty ty1 ty2 = compare_ty ty1 ty2 = 0
 

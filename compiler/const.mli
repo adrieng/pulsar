@@ -15,8 +15,8 @@ val compare_op : op -> op -> int
 type const =
   | Lit of Scal.t
   | Op of op
-  | When of Clock.Periodic.t
-  | Merge of Clock.Periodic.t
+  | When of Warp.Periodic.t
+  | Merge of Warp.Periodic.t
 
 (** Pretty-print a constant *)
 val print_const : Format.formatter -> const -> unit
