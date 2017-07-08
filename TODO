@@ -1,0 +1,4 @@
+# Minor
+
+* Utils.compare_both -> Utils.compare_pair
+* Clean up the printing mess in Utils

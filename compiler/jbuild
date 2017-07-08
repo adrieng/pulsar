@@ -1,0 +1,20 @@
+(jbuild_version 1)
+
+(executable
+ (
+  (name pulsar)
+  (public_name pulsar)
+  (libraries (clock unix str sedlex menhirLib))
+  (preprocess (per_module ((pps (sedlex.ppx)) (lexer))))
+  ))
+
+(rule
+  ((targets (parser.ml parser.mli))
+   (deps    (parser.mly))
+   (action
+    (chdir ${ROOT}
+           (run ${bin:menhir}
+                --explain
+                --table
+                --external-tokens Lexer
+                ${<})))))

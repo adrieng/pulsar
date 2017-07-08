@@ -1,0 +1,5 @@
+# Pulsar
+
+Pulsar is an experimental functional language and compiler built on a time-aware
+type system. Pulsar types give precise information on data dependencies and
+serve as a basis for program transformations.

@@ -1,0 +1,78 @@
+#load "str.cma";;
+#load "unix.cma";;
+#load "graphics.cma";;
+#directory "_build/default/clock"
+#load_rec "clock.cma";;
+
+open Clock
+
+#install_printer Int.print;;
+#install_printer Rat.print;;
+#install_printer Enat.print;;
+#install_printer Word.print;;
+#install_printer Periodic.print;;
+
+open Word
+open Periodic
+
+let make u v =
+  let prefix = of_list u in
+  let ppattern = of_list v in
+  if Word.weight ppattern = 0
+  then make_extremal ~prefix Zero
+  else make_pattern ~prefix ~ppattern
+
+let make_omega u =
+  let prefix = of_list u in
+  make_extremal ~prefix Omega
+
+let p0 = make [1; 0; 3] [0]
+let p1 = make [1] [1; 0; 2]
+let v = concat [of_list [1; 2; 3]; power (of_list [2; 1]) 3]
+let p2 = make_pattern v
+let p3 = make [] [1; 0; 0; 1]
+let p4 = make [] [0; 1; 1; 0]
+
+let p = make [] [3; 0; 0; 0]
+let q = make [] [0; 2]
+
+let p' = make [] [3; 0; 0; 0; 0; 0]
+let q' = make [] [0; 0; 2]
+
+let a0 = make [2; 0; 2] [1; 0; 0; 1]
+let a1 = make [3; 0; 0] [0; 1; 1; 0]
+
+let b0 = make [] [2; 1; 0]
+let b1 = make [] [1; 0; 0]
+
+let w0 = make_omega [1; 2; 0; 1; 0; 3]
+
+let print_ones ?(max = 10) p =
+  let l =
+    List.map (ones p) @@ List.map (fun i -> Enat.Fin i) (Utils.range 0 max)
+  in
+  Format.printf "@[ones @[%a@] =@ @[%a@]@]@."
+    Periodic.print p
+    (Utils.print_list_r Enat.print ",") l
+
+let print_on p q =
+  Format.printf "@[@[%a@]@ on @[%a@]@ = @[%a@]@]@."
+    Periodic.print p
+    Periodic.print q
+    Periodic.print (Periodic.on p q)
+
+let print_ladj ?(normalize = true) p =
+  let norm p = if normalize then Periodic.quick_normalize p else p in
+  Format.printf "@[%a@]^* = @[%a@]@."
+    Periodic.print p
+    Periodic.print Periodic.(norm @@ ladj p)
+
+let print_radj ?(normalize = true) p =
+  let norm p = if normalize then Periodic.quick_normalize p else p in
+  Format.printf "@[%a@]_* = @[%a@]@."
+    Periodic.print p
+    Periodic.print Periodic.(norm @@ radj p)
+
+let print_adj ?(normalize = true) p =
+  print_ladj ~normalize p;
+  print_radj ~normalize p
