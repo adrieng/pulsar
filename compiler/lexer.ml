@@ -292,7 +292,7 @@ let optsign =
   [%sedlex.regexp? "" | "-" | "+"]
 
 let int =
-  [%sedlex.regexp? optsign, Star '0'..'9']
+  [%sedlex.regexp? optsign, Plus '0'..'9']
 
 let exponent =
   [%sedlex.regexp? ('e' | 'E'), optsign, Plus ascii_digit]
