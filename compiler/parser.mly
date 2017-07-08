@@ -118,6 +118,7 @@
 %token ARR
 %token MOD
 %token POWER
+%token TICK
 %token EOF
 
 (* Priorities *)
@@ -154,7 +155,8 @@ singleton_or_brace_tword:
 | LBRACE w = nonempty_tword RBRACE { w }
 
 nonempty_tword:
-| l = nonempty_list(singleton_or_brace_tword) { Clock.Word.concat l }
+| l = separated_nonempty_list(COMMA, singleton_or_brace_tword)
+        { Clock.Word.concat l }
 | w = singleton_or_brace_tword POWER i = LINT { Clock.Word.power w i }
 
 tword:
@@ -166,7 +168,7 @@ pword:
 | u = tword LPAREN v = nonempty_tword RPAREN { make_extremal_or_pattern u v }
 
 clock_ty:
-| p = pword { Clock_type.make p }
+| TICK p = pword { Clock_type.make p }
 
 (* Types *)
 
@@ -181,7 +183,7 @@ ty:
 | STREAM bty = bty { Types.Stream bty }
 | ty1 = ty TIMES ty2 = ty { Types.Prod (ty1, ty2) }
 | ty1 = ty ARR ty2 = ty { Types.Fun (ty1, ty2) }
-| MOD ck = clock_ty ty = ty { Types.Box (ck, ty) }
+| ck = clock_ty MOD ty = ty { Types.Box (ck, ty) }
 | LPAREN ty = ty RPAREN { ty }
 
 (* Literals, operators, and constants *)

@@ -51,6 +51,7 @@ type token =
   | STREAM
   | MOD
   | POWER
+  | TICK
   (* End-of-file, last token *)
   | EOF
 
@@ -135,7 +136,9 @@ let print_token fmt tok =
   | STREAM ->
     Format.fprintf fmt "STREAM"
   | POWER ->
-    Format.fprintf fmt "POWER"
+     Format.fprintf fmt "POWER"
+  | TICK ->
+     Format.fprintf fmt "TICK"
   | EOF ->
     Format.fprintf fmt "EOF"
 
@@ -358,6 +361,7 @@ let rec next_token ctx =
   | "-" -> MINUS
   | "*" | 0x00D7 -> TIMES
   | "/" -> DIV
+  | "`" -> TICK
 
   | id -> keyword_or_ident (lexeme_ascii ctx)
 

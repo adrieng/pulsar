@@ -3,4 +3,4 @@ let x : stream int = λx->1 2
 let y : ((stream int → stream float) -> stream float) × (unit -> stream int)
       = 42
 
-let z : ⊛ (1 0) stream int = 42
+let z : `1,2(1,2) ⊛ stream int = 42

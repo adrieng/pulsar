@@ -356,6 +356,12 @@ let print_pair p1 p2 fmt (x, y) =
     p1 x
     p2 y
 
+let breakspace fmt () =
+  Format.fprintf fmt "@ "
+
+let break fmt () =
+  Format.fprintf fmt "@,"
+
 let print_list p fmt l = List.iter (p fmt) l
 
 let rec print_list_eol p fmt l =
@@ -365,11 +371,15 @@ let rec print_list_eol p fmt l =
   | x :: l ->
     fprintf fmt "%a@\n%a" p x (print_list_eol p) l
 
-let rec print_list_r p sep fmt l = match l with
+let rec print_list_r ?(break = break) p sep fmt l = match l with
   | [] -> ()
   | [x] -> p fmt x
   | h :: t ->
-    fprintf fmt "%a%s@ %a" p h sep (print_list_r p sep) t
+     fprintf fmt "%a%s%a%a"
+       p h
+       sep
+       break ()
+       (print_list_r p sep) t
 
 let rec print_list_l p sep fmt l = match l with
   | [] -> ()

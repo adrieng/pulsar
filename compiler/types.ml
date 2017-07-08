@@ -94,9 +94,9 @@ let rec print_ty fmt ty =
     | Fun _ ->
       in_pp_par print_fun_ty fmt ty
     | Box (ck, ty) ->
-      Format.fprintf fmt "%a%a@ %a"
-        Pp.print_mod ()
+      Format.fprintf fmt "%a@ %a %a"
         Clock_type.print ck
+        Pp.print_mod ()
         print_box_ty ty
   in
   match ty with

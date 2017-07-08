@@ -38,6 +38,7 @@ type token =
   | STREAM
   | MOD
   | POWER
+  | TICK
   | EOF
 
 (** Pretty-print a token; for debugging purposes *)
