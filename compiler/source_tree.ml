@@ -167,7 +167,7 @@ struct
     | Shift (e, ck, ty) ->
       Format.fprintf fmt "@[shift %a@ to %a@]"
         print_exp e
-        Types.print_ty (Types.Box (ck, ty))
+        Types.print_ty (Types.Warped (ck, ty))
     | Scale { body; dr; locals; } ->
       Format.fprintf fmt "@[scale %a@ by %a@ with %a@]"
         print_exp body

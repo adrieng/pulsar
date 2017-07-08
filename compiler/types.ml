@@ -41,7 +41,7 @@ type ty =
   | Stream of bty
   | Prod of ty * ty
   | Fun of ty * ty
-  | Box of Warp_type.t * ty
+  | Warped of Warp_type.t * ty
 
 let rec print_ty fmt ty =
   let in_pp_box f fmt x =
@@ -63,7 +63,7 @@ let rec print_ty fmt ty =
         print_prod_ty ty2
     | Fun _ ->
       in_pp_par print_fun_ty fmt ty
-    | Box _ ->
+    | Warped _ ->
       in_pp_box print_box_ty fmt ty
 
   and print_fun_ty fmt ty =
@@ -72,7 +72,7 @@ let rec print_ty fmt ty =
       print_ty fmt ty
     | Prod _ ->
       in_pp_box print_prod_ty fmt ty
-    | Fun ((Unit | Stream _ | Box _ | Prod _) as ty1, ty2) ->
+    | Fun ((Unit | Stream _ | Warped _ | Prod _) as ty1, ty2) ->
       Format.fprintf fmt "%a@ %a %a"
         (in_pp_box print_ty) ty1
         Pp.print_arr ()
@@ -82,7 +82,7 @@ let rec print_ty fmt ty =
         (in_pp_par print_fun_ty) ty1
         Pp.print_arr ()
         print_fun_ty ty2
-    | Box _ ->
+    | Warped _ ->
       in_pp_box print_box_ty fmt ty
 
   and print_box_ty fmt ty =
@@ -93,7 +93,7 @@ let rec print_ty fmt ty =
       in_pp_par print_prod_ty fmt ty
     | Fun _ ->
       in_pp_par print_fun_ty fmt ty
-    | Box (ck, ty) ->
+    | Warped (ck, ty) ->
       Format.fprintf fmt "%a@ %a %a"
         Warp_type.print ck
         Pp.print_mod ()
@@ -108,12 +108,12 @@ let rec print_ty fmt ty =
     in_pp_box print_prod_ty fmt ty
   | Fun _ ->
     in_pp_box print_fun_ty fmt ty
-  | Box _ ->
+  | Warped _ ->
     in_pp_box print_box_ty fmt ty
 
 let rec normalize ty =
   let box p ty =
-    if Warp_type.is_unit p then ty else Box (p, ty)
+    if Warp_type.is_unit p then ty else Warped (p, ty)
   in
 
   let rec push p ty =
@@ -126,7 +126,7 @@ let rec normalize ty =
       Prod (push p ty1, push p ty2)
     | Fun (ty1, ty2) ->
       box p (Fun (normalize ty1, normalize ty2))
-    | Box (p', ty) ->
+    | Warped (p', ty) ->
       push (Warp_type.on p p') ty
   in
 
@@ -141,7 +141,7 @@ let rec compare_ty ty1 ty2 =
       | Stream _ -> 2
       | Prod _ -> 3
       | Fun _ -> 4
-      | Box _ -> 5
+      | Warped _ -> 5
     in
     match ty1, ty2 with
     | Unit, Unit ->
@@ -153,11 +153,11 @@ let rec compare_ty ty1 ty2 =
       Warp.Utils.compare_both
         (compare_ty ty1 ty1')
         (fun () -> compare_ty ty2 ty2')
-    | Box (ck, ty), Box (ck', ty') ->
+    | Warped (ck, ty), Warped (ck', ty') ->
       Warp.Utils.compare_both
         (Warp_type.compare ck ck')
         (fun () -> compare_ty ty ty')
-    | (Unit | Stream _ | Prod _ | Fun _ | Box _), _ ->
+    | (Unit | Stream _ | Prod _ | Fun _ | Warped _), _ ->
       Warp.Utils.compare_int (tag_to_int ty1) (tag_to_int ty2)
 
 let equal_ty ty1 ty2 = compare_ty ty1 ty2 = 0

@@ -183,7 +183,7 @@ ty:
 | STREAM bty = bty { Types.Stream bty }
 | ty1 = ty TIMES ty2 = ty { Types.Prod (ty1, ty2) }
 | ty1 = ty ARR ty2 = ty { Types.Fun (ty1, ty2) }
-| ck = clock_ty MOD ty = ty { Types.Box (ck, ty) }
+| ck = clock_ty MOD ty = ty { Types.Warped (ck, ty) }
 | LPAREN ty = ty RPAREN { ty }
 
 (* Literals, operators, and constants *)
