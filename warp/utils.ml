@@ -371,7 +371,7 @@ let rec print_list_eol p fmt l =
   | x :: l ->
     fprintf fmt "%a@\n%a" p x (print_list_eol p) l
 
-let rec print_list_r ?(break = break) p sep fmt l = match l with
+let rec print_list_r ?(break = breakspace) p sep fmt l = match l with
   | [] -> ()
   | [x] -> p fmt x
   | h :: t ->

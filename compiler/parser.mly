@@ -167,7 +167,7 @@ singleton_or_brace_tword:
 | LBRACE w = nonempty_tword RBRACE { w }
 
 nonempty_tword:
-| l = separated_nonempty_list(COMMA, singleton_or_brace_tword)
+| l = nonempty_list(singleton_or_brace_tword)
         { Warp.Word.concat l }
 | w = singleton_or_brace_tword POWER i = LINT { Warp.Word.power w i }
 

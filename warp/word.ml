@@ -17,7 +17,7 @@ let rec print_short fmt w =
   | Single i ->
      Format.fprintf fmt "%d" i
   | Concat w_l ->
-     Utils.print_list_r ~break:Utils.break print_short "," fmt w_l
+     Utils.print_list_r ~break:Utils.breakspace print_short "" fmt w_l
   | Power ({ desc = Single i; _ }, j) ->
      Format.fprintf fmt "%d^%d"
        i

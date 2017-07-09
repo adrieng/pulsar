@@ -158,7 +158,7 @@ struct
         print_exp e
         Types.print_ty ty
     | SubTy (e, c) ->
-       Format.fprintf fmt "@[%a; %a@]"
+       Format.fprintf fmt "@[%a@ >> %a@]"
          print_exp e
          Coercions.print c
 
