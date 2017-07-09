@@ -60,9 +60,6 @@
   let make_const_lit start stop l =
     make_const start stop (Const.Lit l)
 
-  let make_shift start stop e ck ty =
-    make_exp start stop (Raw_tree.T.Shift (e, ck, ty))
-
   let make_scale start stop body dr locals =
     make_exp start stop (Raw_tree.T.Scale { body; dr; locals; })
 
@@ -103,8 +100,6 @@
 %token DIV
 %token WHEN
 %token MERGE
-%token SHIFT
-%token TO
 %token SCALE
 %token BY
 %token WITH
@@ -266,8 +261,6 @@ exp:
     { make_where $startpos $endpos e ir ld }
 | c = const_exp(paren(const))
     { c }
-| SHIFT e = exp TO MOD ck = clock_ty ty = ty
-    { make_shift $startpos $endpos e ck ty }
 | SCALE e = exp BY dr = clock_ty WITH LBRACE locals = local_decls RBRACE
     { make_scale $startpos $endpos e dr locals }
 | e = exp COLON ty = ty

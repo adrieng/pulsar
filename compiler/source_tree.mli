@@ -31,9 +31,9 @@ sig
     | Snd of exp
     | Where of { body : exp; is_rec : bool; defs : def list; }
     | Const of Const.const
-    | Shift of exp * Warp_type.t * Types.ty
     | Scale of { body : exp; dr : Warp_type.t; locals : decl list; }
     | Annot of exp * Types.ty
+    | SubTy of exp * Coercions.t
 
   (** Definitions "x : ty = e" *)
   and def =

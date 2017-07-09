@@ -32,9 +32,6 @@ type token =
   | DIV
   | WHEN
   | MERGE
-  (* Shift *)
-  | SHIFT
-  | TO
   (* Scale *)
   | SCALE
   | BY
@@ -108,10 +105,6 @@ let print_token fmt tok =
     Format.fprintf fmt "WHEN"
   | MERGE ->
     Format.fprintf fmt "MERGE"
-  | SHIFT ->
-    Format.fprintf fmt "SHIFT"
-  | TO ->
-    Format.fprintf fmt "TO"
   | SCALE ->
     Format.fprintf fmt "SCALE"
   | BY ->
@@ -249,8 +242,6 @@ let find_keyword =
         "rec", REC;
         "when", WHEN;
         "merge", MERGE;
-        "shift", SHIFT;
-        "to", TO;
         "scale", SCALE;
         "by", BY;
         "with", WITH;

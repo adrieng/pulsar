@@ -14,7 +14,6 @@ module type Tree =
 sig
   include Info
 
-  (** Expressions, the main syntactic category *)
   type exp =
       {
         desc : exp_desc;
@@ -22,7 +21,6 @@ sig
         ann : ann;
       }
 
-  (** Expression bodies *)
   and exp_desc =
     | Var of id
     | Lam of id * exp
@@ -32,11 +30,10 @@ sig
     | Snd of exp
     | Where of { body : exp; is_rec : bool; defs : def list; }
     | Const of Const.const
-    | Shift of exp * Warp_type.t * Types.ty
     | Scale of { body : exp; dr : Warp_type.t; locals : decl list; }
     | Annot of exp * Types.ty
+    | SubTy of exp * Coercions.t
 
-  (** Definitions "x : ty = e" *)
   and def =
       {
         lhs : id;
@@ -45,7 +42,6 @@ sig
         locdf : Loc.loc;
       }
 
-  (** Declarations "x : ty" *)
   and decl =
       {
         name : id;
@@ -53,45 +49,33 @@ sig
         locdl : Loc.loc;
       }
 
-  (** Pretty-print an expression *)
   val print_exp : Format.formatter -> exp -> unit
 
-  (** Pretty-print a definition *)
   val print_def : Format.formatter -> def -> unit
 
-  (** Pretty-print a declaration *)
   val print_decl : Format.formatter -> decl -> unit
 
-  (** Comparison function for expressions a la [Pervasives.compare]. *)
   val compare_exp : exp -> exp -> int
 
-  (** Comparison function for definitions a la [Pervasives.compare]. *)
   val compare_def : def -> def -> int
 
-  (** Comparison function for declarations a la [Pervasives.compare]. *)
   val compare_decl : decl -> decl -> int
 
-  (** Phrases, that is, top-level statements *)
   type phr =
     | Def of def
 
-  (** Pretty-print a phrase *)
   val print_phr : Format.formatter -> phr -> unit
 
-  (** Comparison function for phrases a la [Pervasives.compare] *)
   val compare_phr : phr -> phr -> int
 
-  (** Complete files *)
   type file =
       {
         name : string;
         phrases : phr list;
       }
 
-  (** Pretty-print a file *)
   val print_file : Format.formatter -> file -> unit
 
-  (** Comparison function for files a la [Pervasives.compare] *)
   val compare_file : file -> file -> int
 end
 
@@ -115,9 +99,9 @@ struct
     | Snd of exp
     | Where of { body : exp; is_rec : bool; defs : def list; }
     | Const of Const.const
-    | Shift of exp * Warp_type.t * Types.ty
     | Scale of { body : exp; dr : Warp_type.t; locals : decl list; }
     | Annot of exp * Types.ty
+    | SubTy of exp * Coercions.t
 
   and def =
       {
@@ -164,10 +148,6 @@ struct
         print_exp e
     | Const c ->
       Const.print_const fmt c
-    | Shift (e, ck, ty) ->
-      Format.fprintf fmt "@[shift %a@ to %a@]"
-        print_exp e
-        Types.print_ty (Types.Warped (ck, ty))
     | Scale { body; dr; locals; } ->
       Format.fprintf fmt "@[scale %a@ by %a@ with %a@]"
         print_exp body
@@ -177,6 +157,10 @@ struct
       Format.fprintf fmt "@[%a@ : %a@]"
         print_exp e
         Types.print_ty ty
+    | SubTy (e, c) ->
+       Format.fprintf fmt "@[%a; %a@]"
+         print_exp e
+         Coercions.print c
 
   and print_def fmt { lhs; tydf; rhs; } =
     Format.fprintf fmt "@[%a @[@,: %a @,= %a@]@]"
@@ -205,9 +189,9 @@ struct
         | Snd _ -> 5
         | Where _ -> 6
         | Const _ -> 7
-        | Shift _ -> 8
-        | Scale _ -> 9
-        | Annot _ -> 10
+        | Scale _ -> 8
+        | Annot _ -> 9
+        | SubTy _ -> 10
       in
       match ed1, ed2 with
       | Var v1, Var v2 ->
@@ -233,13 +217,6 @@ struct
               (fun () -> Warp.Utils.compare_list compare_def b1 b2))
       | Const c, Const c' ->
         Const.compare_const c c'
-      | Shift (e, p, ty), Shift (e', p', ty') ->
-        Warp.Utils.compare_both
-          (Warp_type.compare p p')
-          (fun () ->
-            Warp.Utils.compare_both
-              (Types.compare_ty ty ty')
-              (fun () -> compare_exp e e'))
       | Scale { body = e; dr = p;  locals = l; },
         Scale { body = e'; dr = p'; locals = l'; } ->
         Warp.Utils.compare_both
@@ -252,8 +229,12 @@ struct
         Warp.Utils.compare_both
           (Types.compare_ty ty ty')
           (fun () -> compare_exp e e')
+      | SubTy (e1, c1), SubTy (e2, c2) ->
+         Warp.Utils.compare_both
+           (compare_exp e1 e2)
+           (fun () -> Coercions.compare c1 c2)
       | (Var _ | Lam _ | App _ | Pair _ | Fst _ | Snd _ | Where _ | Const _ |
-          Shift _ | Scale _ | Annot _), _ ->
+          Scale _ | Annot _ | SubTy _), _ ->
         Warp.Utils.compare_int (tag_to_int ed1) (tag_to_int ed2)
 
   and compare_def
