@@ -143,7 +143,7 @@
 %nonassoc MOD
 
 %nonassoc RRANGLE
-%nonassoc SEMICOLON
+%left SEMICOLON
 
 %left WHERE
 %left COLON
