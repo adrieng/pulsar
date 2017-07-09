@@ -49,6 +49,17 @@ type token =
   | MOD
   | POWER
   | TICK
+  (* Misc *)
+  | SUBTY
+  | LLANGLE
+  | RRANGLE
+  (* Coercions *)
+  | ID
+  | WRAP | UNWRAP
+  | CONCAT | DECAT
+  | DIST | FACT
+  | INFL | DEFL
+  | DELAY
   (* End-of-file, last token *)
   | EOF
 
@@ -132,6 +143,32 @@ let print_token fmt tok =
      Format.fprintf fmt "POWER"
   | TICK ->
      Format.fprintf fmt "TICK"
+  | SUBTY ->
+     Format.fprintf fmt "SUBTY"
+  | LLANGLE ->
+     Format.fprintf fmt "LLANGLE"
+  | RRANGLE ->
+     Format.fprintf fmt "RRANGLE"
+  | ID ->
+     Format.fprintf fmt "ID"
+  | WRAP ->
+     Format.fprintf fmt "WRAP"
+  | UNWRAP ->
+     Format.fprintf fmt "UNWRAP"
+  | CONCAT ->
+     Format.fprintf fmt "CONCAT"
+  | DECAT ->
+     Format.fprintf fmt "DECAT"
+  | DIST ->
+     Format.fprintf fmt "DIST"
+  | FACT ->
+     Format.fprintf fmt "FACT"
+  | INFL ->
+     Format.fprintf fmt "INFL"
+  | DEFL ->
+     Format.fprintf fmt "DEFL"
+  | DELAY ->
+     Format.fprintf fmt "DELAY"
   | EOF ->
     Format.fprintf fmt "EOF"
 
@@ -252,6 +289,16 @@ let find_keyword =
         "int", INT;
         "unit", UNIT;
         "stream", STREAM;
+        "id", ID;
+        "wrap", WRAP;
+        "unwrap", UNWRAP;
+        "concat", CONCAT;
+        "decat", DECAT;
+        "dist", DIST;
+        "fact", FACT;
+        "infl", INFL;
+        "defl", DEFL;
+        "delay", DELAY;
       ]
   in
   Hashtbl.find keyword_table
@@ -334,6 +381,10 @@ let rec next_token ctx =
     LINT (lexeme_int ctx)
   | float ->
     LFLOAT (lexeme_float ctx)
+
+  | "<<" -> LLANGLE
+  | ">>" -> RRANGLE
+  | "<:" -> SUBTY
 
   | "\\" | 0x03BB -> LAM
   | "->" | 0x2192 -> ARR

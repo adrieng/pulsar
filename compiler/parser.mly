@@ -63,6 +63,9 @@
   let make_scale start stop body dr locals =
     make_exp start stop (Raw_tree.T.Scale { body; dr; locals; })
 
+  let make_subty start stop e c =
+    make_exp start stop (Raw_tree.T.SubTy (e, c))
+
   let make_annot start stop e ty =
     make_exp start stop (Raw_tree.T.Annot (e, ty))
 
@@ -114,6 +117,22 @@
 %token MOD
 %token POWER
 %token TICK
+
+%token SUBTY
+%token LLANGLE
+%token RRANGLE
+
+%token ID
+%token WRAP
+%token UNWRAP
+%token CONCAT
+%token DECAT
+%token DIST
+%token FACT
+%token INFL
+%token DEFL
+%token DELAY
+
 %token EOF
 
 (* Priorities *)
@@ -122,6 +141,9 @@
 %left PLUS MINUS
 %left TIMES DIV
 %nonassoc MOD
+
+%nonassoc RRANGLE
+%nonassoc SEMICOLON
 
 %left WHERE
 %left COLON
@@ -135,12 +157,7 @@
 %inline paren(X):
 | LPAREN x = X RPAREN { x }
 
-(* Periodic clocks *)
-
-semicolon_nonempty_list(X):
-| x = X { [x] }
-| x = X SEMICOLON { [x] }
-| x = X SEMICOLON l = semicolon_nonempty_list(X) { x :: l }
+(* Periodic warps *)
 
 int:
 | i = LINT { i }
@@ -162,7 +179,7 @@ pword:
 | u = tword LPAREN v = OMEGA RPAREN { Warp.Periodic.make_extremal ~prefix:u Warp.Periodic.Omega }
 | u = tword LPAREN v = nonempty_tword RPAREN { make_extremal_or_pattern u v }
 
-clock_ty:
+warp_ty:
 | TICK p = pword { Warp_type.make p }
 
 (* Types *)
@@ -178,7 +195,7 @@ ty:
 | STREAM bty = bty { Types.Stream bty }
 | ty1 = ty TIMES ty2 = ty { Types.Prod (ty1, ty2) }
 | ty1 = ty ARR ty2 = ty { Types.Fun (ty1, ty2) }
-| ck = clock_ty MOD ty = ty { Types.Warped (ck, ty) }
+| p = warp_ty MOD ty = ty { Types.Warped (p, ty) }
 | LPAREN ty = ty RPAREN { ty }
 
 (* Literals, operators, and constants *)
@@ -215,6 +232,28 @@ lit:
 | c = cwhen { c }
 | c = cmerge { c }
 
+(* Coercions *)
+
+invertible:
+| WRAP { Coercions.Wrap }
+| UNWRAP { Coercions.Unwrap }
+| CONCAT p = warp_ty q = warp_ty { Coercions.Concat (p, q) }
+| DECAT p = warp_ty q = warp_ty { Coercions.Decat (p, q) }
+| DIST { Coercions.Dist }
+| FACT { Coercions.Fact }
+| INFL { Coercions.Infl }
+| DEFL { Coercions.Defl }
+
+coercion:
+| ID { Coercions.Id }
+| c1 = coercion SEMICOLON c2 = coercion { Coercions.Seq (c1, c2) }
+| c1 = coercion ARR c2 = coercion { Coercions.Arr (c1, c2) }
+| c1 = coercion TIMES c2 = coercion { Coercions.Prod (c1, c2) }
+| p = warp_ty MOD c = coercion { Coercions.Warped (p, c) }
+| i = invertible { Coercions.Invertible i }
+| DELAY p = warp_ty q = warp_ty { Coercions.Delay (p, q) }
+| c = paren(coercion) { c }
+
 (* Definitions and declarations *)
 
 def:
@@ -225,10 +264,10 @@ decl:
 | id = IDENT COLON ty = ty { make_decl $startpos $endpos id ty }
 
 local_defs:
-| l = semicolon_nonempty_list(def) { l }
+| LBRACE l = separated_list(SEMICOLON, def) RBRACE { l }
 
 local_decls:
-| l = semicolon_nonempty_list(decl) { l }
+| LBRACE l = separated_list(SEMICOLON, decl) RBRACE { l }
 
 (* Expressions *)
 
@@ -257,12 +296,14 @@ exp:
 
 | LPAREN e1 = exp COMMA e2 = exp RPAREN
     { make_pair $startpos $endpos e1 e2 }
-| e = exp WHERE ir = boption(REC) LBRACE ld = local_defs RBRACE
+| e = exp WHERE ir = boption(REC) ld = local_defs
     { make_where $startpos $endpos e ir ld }
 | c = const_exp(paren(const))
     { c }
-| SCALE e = exp BY dr = clock_ty WITH LBRACE locals = local_decls RBRACE
-    { make_scale $startpos $endpos e dr locals }
+| SCALE e = exp BY p = warp_ty locals = local_decls
+    { make_scale $startpos $endpos e p locals }
+| e = exp RRANGLE c = coercion
+    { make_subty $startpos $endpos e c }
 | e = exp COLON ty = ty
     { make_annot $startpos $endpos e ty }
 

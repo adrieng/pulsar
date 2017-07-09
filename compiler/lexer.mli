@@ -37,6 +37,19 @@ type token =
   | MOD
   | POWER
   | TICK
+  | SUBTY
+  | LLANGLE
+  | RRANGLE
+  | ID
+  | WRAP
+  | UNWRAP
+  | CONCAT
+  | DECAT
+  | DIST
+  | FACT
+  | INFL
+  | DEFL
+  | DELAY
   | EOF
 
 (** Pretty-print a token; for debugging purposes *)
