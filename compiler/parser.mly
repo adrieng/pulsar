@@ -176,8 +176,10 @@ tword:
 | { Warp.Word.empty }
 
 pword:
-| u = tword LPAREN v = OMEGA RPAREN { Warp.Periodic.make_extremal ~prefix:u Warp.Periodic.Omega }
-| u = tword LPAREN v = nonempty_tword RPAREN { make_extremal_or_pattern u v }
+| u = tword v = paren(OMEGA)
+        { Warp.Periodic.make_extremal ~prefix:u Warp.Periodic.Omega }
+| u = tword v = paren(nonempty_tword)
+        { make_extremal_or_pattern u v }
 
 warp_ty:
 | TICK p = pword { Warp_type.make p }
@@ -196,7 +198,7 @@ ty:
 | ty1 = ty TIMES ty2 = ty { Types.Prod (ty1, ty2) }
 | ty1 = ty ARR ty2 = ty { Types.Fun (ty1, ty2) }
 | p = warp_ty MOD ty = ty { Types.Warped (p, ty) }
-| LPAREN ty = ty RPAREN { ty }
+| ty = paren(ty) { ty }
 
 (* Literals, operators, and constants *)
 
@@ -276,7 +278,7 @@ simple_exp:
     { make_var $startpos $endpos id }
 | l = lit
     { make_const_lit $startpos $endpos l }
-| LPAREN e = exp RPAREN
+| e = paren(exp)
     { e }
 
 exp:
