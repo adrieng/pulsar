@@ -40,6 +40,8 @@ type token =
   | SUBTY
   | LLANGLE
   | RRANGLE
+  | LBRACEIMARK
+  | RBRACEIMARK
   | ID
   | WRAP
   | UNWRAP

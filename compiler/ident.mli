@@ -52,8 +52,9 @@ module Env :
     val of_assoc_list : (key * 'a) list -> 'a t
     val union : 'a t -> 'a t -> 'a t
     val print :
+      ?key_val_sep:Warp.Utils.unit_fmt ->
+      ?binding_sep:Warp.Utils.unit_fmt ->
       (Format.formatter -> 'a -> unit) ->
-      string ->
       Format.formatter ->
       'a t ->
       unit

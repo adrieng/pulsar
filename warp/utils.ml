@@ -219,9 +219,9 @@ let find_rank ?(eq = (=)) x l =
 
 let compare_both c k = if c <> 0 then c else k ()
 
-let compare_string x y = Pervasives.compare x y
+let compare_string (x : string) (y : string) = Pervasives.compare x y
 
-let compare_int x y = Pervasives.compare x y
+let compare_int (x : int) (y : int) = Pervasives.compare x y
 
 let compare_bool x y =
   let tag_to_int x =
@@ -356,11 +356,16 @@ let print_pair p1 p2 fmt (x, y) =
     p1 x
     p2 y
 
-let breakspace fmt () =
-  Format.fprintf fmt "@ "
+type unit_fmt = Format.formatter -> unit -> unit
 
 let break fmt () =
   Format.fprintf fmt "@,"
+
+let break_space fmt () =
+  Format.fprintf fmt "@ "
+
+let comma_break_space fmt () =
+  Format.fprintf fmt ",@ "
 
 let print_list p fmt l = List.iter (p fmt) l
 
@@ -371,7 +376,7 @@ let rec print_list_eol p fmt l =
   | x :: l ->
     fprintf fmt "%a@\n%a" p x (print_list_eol p) l
 
-let rec print_list_r ?(break = breakspace) p sep fmt l = match l with
+let rec print_list_r ?(break = break_space) p sep fmt l = match l with
   | [] -> ()
   | [x] -> p fmt x
   | h :: t ->

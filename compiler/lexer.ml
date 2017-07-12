@@ -53,6 +53,8 @@ type token =
   | SUBTY
   | LLANGLE
   | RRANGLE
+  | LBRACEIMARK
+  | RBRACEIMARK
   (* Coercions *)
   | ID
   | WRAP | UNWRAP
@@ -149,6 +151,10 @@ let print_token fmt tok =
      Format.fprintf fmt "LLANGLE"
   | RRANGLE ->
      Format.fprintf fmt "RRANGLE"
+  | LBRACEIMARK ->
+     Format.fprintf fmt "LBRACEIMARK"
+  | RBRACEIMARK ->
+     Format.fprintf fmt "RBRACEIMARK"
   | ID ->
      Format.fprintf fmt "ID"
   | WRAP ->
@@ -385,6 +391,9 @@ let rec next_token ctx =
   | "<<" -> LLANGLE
   | ">>" -> RRANGLE
   | "<:" -> SUBTY
+
+  | "{!" -> LBRACEIMARK
+  | "!}" -> RBRACEIMARK
 
   | "\\" | 0x03BB -> LAM
   | "->" | 0x2192 -> ARR

@@ -84,7 +84,7 @@ struct
 
   let print fmt s =
     let l = M.fold (fun x l -> x :: l) s [] in
-    Utils.print_list_r print "," fmt l
+    Warp.Utils.print_list_r print "," fmt l
 end
 
 module Env =
@@ -116,14 +116,21 @@ struct
 
   open Format
 
-  let print print_val sep fmt env =
+  let print
+        ?(key_val_sep = Warp.Utils.comma_break_space)
+        ?(binding_sep = Warp.Utils.break_space)
+        print_val
+        fmt env =
     let size = cardinal env in
     fprintf fmt "@[";
     ignore
       (M.fold
          (fun k v n ->
-           fprintf fmt "@[%a -> %a@]" print k print_val v;
-           if n < size then fprintf fmt "%s@ " sep;
+           fprintf fmt "@[%a%a%a@]"
+             print k
+             key_val_sep ()
+             print_val v;
+           if n < size then binding_sep fmt ();
            n + 1)
          env
          1);

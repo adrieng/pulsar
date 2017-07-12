@@ -1,3 +1,11 @@
+type annot_kind =
+  | Typing
+  | Subtyping
+
+val print_annot_kind : Format.formatter -> annot_kind -> unit
+
+val compare_annot_kind : annot_kind -> annot_kind -> int
+
 module type Info =
 sig
   type id
@@ -32,8 +40,8 @@ sig
     | Where of { body : exp; is_rec : bool; defs : def list; }
     | Const of Const.const
     | Scale of { body : exp; dr : Warp_type.t; locals : decl list; }
-    | Annot of exp * Types.ty
-    | SubTy of exp * Coercions.t
+    | Annot of { exp : exp; kind : annot_kind; annot : Types.ty; }
+    | Sub of (id * Coercions.t) list * exp * Coercions.t
 
   (** Definitions "x : ty = e" *)
   and def =

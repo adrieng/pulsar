@@ -63,11 +63,11 @@
   let make_scale start stop body dr locals =
     make_exp start stop (Raw_tree.T.Scale { body; dr; locals; })
 
-  let make_subty start stop e c =
-    make_exp start stop (Raw_tree.T.SubTy (e, c))
+  let make_subty start stop ctx_c e c =
+    make_exp start stop (Raw_tree.T.Sub (ctx_c, e, c))
 
-  let make_annot start stop e ty =
-    make_exp start stop (Raw_tree.T.Annot (e, ty))
+  let make_annot start stop e kind ty =
+    make_exp start stop (Raw_tree.T.Annot { exp = e; kind; annot = ty; })
 
   let make_op start stop op =
     make_exp start stop (Raw_tree.T.Const (Const.Op op))
@@ -121,6 +121,8 @@
 %token SUBTY
 %token LLANGLE
 %token RRANGLE
+%token LBRACEIMARK
+%token RBRACEIMARK
 
 %token ID
 %token WRAP
@@ -136,6 +138,8 @@
 %token EOF
 
 (* Priorities *)
+
+%nonassoc SUBTY
 
 %right ARR
 %left PLUS MINUS
@@ -200,6 +204,10 @@ ty:
 | p = warp_ty MOD ty = ty { Types.Warped (p, ty) }
 | ty = paren(ty) { ty }
 
+annot_kind:
+| COLON { Source_tree.Typing }
+| SUBTY { Source_tree.Subtyping }
+
 (* Literals, operators, and constants *)
 
 %inline const_exp(C):
@@ -256,6 +264,12 @@ coercion:
 | DELAY p = warp_ty q = warp_ty { Coercions.Delay (p, q) }
 | c = paren(coercion) { c }
 
+ident_coercion:
+| id = IDENT LLANGLE c = coercion { (id, c) }
+
+coercion_ctx:
+| l = separated_list(COMMA, paren(ident_coercion)) { l }
+
 (* Definitions and declarations *)
 
 def:
@@ -304,10 +318,14 @@ exp:
     { c }
 | SCALE e = exp BY p = warp_ty locals = local_decls
     { make_scale $startpos $endpos e p locals }
-| e = exp RRANGLE c = coercion
-    { make_subty $startpos $endpos e c }
-| e = exp COLON ty = ty
-    { make_annot $startpos $endpos e ty }
+| LBRACEIMARK
+    ctx_c = coercion_ctx
+    RRANGLE e = exp
+    RRANGLE c = coercion
+  RBRACEIMARK
+    { make_subty $startpos $endpos ctx_c e c }
+| e = exp kind = annot_kind ty = ty %prec SUBTY
+    { make_annot $startpos $endpos e kind ty }
 
 phrase:
 | LET d = def { Raw_tree.T.Def d }
