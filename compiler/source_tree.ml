@@ -149,9 +149,10 @@ struct
     | Var x ->
       print_id fmt x
     | Lam (x, e) ->
-      Format.fprintf fmt "@[%a%a.%a@]"
+      Format.fprintf fmt "@[%a%a%a%a@]"
         Pp.print_lam ()
         print_id x
+        Pp.print_warr ()
         print_exp e
     | App (e1, e2) ->
       Format.fprintf fmt "@[<v>%a@ %a@]"

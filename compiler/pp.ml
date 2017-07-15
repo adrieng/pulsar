@@ -11,6 +11,11 @@ let print_arr fmt () =
   then Format.fprintf fmt "\xE2\x86\x92"
   else Format.fprintf fmt "->"
 
+let print_warr fmt () =
+  if !use_utf8
+  then Format.fprintf fmt "\xE2\x87\x92"
+  else Format.fprintf fmt "=>"
+
 let print_mod fmt () =
   if !use_utf8
   then Format.fprintf fmt "\xE2\x8A\x9B"

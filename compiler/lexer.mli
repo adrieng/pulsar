@@ -3,6 +3,7 @@ type token =
   | IDENT of string
   | LAM
   | ARR
+  | WARR
   | LPAREN
   | RPAREN
   | COMMA

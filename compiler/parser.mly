@@ -114,6 +114,7 @@
 %token UNIT
 %token STREAM
 %token ARR
+%token WARR
 %token MOD
 %token POWER
 %token TICK
@@ -293,7 +294,7 @@ simple_exp:
 exp:
 | e = simple_exp
     { e }
-| LAM id = IDENT ARR e = exp
+| LAM id = IDENT WARR e = exp
     { make_lam $startpos $endpos id e }
 | e1 = simple_exp e2 = exp %prec APP
     { Raw_tree.make_app e1 e2 }

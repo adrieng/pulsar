@@ -6,6 +6,7 @@ type token =
   (* Lambda *)
   | LAM
   | ARR
+  | WARR
   (* Pair *)
   | LPAREN
   | RPAREN
@@ -74,6 +75,9 @@ let print_token fmt tok =
   | ARR ->
     Format.fprintf fmt "ARR (%a)"
       Pp.print_arr ()
+  | WARR ->
+    Format.fprintf fmt "WARR (%a)"
+      Pp.print_warr ()
   | LPAREN ->
     Format.fprintf fmt "LPAREN"
   | RPAREN ->
@@ -392,6 +396,7 @@ let rec next_token ctx =
 
   | "\\" | 0x03BB -> LAM
   | "->" | 0x2192 -> ARR
+  | "=>" | 0x21D2 -> WARR
   | "(" -> LPAREN
   | ")" -> RPAREN
   | "," -> COMMA
