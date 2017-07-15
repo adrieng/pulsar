@@ -1,0 +1,2 @@
+let rec const : int → stream int =
+    fun (x : int) ⇒ x :: (const x) by `0(1)
