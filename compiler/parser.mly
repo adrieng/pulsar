@@ -14,7 +14,7 @@
       Raw_tree.T.ann = ();
     }
 
-  let make_def start stop p res_ty e =
+  let make_eq start stop p res_ty e =
     {
       Raw_tree.T.lhs = p;
       Raw_tree.T.res_ty = res_ty;
@@ -44,8 +44,8 @@
   let make_snd start stop e =
     make_exp start stop (Raw_tree.T.Snd e)
 
-  let make_where start stop body is_rec defs =
-    make_exp start stop (Raw_tree.T.Where { body; is_rec; defs; })
+  let make_where start stop body is_rec eqs =
+    make_exp start stop (Raw_tree.T.Where { body; is_rec; eqs; })
 
   let make_extremal_or_pattern prefix ppattern =
     (* This is where we distinguish 0 the extremal pattern from 0 the integer.
@@ -296,12 +296,12 @@ res_ty:
 | { None }
 | COLON ty = ty { Some ty }
 
-def:
+eq:
 | p = pat res_ty = res_ty EQUAL e = exp
-    { make_def $startpos $endpos p res_ty e }
+    { make_eq $startpos $endpos p res_ty e }
 
-local_defs:
-| LBRACE l = separated_list(SEMICOLON, def) RBRACE { l }
+eqs:
+| LBRACE l = separated_list(SEMICOLON, eq) RBRACE { l }
 
 (* Expressions *)
 
@@ -330,8 +330,8 @@ exp:
 
 | LPAREN e1 = exp COMMA e2 = exp RPAREN
     { make_pair $startpos $endpos e1 e2 }
-| e = exp WHERE ir = boption(REC) ld = local_defs
-    { make_where $startpos $endpos e ir ld }
+| e = exp WHERE ir = boption(REC) eqs = eqs
+    { make_where $startpos $endpos e ir eqs }
 | c = const_exp(paren(const))
     { c }
 | e = simple_exp BY dr = warp_ty
@@ -346,7 +346,7 @@ exp:
     { make_annot $startpos $endpos e kind ty }
 
 phrase:
-| LET is_rec = boption(REC) def = def { Raw_tree.T.Def { is_rec; def; } }
+| LET is_rec = boption(REC) body = eq { Raw_tree.T.Def { is_rec; body; } }
 
 file:
 | body = list(phrase) EOF { make_file $startpos body }

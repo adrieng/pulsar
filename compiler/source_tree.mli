@@ -52,14 +52,14 @@ sig
     | Pair of exp * exp
     | Fst of exp
     | Snd of exp
-    | Where of { body : exp; is_rec : bool; defs : def list; }
+    | Where of { body : exp; is_rec : bool; eqs : eq list; }
     | Const of Const.const
     | By of { body : exp; dr : Warp_type.t; }
     | Annot of { exp : exp; kind : annot_kind; annot : Type.t; }
     | Sub of (id * Coercions.t) list * exp * Coercions.t
 
-  (** Definitions "p = e" *)
-  and def =
+  (** Equations "lhs (: ty) = rhs" *)
+  and eq =
       {
         lhs : pat;
         res_ty : Type.t option;
@@ -70,18 +70,18 @@ sig
   (** Pretty-print an expression *)
   val print_exp : Format.formatter -> exp -> unit
 
-  (** Pretty-print a definition *)
-  val print_def : Format.formatter -> def -> unit
+  (** Pretty-print an equation *)
+  val print_eq : Format.formatter -> eq -> unit
 
   (** Comparison function for expressions a la [Pervasives.compare]. *)
   val compare_exp : exp -> exp -> int
 
-  (** Comparison function for definitions a la [Pervasives.compare]. *)
-  val compare_def : def -> def -> int
+  (** Comparison function for equations a la [Pervasives.compare]. *)
+  val compare_eq : eq -> eq -> int
 
   (** Phrases, that is, top-level statements *)
   type phr =
-    | Def of { is_rec : bool; def : def }
+    | Def of { is_rec : bool; body : eq }
 
   (** Pretty-print a phrase *)
   val print_phr : Format.formatter -> phr -> unit

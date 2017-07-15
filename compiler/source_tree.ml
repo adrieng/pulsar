@@ -64,13 +64,13 @@ sig
     | Pair of exp * exp
     | Fst of exp
     | Snd of exp
-    | Where of { body : exp; is_rec : bool; defs : def list; }
+    | Where of { body : exp; is_rec : bool; eqs : eq list; }
     | Const of Const.const
     | By of { body : exp; dr : Warp_type.t; }
     | Annot of { exp : exp; kind : annot_kind; annot : Type.t; }
     | Sub of (id * Coercions.t) list * exp * Coercions.t
 
-  and def =
+  and eq =
       {
         lhs : pat;
         res_ty : Type.t option;
@@ -80,14 +80,14 @@ sig
 
   val print_exp : Format.formatter -> exp -> unit
 
-  val print_def : Format.formatter -> def -> unit
+  val print_eq : Format.formatter -> eq -> unit
 
   val compare_exp : exp -> exp -> int
 
-  val compare_def : def -> def -> int
+  val compare_eq : eq -> eq -> int
 
   type phr =
-    | Def of { is_rec : bool; def : def; }
+    | Def of { is_rec : bool; body : eq; }
 
   val print_phr : Format.formatter -> phr -> unit
 
@@ -135,13 +135,13 @@ struct
     | Pair of exp * exp
     | Fst of exp
     | Snd of exp
-    | Where of { body : exp; is_rec : bool; defs : def list; }
+    | Where of { body : exp; is_rec : bool; eqs : eq list; }
     | Const of Const.const
     | By of { body : exp; dr : Warp_type.t; }
     | Annot of { exp : exp; kind : annot_kind; annot : Type.t; }
     | Sub of (id * Coercions.t) list * exp * Coercions.t
 
-  and def =
+  and eq =
       {
         lhs : pat;
         res_ty : Type.t option;
@@ -201,11 +201,11 @@ struct
         print_exp e1
         print_exp e2
 
-    | Where { body; is_rec; defs; } ->
+    | Where { body; is_rec; eqs; } ->
       Format.fprintf fmt "@[%a where%s@ {@[<v 2>%a@]}@]"
         print_exp body
         (if is_rec then " rec" else "")
-        (pp_list ~pp_sep:pp_semicolon print_def) defs
+        (pp_list ~pp_sep:pp_semicolon print_eq) eqs
 
     | Fst e ->
       Format.fprintf fmt "@[fst@ %a@]"
@@ -263,7 +263,7 @@ struct
   and print_exp fmt e =
     print_exp_prio 0 fmt e
 
-  and print_def fmt { lhs; res_ty; rhs; _ } =
+  and print_eq fmt { lhs; res_ty; rhs; _ } =
     let print_res_ty =
       Warp.Print.pp_opt
         ~pp_left:Warp.Print.pp_breakable_space
@@ -333,14 +333,14 @@ struct
            (fun () -> compare_exp e2 e2')
       | Fst e, Fst e' | Snd e, Snd e' ->
         compare_exp e e'
-      | Where { body = e1; is_rec = r1; defs = b1; },
-        Where { body = e2; is_rec = r2; defs = b2; } ->
+      | Where { body = e1; is_rec = r1; eqs = eqs1; },
+        Where { body = e2; is_rec = r2; eqs = eqs2; } ->
         Warp.Utils.compare_both
           (Warp.Utils.compare_bool r1 r2)
           (fun () ->
             Warp.Utils.compare_both
               (compare_exp e1 e2)
-              (fun () -> Warp.Utils.compare_list compare_def b1 b2))
+              (fun () -> Warp.Utils.compare_list compare_eq eqs1 eqs2))
       | Const c, Const c' ->
         Const.compare_const c c'
       | By { body = e1; dr = p1; },
@@ -375,7 +375,7 @@ struct
           By _ | Annot _ | Sub _), _ ->
         Warp.Utils.compare_int (tag_to_int ed1) (tag_to_int ed2)
 
-  and compare_def
+  and compare_eq
       { lhs = p1; res_ty = ty1; rhs = e1; }
       { lhs = p2; res_ty = ty2; rhs = e2; } =
     Warp.Utils.compare_both
@@ -386,24 +386,24 @@ struct
           (fun () -> compare_exp e1 e2))
 
   type phr =
-    | Def of { is_rec : bool; def : def; }
+    | Def of { is_rec : bool; body : eq; }
 
   let print_phr fmt phr =
     match phr with
-    | Def { is_rec; def; } ->
+    | Def { is_rec; body; } ->
       Format.fprintf fmt "@[let%s %a@]"
         (if is_rec then " rec" else "")
-        print_def def
+        print_eq body
 
   let compare_phr phr1 phr2 =
     if phr1 == phr2 then 0
     else
       match phr1, phr2 with
-      | Def { is_rec = r1; def = d1 },
-        Def { is_rec = r2; def = d2 } ->
+      | Def { is_rec = r1; body = b1 },
+        Def { is_rec = r2; body = b2 } ->
          Warp.Utils.compare_both
            (Warp.Utils.compare_bool r1 r2)
-           (fun () -> compare_def d1 d2)
+           (fun () -> compare_eq b1 b2)
 
   type file =
       {
