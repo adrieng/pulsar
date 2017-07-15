@@ -73,6 +73,7 @@ sig
   and eq =
       {
         lhs : pat;
+        params : pat list;
         res_ty : Type.t option;
         rhs : exp;
         locdf : Loc.loc;
@@ -144,6 +145,7 @@ struct
   and eq =
       {
         lhs : pat;
+        params : pat list;
         res_ty : Type.t option;
         rhs : exp;
         locdf : Loc.loc;
@@ -263,14 +265,15 @@ struct
   and print_exp fmt e =
     print_exp_prio 0 fmt e
 
-  and print_eq fmt { lhs; res_ty; rhs; _ } =
+  and print_eq fmt { lhs; params; res_ty; rhs; _ } =
     let print_res_ty =
       Warp.Print.pp_opt
         ~pp_left:Warp.Print.pp_breakable_space
         (fun fmt ty -> Format.fprintf fmt ": %a" Type.print ty)
     in
-    Format.fprintf fmt "@[%a%a @,= %a@]@]"
+    Format.fprintf fmt "@[%a%a%a @,= %a@]@]"
       print_pat lhs
+      Warp.Print.(pp_list ~pp_left:pp_breakable_space print_pat) params
       print_res_ty res_ty
       print_exp rhs
 

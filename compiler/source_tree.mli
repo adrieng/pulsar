@@ -62,6 +62,7 @@ sig
   and eq =
       {
         lhs : pat;
+        params : pat list;
         res_ty : Type.t option;
         rhs : exp;
         locdf : Loc.loc;

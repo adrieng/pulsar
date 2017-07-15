@@ -14,9 +14,10 @@
       Raw_tree.T.ann = ();
     }
 
-  let make_eq start stop p res_ty e =
+  let make_eq start stop p params res_ty e =
     {
       Raw_tree.T.lhs = p;
+      Raw_tree.T.params = params;
       Raw_tree.T.res_ty = res_ty;
       Raw_tree.T.rhs = e;
       Raw_tree.T.locdf = Loc.loc_of_lexing_pos_pair ~start ~stop;
@@ -297,8 +298,8 @@ res_ty:
 | COLON ty = ty { Some ty }
 
 eq:
-| p = pat res_ty = res_ty EQUAL e = exp
-    { make_eq $startpos $endpos p res_ty e }
+| p = pat params = list(pat) res_ty = res_ty EQUAL e = exp
+    { make_eq $startpos $endpos p params res_ty e }
 
 eqs:
 | LBRACE l = separated_list(SEMICOLON, eq) RBRACE { l }
