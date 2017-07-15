@@ -1,2 +1,2 @@
 let rec const : int → stream int =
-    λ x => x :: (const x) by `0(1)
+    λ x ⇒ x :: (const x) by `0(1)

@@ -143,47 +143,69 @@ struct
         locdl : Loc.loc;
       }
 
-  let rec print_exp fmt e =
+  let rec print_exp_prio prio fmt e =
     let open Warp.Print in
     match e.desc with
     | Var x ->
       print_id fmt x
+
     | Lam (x, e) ->
-      Format.fprintf fmt "@[%a%a%a%a@]"
+      Format.fprintf fmt "@[<hov 2>%a %a %a@ %a@]"
         Pp.print_lam ()
         print_id x
         Pp.print_warr ()
         print_exp e
+
+    | App ({ desc = App ({ desc = Const Const.Op op; _ }, e1); _ }, e2) ->
+       let prio' = Const.priority op in
+       if prio' < prio
+       then
+         Format.fprintf fmt "(@[%a@])"
+           (print_exp_prio prio') e
+       else
+         Format.fprintf fmt "@[<hov 2>%a@ %a %a@]"
+           (print_exp_prio prio') e1
+           Const.print_op op
+           (print_exp_prio prio') e2
+
     | App (e1, e2) ->
-      Format.fprintf fmt "@[<v>%a@ %a@]"
+      Format.fprintf fmt "@[<hov 2>%a %a@]"
         print_exp e1
-        print_exp e2
+        print_exp_app e2
+
     | Pair (e1, e2) ->
       Format.fprintf fmt "(@[<v>%a,@ %a@])"
         print_exp e1
         print_exp e2
+
     | Where { body; is_rec; defs; } ->
       Format.fprintf fmt "@[%a where%s@ {@[<v 2>%a@]}@]"
         print_exp body
         (if is_rec then " rec" else "")
         (pp_list ~pp_sep:pp_semicolon print_def) defs
+
     | Fst e ->
       Format.fprintf fmt "@[fst@ %a@]"
         print_exp e
+
     | Snd e ->
       Format.fprintf fmt "@[snd@ %a@]"
         print_exp e
+
     | Const c ->
       Const.print_const fmt c
+
     | By { body; dr; } ->
       Format.fprintf fmt "@[%a@ by %a@]"
-        print_exp body
+        print_exp_simple body
         Warp_type.print dr
+
     | Annot { exp = e; kind = a; annot = ty; } ->
       Format.fprintf fmt "@[%a@ %a %a@]"
         print_exp e
         print_annot_kind a
         Types.print_ty ty
+
     | Sub (ctx_c, e, c) ->
        let print_ident_coercion fmt (id, c) =
          Format.fprintf fmt "(%a <<@ %a)"
@@ -197,6 +219,26 @@ struct
             print_ident_coercion) ctx_c
          print_exp e
          Coercions.print c
+
+  and print_exp_simple fmt e =
+    match e.desc with
+    | Var _ | Const (Const.Lit _) ->
+       print_exp fmt e
+    | _ ->
+       Format.fprintf fmt "(%a)"
+         print_exp e
+
+  and print_exp_app fmt e =
+    match e.desc with
+    | App (e1, e2) ->
+       Format.fprintf fmt "%a@ %a"
+         print_exp e1
+         print_exp_app e2
+    | _ ->
+       print_exp fmt e
+
+  and print_exp fmt e =
+    print_exp_prio 0 fmt e
 
   and print_def fmt { lhs; tydf; rhs; } =
     Format.fprintf fmt "@[%a @[@,: %a @,= %a@]@]"

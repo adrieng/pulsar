@@ -12,6 +12,9 @@ val print_op : Format.formatter -> op -> unit
 (** Comparison function for operator a la [Pervasives.compare] *)
 val compare_op : op -> op -> int
 
+(** Priority of the operation *)
+val priority : op -> int
+
 (** Constants *)
 type const =
   | Lit of Scal.t

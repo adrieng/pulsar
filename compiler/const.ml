@@ -39,6 +39,15 @@ let compare_op op1 op2 =
     | (Plus | Minus | Times | Div | Cons), _ ->
       Warp.Utils.compare_int (tag_to_int op1) (tag_to_int op2)
 
+let priority op =
+  match op with
+  | Plus | Minus ->
+     20
+  | Times | Div ->
+     30
+  | Cons ->
+     10
+
 type const =
   | Lit of Scal.t
   | Op of op
