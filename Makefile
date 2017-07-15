@@ -1,4 +1,4 @@
-.PHONY: all clean watch
+.PHONY: all clean watch test
 
 all:
 	jbuilder build @install warp/warp.cma # warp.cma for toplevel use
@@ -17,3 +17,6 @@ watch:
 		echo "============ at `date` ==========" ; \
 		make all; \
 	done
+
+test: all
+	./pulsar examples/*.pul
