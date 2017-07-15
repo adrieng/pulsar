@@ -104,6 +104,7 @@
 %token DIV
 %token WHEN
 %token MERGE
+%token CONS
 %token BY
 %token LET
 %token BOOL
@@ -144,6 +145,7 @@
 %left PLUS MINUS
 %left TIMES DIV
 %nonassoc MOD
+%right CONS
 
 %left SEMICOLON
 
@@ -222,6 +224,7 @@ lit:
 | MINUS { Const.Minus }
 | TIMES { Const.Times }
 | DIV { Const.Div }
+| CONS { Const.Cons }
 
 %inline cwhen:
 | WHEN p = pword { Const.When p }

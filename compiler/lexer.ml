@@ -32,6 +32,7 @@ type token =
   | DIV
   | WHEN
   | MERGE
+  | CONS
   (* Warp *)
   | BY
   (* Phrases *)
@@ -116,6 +117,8 @@ let print_token fmt tok =
     Format.fprintf fmt "WHEN"
   | MERGE ->
     Format.fprintf fmt "MERGE"
+  | CONS ->
+    Format.fprintf fmt "CONS"
   | BY ->
     Format.fprintf fmt "BY"
   | LET ->
@@ -394,6 +397,7 @@ let rec next_token ctx =
   | "," -> COMMA
   | "{" -> LBRACE
   | "}" -> RBRACE
+  | "::" -> CONS
   | ":" -> COLON
   | "=" -> EQUAL
   | ";" -> SEMICOLON

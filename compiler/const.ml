@@ -3,6 +3,7 @@ type op =
   | Minus
   | Times
   | Div
+  | Cons
 
 let print_op fmt op =
   match op with
@@ -14,6 +15,8 @@ let print_op fmt op =
     Pp.print_times fmt ()
   | Div ->
     Format.fprintf fmt "/"
+  | Cons ->
+    Format.fprintf fmt "::"
 
 let compare_op op1 op2 =
   if op1 == op2 then 0
@@ -24,11 +27,16 @@ let compare_op op1 op2 =
       | Minus -> 1
       | Times -> 2
       | Div -> 3
+      | Cons -> 4
     in
     match op1, op2 with
-    | Plus, Plus | Minus, Minus | Times, Times | Div, Div ->
+    | Plus, Plus
+    | Minus, Minus
+    | Times, Times
+    | Div, Div
+    | Cons, Cons->
       0
-    | (Plus | Minus | Times | Div), _ ->
+    | (Plus | Minus | Times | Div | Cons), _ ->
       Warp.Utils.compare_int (tag_to_int op1) (tag_to_int op2)
 
 type const =

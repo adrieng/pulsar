@@ -4,6 +4,7 @@ type op =
   | Minus
   | Times
   | Div
+  | Cons
 
 (** Pretty-print an operator *)
 val print_op : Format.formatter -> op -> unit
