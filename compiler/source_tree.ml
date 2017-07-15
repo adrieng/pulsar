@@ -54,14 +54,14 @@ sig
     | Where of { body : exp; is_rec : bool; defs : def list; }
     | Const of Const.const
     | By of { body : exp; dr : Warp_type.t; }
-    | Annot of { exp : exp; kind : annot_kind; annot : Types.ty; }
+    | Annot of { exp : exp; kind : annot_kind; annot : Type.t; }
     | Sub of (id * Coercions.t) list * exp * Coercions.t
 
   and def =
       {
         is_rec : bool;
         lhs : id;
-        tydf : Types.ty;
+        tydf : Type.t;
         rhs : exp;
         locdf : Loc.loc;
       }
@@ -69,7 +69,7 @@ sig
   and decl =
       {
         name : id;
-        tydl : Types.ty;
+        tydl : Type.t;
         locdl : Loc.loc;
       }
 
@@ -124,14 +124,14 @@ struct
     | Where of { body : exp; is_rec : bool; defs : def list; }
     | Const of Const.const
     | By of { body : exp; dr : Warp_type.t; }
-    | Annot of { exp : exp; kind : annot_kind; annot : Types.ty; }
+    | Annot of { exp : exp; kind : annot_kind; annot : Type.t; }
     | Sub of (id * Coercions.t) list * exp * Coercions.t
 
   and def =
       {
         is_rec : bool;
         lhs : id;
-        tydf : Types.ty;
+        tydf : Type.t;
         rhs : exp;
         locdf : Loc.loc;
       }
@@ -139,7 +139,7 @@ struct
   and decl =
       {
         name : id;
-        tydl : Types.ty;
+        tydl : Type.t;
         locdl : Loc.loc;
       }
 
@@ -204,7 +204,7 @@ struct
       Format.fprintf fmt "@[%a@ %a %a@]"
         print_exp e
         print_annot_kind a
-        Types.print_ty ty
+        Type.print ty
 
     | Sub (ctx_c, e, c) ->
        let print_ident_coercion fmt (id, c) =
@@ -243,13 +243,13 @@ struct
   and print_def fmt { lhs; tydf; rhs; } =
     Format.fprintf fmt "@[%a @[@,: %a @,= %a@]@]"
       print_id lhs
-      Types.print_ty tydf
+      Type.print tydf
       print_exp rhs
 
   and print_decl fmt { name; tydl; } =
     Format.fprintf fmt "@[%a : %a@]"
       print_id name
-      Types.print_ty tydl
+      Type.print tydl
 
   let rec compare_exp e1 e2 =
     if e1 == e2 then 0 else compare_exp_desc e1.desc e2.desc
@@ -307,7 +307,7 @@ struct
            (compare_annot_kind k1 k2)
            (fun () ->
              Warp.Utils.compare_both
-               (Types.compare_ty ty1 ty2)
+               (Type.compare ty1 ty2)
                (fun () ->
                  compare_exp e1 e2))
       | Sub (ctx_c1, e1, c1), Sub (ctx_c2, e2, c2) ->
@@ -334,13 +334,13 @@ struct
       (compare_id x1 x2)
       (fun () ->
         Warp.Utils.compare_both
-          (Types.compare_ty ty1 ty2)
+          (Type.compare ty1 ty2)
           (fun () -> compare_exp e1 e2))
 
   and compare_decl { name = x1; tydl = ty1; } { name = x2; tydl = ty2; } =
     Warp.Utils.compare_both
       (compare_id x1 x2)
-      (fun () -> Types.compare_ty ty1 ty2)
+      (fun () -> Type.compare ty1 ty2)
 
   type phr =
     | Def of def
@@ -351,7 +351,7 @@ struct
       Format.fprintf fmt "@[let%s %a @[: %a@ = @[%a@]@]@]"
         (if is_rec then " rec" else "")
         print_id lhs
-        Types.print_ty tydf
+        Type.print tydf
         print_exp rhs
 
   let compare_phr phr1 phr2 =

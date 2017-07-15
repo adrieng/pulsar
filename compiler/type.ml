@@ -1,13 +1,13 @@
 (* Base types *)
 
-type bty =
+type base =
   | Unit
   | Bool
   | Char
   | Int
   | Float
 
-let string_of_base_ty bty =
+let string_of_base bty =
   match bty with
   | Unit -> "unit"
   | Bool -> "bool"
@@ -15,10 +15,10 @@ let string_of_base_ty bty =
   | Int -> "int"
   | Float -> "float"
 
-let print_base_ty fmt bty =
-  Format.fprintf fmt "%s" (string_of_base_ty bty)
+let print_base fmt bty =
+  Format.fprintf fmt "%s" (string_of_base bty)
 
-let rec compare_bty bty1 bty2 =
+let rec compare_base bty1 bty2 =
   if bty1 == bty2 then 0
   else
     let tag_to_int bty =
@@ -35,18 +35,19 @@ let rec compare_bty bty1 bty2 =
     | (Unit | Bool | Char | Int | Float), _ ->
       Warp.Utils.compare_int (tag_to_int bty1) (tag_to_int bty2)
 
-let equal_bty bty1 bty2 = compare_bty bty1 bty2 = 0
+let equal_base bty1 bty2 =
+  compare_base bty1 bty2 = 0
 
 (* Types *)
 
-type ty =
-  | Base of bty
-  | Stream of bty
-  | Prod of ty * ty
-  | Fun of ty * ty
-  | Warped of Warp_type.t * ty
+type t =
+  | Base of base
+  | Stream of base
+  | Prod of t * t
+  | Fun of t * t
+  | Warped of Warp_type.t * t
 
-let rec print_ty fmt ty =
+let rec print fmt ty =
   let in_pp_box f fmt x =
     Format.fprintf fmt "@[%a@]" f x
   in
@@ -55,64 +56,64 @@ let rec print_ty fmt ty =
     Format.fprintf fmt "(%a)" (in_pp_box f) x
   in
 
-  let rec print_prod_ty fmt ty =
+  let rec print_prod fmt ty =
     match ty with
     | Base _ | Stream _ ->
-      print_ty fmt ty
+      print fmt ty
     | Prod (ty1, ty2) ->
       Format.fprintf fmt "%a@ %a %a"
-        print_prod_ty ty1
+        print_prod ty1
         Pp.print_times ()
-        print_prod_ty ty2
+        print_prod ty2
     | Fun _ ->
-      in_pp_par print_fun_ty fmt ty
+      in_pp_par print_fun fmt ty
     | Warped _ ->
-      in_pp_box print_box_ty fmt ty
+      in_pp_box print_box fmt ty
 
-  and print_fun_ty fmt ty =
+  and print_fun fmt ty =
     match ty with
     | Base _ | Stream _ ->
-      print_ty fmt ty
+      print fmt ty
     | Prod _ ->
-      in_pp_box print_prod_ty fmt ty
+      in_pp_box print_prod fmt ty
     | Fun ((Base _ | Stream _ | Warped _ | Prod _) as ty1, ty2) ->
       Format.fprintf fmt "%a@ %a %a"
-        (in_pp_box print_ty) ty1
+        (in_pp_box print) ty1
         Pp.print_arr ()
-        print_fun_ty ty2
+        print_fun ty2
     | Fun ((Fun _) as ty1, ty2) ->
       Format.fprintf fmt "%a@ %a %a"
-        (in_pp_par print_fun_ty) ty1
+        (in_pp_par print_fun) ty1
         Pp.print_arr ()
-        print_fun_ty ty2
+        print_fun ty2
     | Warped _ ->
-      in_pp_box print_box_ty fmt ty
+      in_pp_box print_box fmt ty
 
-  and print_box_ty fmt ty =
+  and print_box fmt ty =
     match ty with
     | Base _ | Stream _ ->
-      print_ty fmt ty
+      print fmt ty
     | Prod _ ->
-      in_pp_par print_prod_ty fmt ty
+      in_pp_par print_prod fmt ty
     | Fun _ ->
-      in_pp_par print_fun_ty fmt ty
+      in_pp_par print_fun fmt ty
     | Warped (ck, ty) ->
       Format.fprintf fmt "%a@ %a %a"
         Warp_type.print ck
         Pp.print_mod ()
-        print_box_ty ty
+        print_box ty
   in
   match ty with
   | Base bty ->
-     print_base_ty fmt bty
+     print_base fmt bty
   | Stream bty ->
-    Format.fprintf fmt "stream %a" print_base_ty bty
+    Format.fprintf fmt "stream %a" print_base bty
   | Prod _ ->
-    in_pp_box print_prod_ty fmt ty
+    in_pp_box print_prod fmt ty
   | Fun _ ->
-    in_pp_box print_fun_ty fmt ty
+    in_pp_box print_fun fmt ty
   | Warped _ ->
-    in_pp_box print_box_ty fmt ty
+    in_pp_box print_box fmt ty
 
 let rec normalize ty =
   let box p ty =
@@ -133,7 +134,7 @@ let rec normalize ty =
 
   push Warp_type.unit ty
 
-let rec compare_ty ty1 ty2 =
+let rec compare ty1 ty2 =
   if ty1 == ty2 then 0
   else
     let tag_to_int ty =
@@ -146,21 +147,21 @@ let rec compare_ty ty1 ty2 =
     in
     match ty1, ty2 with
     | Base bty1, Base bty2 ->
-       compare_bty bty1 bty2
+       compare_base bty1 bty2
     | Stream bty1, Stream bty2 ->
-      compare_bty bty1 bty2
+      compare_base bty1 bty2
     | Prod (ty1, ty2), Prod (ty1', ty2')
     | Fun (ty1, ty2), Fun (ty1', ty2') ->
       Warp.Utils.compare_both
-        (compare_ty ty1 ty1')
-        (fun () -> compare_ty ty2 ty2')
+        (compare ty1 ty1')
+        (fun () -> compare ty2 ty2')
     | Warped (ck, ty), Warped (ck', ty') ->
       Warp.Utils.compare_both
         (Warp_type.compare ck ck')
-        (fun () -> compare_ty ty ty')
+        (fun () -> compare ty ty')
     | (Base _ | Stream _ | Prod _ | Fun _ | Warped _), _ ->
       Warp.Utils.compare_int (tag_to_int ty1) (tag_to_int ty2)
 
-let equal_ty ty1 ty2 = compare_ty ty1 ty2 = 0
+let equal ty1 ty2 = compare ty1 ty2 = 0
 
-let equiv_ty ty1 ty2 = equal_ty (normalize ty1) (normalize ty2)
+let equiv ty1 ty2 = equal (normalize ty1) (normalize ty2)

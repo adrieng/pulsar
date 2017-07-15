@@ -192,18 +192,18 @@ warp_ty:
 (* Types *)
 
 bty:
-| UNIT { Types.Unit }
-| BOOL { Types.Bool }
-| CHAR { Types.Char }
-| INT { Types.Int }
-| FLOAT { Types.Float }
+| UNIT { Type.Unit }
+| BOOL { Type.Bool }
+| CHAR { Type.Char }
+| INT { Type.Int }
+| FLOAT { Type.Float }
 
 ty:
-| bty = bty { Types.Base bty }
-| STREAM bty = bty { Types.Stream bty }
-| ty1 = ty TIMES ty2 = ty { Types.Prod (ty1, ty2) }
-| ty1 = ty ARR ty2 = ty { Types.Fun (ty1, ty2) }
-| p = warp_ty MOD ty = ty { Types.Warped (p, ty) }
+| bty = bty { Type.Base bty }
+| STREAM bty = bty { Type.Stream bty }
+| ty1 = ty TIMES ty2 = ty { Type.Prod (ty1, ty2) }
+| ty1 = ty ARR ty2 = ty { Type.Fun (ty1, ty2) }
+| p = warp_ty MOD ty = ty { Type.Warped (p, ty) }
 | ty = paren(ty) { ty }
 
 annot_kind:

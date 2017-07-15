@@ -12,4 +12,4 @@ val print : Format.formatter -> t -> unit
 val compare : t -> t -> int
 
 (** Compute the type of a scalar value, which is always a base type *)
-val type_of : t -> Types.bty
+val type_of : t -> Type.base

@@ -40,7 +40,7 @@ sig
     | Where of { body : exp; is_rec : bool; defs : def list; }
     | Const of Const.const
     | By of { body : exp; dr : Warp_type.t; }
-    | Annot of { exp : exp; kind : annot_kind; annot : Types.ty; }
+    | Annot of { exp : exp; kind : annot_kind; annot : Type.t; }
     | Sub of (id * Coercions.t) list * exp * Coercions.t
 
   (** Definitions "x : ty = e" *)
@@ -48,7 +48,7 @@ sig
       {
         is_rec : bool;
         lhs : id;
-        tydf : Types.ty;
+        tydf : Type.t;
         rhs : exp;
         locdf : Loc.loc;
       }
@@ -57,7 +57,7 @@ sig
   and decl =
       {
         name : id;
-        tydl : Types.ty;
+        tydl : Type.t;
         locdl : Loc.loc;
       }
 

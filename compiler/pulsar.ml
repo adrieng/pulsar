@@ -1,4 +1,4 @@
-open Types
+open Type
 open Parser
 
 let handle_internal_errors f x =

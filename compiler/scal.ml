@@ -35,7 +35,7 @@ let compare s1 s2 =
 
 let type_of s =
   match s with
-  | Bool _ -> Types.Bool
-  | Char _ -> Types.Char
-  | Int _ -> Types.Int
-  | Float _ -> Types.Float
+  | Bool _ -> Type.Bool
+  | Char _ -> Type.Char
+  | Int _ -> Type.Int
+  | Float _ -> Type.Float
