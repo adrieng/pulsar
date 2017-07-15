@@ -60,8 +60,8 @@
   let make_const_lit start stop l =
     make_const start stop (Const.Lit l)
 
-  let make_scale start stop body dr locals =
-    make_exp start stop (Raw_tree.T.Scale { body; dr; locals; })
+  let make_by start stop body dr =
+    make_exp start stop (Raw_tree.T.By { body; dr; })
 
   let make_subty start stop ctx_c e c =
     make_exp start stop (Raw_tree.T.Sub (ctx_c, e, c))
@@ -103,9 +103,7 @@
 %token DIV
 %token WHEN
 %token MERGE
-%token SCALE
 %token BY
-%token WITH
 %token LET
 %token BOOL
 %token CHAR
@@ -269,20 +267,14 @@ ident_coercion:
 coercion_ctx:
 | l = separated_list(COMMA, paren(ident_coercion)) { l }
 
-(* Definitions and declarations *)
+(* Definitions *)
 
 def:
 | id = IDENT COLON ty = ty EQUAL e = exp
     { make_def $startpos $endpos id ty e }
 
-decl:
-| id = IDENT COLON ty = ty { make_decl $startpos $endpos id ty }
-
 local_defs:
 | LBRACE l = separated_list(SEMICOLON, def) RBRACE { l }
-
-local_decls:
-| LBRACE l = separated_list(SEMICOLON, decl) RBRACE { l }
 
 (* Expressions *)
 
@@ -315,8 +307,8 @@ exp:
     { make_where $startpos $endpos e ir ld }
 | c = const_exp(paren(const))
     { c }
-| SCALE e = exp BY p = warp_ty locals = local_decls
-    { make_scale $startpos $endpos e p locals }
+| e = simple_exp BY dr = warp_ty
+    { make_by $startpos $endpos e dr }
 | LBRACEIMARK
     ctx_c = coercion_ctx
     RRANGLE e = exp

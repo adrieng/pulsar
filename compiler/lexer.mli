@@ -24,9 +24,7 @@ type token =
   | DIV
   | WHEN
   | MERGE
-  | SCALE
   | BY
-  | WITH
   | LET
   | BOOL
   | CHAR

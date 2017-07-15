@@ -53,7 +53,7 @@ sig
     | Snd of exp
     | Where of { body : exp; is_rec : bool; defs : def list; }
     | Const of Const.const
-    | Scale of { body : exp; dr : Warp_type.t; locals : decl list; }
+    | By of { body : exp; dr : Warp_type.t; }
     | Annot of { exp : exp; kind : annot_kind; annot : Types.ty; }
     | Sub of (id * Coercions.t) list * exp * Coercions.t
 
@@ -122,7 +122,7 @@ struct
     | Snd of exp
     | Where of { body : exp; is_rec : bool; defs : def list; }
     | Const of Const.const
-    | Scale of { body : exp; dr : Warp_type.t; locals : decl list; }
+    | By of { body : exp; dr : Warp_type.t; }
     | Annot of { exp : exp; kind : annot_kind; annot : Types.ty; }
     | Sub of (id * Coercions.t) list * exp * Coercions.t
 
@@ -172,11 +172,10 @@ struct
         print_exp e
     | Const c ->
       Const.print_const fmt c
-    | Scale { body; dr; locals; } ->
-      Format.fprintf fmt "@[scale %a@ by %a@ with %a@]"
+    | By { body; dr; } ->
+      Format.fprintf fmt "@[%a@ by %a@]"
         print_exp body
         Warp_type.print dr
-        (pp_list ~pp_sep:pp_semicolon print_decl) locals
     | Annot { exp = e; kind = a; annot = ty; } ->
       Format.fprintf fmt "@[%a@ %a %a@]"
         print_exp e
@@ -223,7 +222,7 @@ struct
         | Snd _ -> 5
         | Where _ -> 6
         | Const _ -> 7
-        | Scale _ -> 8
+        | By _ -> 8
         | Annot _ -> 9
         | Sub _ -> 10
       in
@@ -251,14 +250,12 @@ struct
               (fun () -> Warp.Utils.compare_list compare_def b1 b2))
       | Const c, Const c' ->
         Const.compare_const c c'
-      | Scale { body = e; dr = p;  locals = l; },
-        Scale { body = e'; dr = p'; locals = l'; } ->
+      | By { body = e1; dr = p1; },
+        By { body = e2; dr = p2; } ->
         Warp.Utils.compare_both
-          (Warp_type.compare p p')
+          (Warp_type.compare p1 p2)
           (fun () ->
-            Warp.Utils.compare_both
-              (compare_exp e e')
-              (fun () -> Warp.Utils.compare_list compare_decl l l'))
+            compare_exp e1 e2)
       | Annot { exp = e1; kind = k1; annot = ty1; },
         Annot { exp = e2; kind = k2; annot = ty2; } ->
          Warp.Utils.compare_both
@@ -282,7 +279,7 @@ struct
                (fun () ->
                  Warp.Utils.compare_list compare_ident_coercion ctx_c1 ctx_c2))
       | (Var _ | Lam _ | App _ | Pair _ | Fst _ | Snd _ | Where _ | Const _ |
-          Scale _ | Annot _ | Sub _), _ ->
+          By _ | Annot _ | Sub _), _ ->
         Warp.Utils.compare_int (tag_to_int ed1) (tag_to_int ed2)
 
   and compare_def

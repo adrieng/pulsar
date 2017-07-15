@@ -39,7 +39,7 @@ sig
     | Snd of exp
     | Where of { body : exp; is_rec : bool; defs : def list; }
     | Const of Const.const
-    | Scale of { body : exp; dr : Warp_type.t; locals : decl list; }
+    | By of { body : exp; dr : Warp_type.t; }
     | Annot of { exp : exp; kind : annot_kind; annot : Types.ty; }
     | Sub of (id * Coercions.t) list * exp * Coercions.t
 
