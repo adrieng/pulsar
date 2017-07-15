@@ -1,5 +1,6 @@
 (** Types of stream elements *)
 type bty =
+  | Unit
   | Bool
   | Char
   | Int
@@ -16,7 +17,7 @@ val equal_bty : bty -> bty -> bool
 
 (** General types *)
 type ty =
-  | Unit
+  | Base of bty
   | Stream of bty
   | Prod of ty * ty
   | Fun of ty * ty

@@ -192,13 +192,14 @@ warp_ty:
 (* Types *)
 
 bty:
+| UNIT { Types.Unit }
 | BOOL { Types.Bool }
 | CHAR { Types.Char }
 | INT { Types.Int }
 | FLOAT { Types.Float }
 
 ty:
-| UNIT { Types.Unit }
+| bty = bty { Types.Base bty }
 | STREAM bty = bty { Types.Stream bty }
 | ty1 = ty TIMES ty2 = ty { Types.Prod (ty1, ty2) }
 | ty1 = ty ARR ty2 = ty { Types.Fun (ty1, ty2) }
