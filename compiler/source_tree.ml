@@ -37,6 +37,19 @@ module type Tree =
 sig
   include Info
 
+  type pat =
+    {
+      desc : pat_desc;
+      loc : Loc.loc;
+      ann : ann;
+    }
+
+  and pat_desc =
+    | Var of id
+    | Pair of pat * pat
+    | Cons of pat * pat
+    | Annot of pat * Type.t
+
   type exp =
       {
         desc : exp_desc;
@@ -46,7 +59,7 @@ sig
 
   and exp_desc =
     | Var of id
-    | Lam of id * exp
+    | Lam of pat * exp
     | App of exp * exp
     | Pair of exp * exp
     | Fst of exp
@@ -59,34 +72,22 @@ sig
 
   and def =
       {
-        is_rec : bool;
-        lhs : id;
-        tydf : Type.t;
+        lhs : pat;
+        res_ty : Type.t option;
         rhs : exp;
         locdf : Loc.loc;
-      }
-
-  and decl =
-      {
-        name : id;
-        tydl : Type.t;
-        locdl : Loc.loc;
       }
 
   val print_exp : Format.formatter -> exp -> unit
 
   val print_def : Format.formatter -> def -> unit
 
-  val print_decl : Format.formatter -> decl -> unit
-
   val compare_exp : exp -> exp -> int
 
   val compare_def : def -> def -> int
 
-  val compare_decl : decl -> decl -> int
-
   type phr =
-    | Def of def
+    | Def of { is_rec : bool; def : def; }
 
   val print_phr : Format.formatter -> phr -> unit
 
@@ -107,6 +108,19 @@ module Make = functor (I : Info) ->
 struct
   include I
 
+  type pat =
+    {
+      desc : pat_desc;
+      loc : Loc.loc;
+      ann : ann;
+    }
+
+  and pat_desc =
+    | Var of id
+    | Pair of pat * pat
+    | Cons of pat * pat
+    | Annot of pat * Type.t
+
   type exp =
       {
         desc : exp_desc;
@@ -116,7 +130,7 @@ struct
 
   and exp_desc =
     | Var of I.id
-    | Lam of id * exp
+    | Lam of pat * exp
     | App of exp * exp
     | Pair of exp * exp
     | Fst of exp
@@ -129,19 +143,28 @@ struct
 
   and def =
       {
-        is_rec : bool;
-        lhs : id;
-        tydf : Type.t;
+        lhs : pat;
+        res_ty : Type.t option;
         rhs : exp;
         locdf : Loc.loc;
       }
 
-  and decl =
-      {
-        name : id;
-        tydl : Type.t;
-        locdl : Loc.loc;
-      }
+  let rec print_pat fmt (p : pat) =
+    match p.desc with
+    | Var x ->
+       print_id fmt x
+    | Pair (p1, p2) ->
+       Format.fprintf fmt "(@[%a,@;%a@])"
+         print_pat p1
+         print_pat p2
+    | Cons (p1, p2) ->
+       Format.fprintf fmt "(@[%a ::@;%a@])"
+         print_pat p1
+         print_pat p2
+    | Annot (p, ty) ->
+       Format.fprintf fmt "(@[%a :@;%a@])"
+         print_pat p
+         Type.print ty
 
   let rec print_exp_prio prio fmt e =
     let open Warp.Print in
@@ -149,10 +172,10 @@ struct
     | Var x ->
       print_id fmt x
 
-    | Lam (x, e) ->
+    | Lam (p, e) ->
       Format.fprintf fmt "@[<hov 2>%a %a %a@ %a@]"
         Pp.print_lam ()
-        print_id x
+        print_pat p
         Pp.print_warr ()
         print_exp e
 
@@ -240,16 +263,41 @@ struct
   and print_exp fmt e =
     print_exp_prio 0 fmt e
 
-  and print_def fmt { lhs; tydf; rhs; } =
-    Format.fprintf fmt "@[%a @[@,: %a @,= %a@]@]"
-      print_id lhs
-      Type.print tydf
+  and print_def fmt { lhs; res_ty; rhs; _ } =
+    let print_res_ty =
+      Warp.Print.pp_opt
+        ~pp_left:Warp.Print.pp_breakable_space
+        (fun fmt ty -> Format.fprintf fmt ": %a" Type.print ty)
+    in
+    Format.fprintf fmt "@[%a%a @,= %a@]@]"
+      print_pat lhs
+      print_res_ty res_ty
       print_exp rhs
 
-  and print_decl fmt { name; tydl; } =
-    Format.fprintf fmt "@[%a : %a@]"
-      print_id name
-      Type.print tydl
+  let rec compare_pat (p1 : pat) (p2 : pat) =
+    if p1 == p2 then 0
+    else
+      let tag_to_int (pd : pat_desc) =
+        match pd with
+        | Var _ -> 0
+        | Pair _ -> 1
+        | Cons _ -> 2
+        | Annot _ -> 3
+      in
+      match p1.desc, p2.desc with
+      | Var v1, Var v2 ->
+         compare_id v1 v2
+      | Pair (p11, p12), Pair (p21, p22)
+      | Cons (p11, p12), Cons (p21, p22) ->
+         Warp.Utils.compare_both
+           (compare_pat p11 p21)
+           (fun () -> compare_pat p12 p22)
+      | Annot (p1, ty1), Annot (p2, ty2) ->
+         Warp.Utils.compare_both
+           (compare_pat p1 p2)
+           (fun () -> Type.compare ty1 ty2)
+      | (Var _ | Pair _ | Cons _ | Annot _), _ ->
+         Warp.Utils.compare_int (tag_to_int p1.desc) (tag_to_int p2.desc)
 
   let rec compare_exp e1 e2 =
     if e1 == e2 then 0 else compare_exp_desc e1.desc e2.desc
@@ -274,9 +322,9 @@ struct
       match ed1, ed2 with
       | Var v1, Var v2 ->
         compare_id v1 v2
-      | Lam (x, e), Lam (x', e') ->
+      | Lam (p, e), Lam (p', e') ->
         Warp.Utils.compare_both
-          (compare_id x x')
+          (compare_pat p p')
           (fun () -> compare_exp e e')
       | App (e1, e2), App (e1', e2')
       | Pair (e1, e2), Pair (e1', e2') ->
@@ -328,38 +376,34 @@ struct
         Warp.Utils.compare_int (tag_to_int ed1) (tag_to_int ed2)
 
   and compare_def
-      { lhs = x1; tydf = ty1; rhs = e1; }
-  { lhs = x2; tydf = ty2; rhs = e2; } =
+      { lhs = p1; res_ty = ty1; rhs = e1; }
+      { lhs = p2; res_ty = ty2; rhs = e2; } =
     Warp.Utils.compare_both
-      (compare_id x1 x2)
+      (compare_pat p1 p2)
       (fun () ->
         Warp.Utils.compare_both
-          (Type.compare ty1 ty2)
+          (Warp.Utils.compare_opt Type.compare ty1 ty2)
           (fun () -> compare_exp e1 e2))
 
-  and compare_decl { name = x1; tydl = ty1; } { name = x2; tydl = ty2; } =
-    Warp.Utils.compare_both
-      (compare_id x1 x2)
-      (fun () -> Type.compare ty1 ty2)
-
   type phr =
-    | Def of def
+    | Def of { is_rec : bool; def : def; }
 
   let print_phr fmt phr =
     match phr with
-    | Def { is_rec; lhs; tydf; rhs; } ->
-      Format.fprintf fmt "@[let%s %a @[: %a@ = @[%a@]@]@]"
+    | Def { is_rec; def; } ->
+      Format.fprintf fmt "@[let%s %a@]"
         (if is_rec then " rec" else "")
-        print_id lhs
-        Type.print tydf
-        print_exp rhs
+        print_def def
 
   let compare_phr phr1 phr2 =
     if phr1 == phr2 then 0
     else
       match phr1, phr2 with
-      | Def d1, Def d2 ->
-        compare_def d1 d2
+      | Def { is_rec = r1; def = d1 },
+        Def { is_rec = r2; def = d2 } ->
+         Warp.Utils.compare_both
+           (Warp.Utils.compare_bool r1 r2)
+           (fun () -> compare_def d1 d2)
 
   type file =
       {

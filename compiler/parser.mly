@@ -7,20 +7,19 @@
       Raw_tree.T.phrases = phrases;
     }
 
-  let make_def start stop ir x ty e =
+  let make_pat start stop desc : Raw_tree.T.pat =
     {
-      Raw_tree.T.is_rec = ir;
-      Raw_tree.T.lhs = x;
-      Raw_tree.T.tydf = ty;
-      Raw_tree.T.rhs = e;
-      Raw_tree.T.locdf = Loc.loc_of_lexing_pos_pair ~start ~stop;
+      Raw_tree.T.desc = desc;
+      Raw_tree.T.loc = Loc.loc_of_lexing_pos_pair ~start ~stop;
+      Raw_tree.T.ann = ();
     }
 
-  let make_decl start stop x ty =
+  let make_def start stop p res_ty e =
     {
-      Raw_tree.T.name = x;
-      Raw_tree.T.tydl = ty;
-      Raw_tree.T.locdl = Loc.loc_of_lexing_pos_pair ~start ~stop;
+      Raw_tree.T.lhs = p;
+      Raw_tree.T.res_ty = res_ty;
+      Raw_tree.T.rhs = e;
+      Raw_tree.T.locdf = Loc.loc_of_lexing_pos_pair ~start ~stop;
     }
 
   let make_exp start stop desc =
@@ -33,8 +32,8 @@
   let make_var start stop x =
     make_exp start stop (Raw_tree.T.Var x)
 
-  let make_lam start stop x e =
-    make_exp start stop (Raw_tree.T.Lam (x, e))
+  let make_lam start stop (p : Raw_tree.T.pat) e =
+    make_exp start stop (Raw_tree.T.Lam (p, e))
 
   let make_pair start stop e1 e2 =
     make_exp start stop (Raw_tree.T.Pair (e1, e2))
@@ -78,6 +77,8 @@
 %}
 
 %start<Raw_tree.T.file> file
+%type<Raw_tree.T.pat> pat
+%type<Raw_tree.T.exp> exp
 
 (* Tokens; should be the same as in lexer.mli *)
 
@@ -150,6 +151,7 @@
 
 %left SEMICOLON
 
+%left LAM
 %left WHERE
 %left COLON
 %left APP
@@ -273,11 +275,30 @@ ident_coercion:
 coercion_ctx:
 | l = separated_list(COMMA, paren(ident_coercion)) { l }
 
+(* Patterns *)
+
+pat_desc:
+| id = IDENT
+  { Var id }
+| LPAREN p1 = pat COMMA p2 = pat RPAREN
+  { Pair (p1, p2) }
+| LPAREN p1 = pat CONS p2 = pat RPAREN
+  { Cons (p1, p2) }
+| LPAREN p = pat COLON ty = ty RPAREN
+  { Annot (p, ty) }
+
+pat:
+| pd = pat_desc { make_pat $startpos $endpos pd }
+
 (* Definitions *)
 
+res_ty:
+| { None }
+| COLON ty = ty { Some ty }
+
 def:
-| LET ir = boption(REC) id = IDENT COLON ty = ty EQUAL e = exp
-    { make_def $startpos $endpos ir id ty e }
+| p = pat res_ty = res_ty EQUAL e = exp
+    { make_def $startpos $endpos p res_ty e }
 
 local_defs:
 | LBRACE l = separated_list(SEMICOLON, def) RBRACE { l }
@@ -295,8 +316,8 @@ simple_exp:
 exp:
 | e = simple_exp
     { e }
-| LAM id = IDENT WARR e = exp
-    { make_lam $startpos $endpos id e }
+| LAM p = pat WARR e = exp %prec LAM
+    { make_lam $startpos $endpos p e }
 | e1 = simple_exp e2 = exp %prec APP
     { Raw_tree.make_app e1 e2 }
 
@@ -325,7 +346,7 @@ exp:
     { make_annot $startpos $endpos e kind ty }
 
 phrase:
-| d = def { Raw_tree.T.Def d }
+| LET is_rec = boption(REC) def = def { Raw_tree.T.Def { is_rec; def; } }
 
 file:
 | body = list(phrase) EOF { make_file $startpos body }

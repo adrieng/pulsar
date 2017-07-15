@@ -21,6 +21,21 @@ module type Tree =
 sig
   include Info
 
+  (** Patterns *)
+
+  type pat =
+    {
+      desc : pat_desc;
+      loc : Loc.loc;
+      ann : ann;
+    }
+
+  and pat_desc =
+    | Var of id
+    | Pair of pat * pat
+    | Cons of pat * pat
+    | Annot of pat * Type.t
+
   (** Expressions, the main syntactic category *)
   type exp =
       {
@@ -32,7 +47,7 @@ sig
   (** Expression bodies *)
   and exp_desc =
     | Var of id
-    | Lam of id * exp
+    | Lam of pat * exp
     | App of exp * exp
     | Pair of exp * exp
     | Fst of exp
@@ -43,22 +58,13 @@ sig
     | Annot of { exp : exp; kind : annot_kind; annot : Type.t; }
     | Sub of (id * Coercions.t) list * exp * Coercions.t
 
-  (** Definitions "x : ty = e" *)
+  (** Definitions "p = e" *)
   and def =
       {
-        is_rec : bool;
-        lhs : id;
-        tydf : Type.t;
+        lhs : pat;
+        res_ty : Type.t option;
         rhs : exp;
         locdf : Loc.loc;
-      }
-
-  (** Declarations "x : ty" *)
-  and decl =
-      {
-        name : id;
-        tydl : Type.t;
-        locdl : Loc.loc;
       }
 
   (** Pretty-print an expression *)
@@ -67,21 +73,15 @@ sig
   (** Pretty-print a definition *)
   val print_def : Format.formatter -> def -> unit
 
-  (** Pretty-print a declaration *)
-  val print_decl : Format.formatter -> decl -> unit
-
   (** Comparison function for expressions a la [Pervasives.compare]. *)
   val compare_exp : exp -> exp -> int
 
   (** Comparison function for definitions a la [Pervasives.compare]. *)
   val compare_def : def -> def -> int
 
-  (** Comparison function for declarations a la [Pervasives.compare]. *)
-  val compare_decl : decl -> decl -> int
-
   (** Phrases, that is, top-level statements *)
   type phr =
-    | Def of def
+    | Def of { is_rec : bool; def : def }
 
   (** Pretty-print a phrase *)
   val print_phr : Format.formatter -> phr -> unit
