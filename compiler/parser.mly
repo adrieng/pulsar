@@ -7,8 +7,9 @@
       Raw_tree.T.phrases = phrases;
     }
 
-  let make_def start stop x ty e =
+  let make_def start stop ir x ty e =
     {
+      Raw_tree.T.is_rec = ir;
       Raw_tree.T.lhs = x;
       Raw_tree.T.tydf = ty;
       Raw_tree.T.rhs = e;
@@ -270,8 +271,8 @@ coercion_ctx:
 (* Definitions *)
 
 def:
-| id = IDENT COLON ty = ty EQUAL e = exp
-    { make_def $startpos $endpos id ty e }
+| LET ir = boption(REC) id = IDENT COLON ty = ty EQUAL e = exp
+    { make_def $startpos $endpos ir id ty e }
 
 local_defs:
 | LBRACE l = separated_list(SEMICOLON, def) RBRACE { l }
@@ -319,7 +320,7 @@ exp:
     { make_annot $startpos $endpos e kind ty }
 
 phrase:
-| LET d = def { Raw_tree.T.Def d }
+| d = def { Raw_tree.T.Def d }
 
 file:
 | body = list(phrase) EOF { make_file $startpos body }

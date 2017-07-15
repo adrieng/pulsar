@@ -46,6 +46,7 @@ sig
   (** Definitions "x : ty = e" *)
   and def =
       {
+        is_rec : bool;
         lhs : id;
         tydf : Types.ty;
         rhs : exp;

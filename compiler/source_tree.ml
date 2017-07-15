@@ -59,6 +59,7 @@ sig
 
   and def =
       {
+        is_rec : bool;
         lhs : id;
         tydf : Types.ty;
         rhs : exp;
@@ -128,6 +129,7 @@ struct
 
   and def =
       {
+        is_rec : bool;
         lhs : id;
         tydf : Types.ty;
         rhs : exp;
@@ -302,8 +304,9 @@ struct
 
   let print_phr fmt phr =
     match phr with
-    | Def { lhs; tydf; rhs; } ->
-      Format.fprintf fmt "@[let %a @[: %a@ = @[%a@]@]@]"
+    | Def { is_rec; lhs; tydf; rhs; } ->
+      Format.fprintf fmt "@[let%s %a @[: %a@ = @[%a@]@]@]"
+        (if is_rec then " rec" else "")
         print_id lhs
         Types.print_ty tydf
         print_exp rhs
