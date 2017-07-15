@@ -142,6 +142,7 @@ struct
       }
 
   let rec print_exp fmt e =
+    let open Warp.Print in
     match e.desc with
     | Var x ->
       print_id fmt x
@@ -162,7 +163,7 @@ struct
       Format.fprintf fmt "@[%a where%s@ {@[<v 2>%a@]}@]"
         print_exp body
         (if is_rec then " rec" else "")
-        (Warp.Utils.print_list_sep_r print_def ";") defs
+        (pp_list ~pp_sep:pp_semicolon print_def) defs
     | Fst e ->
       Format.fprintf fmt "@[fst@ %a@]"
         print_exp e
@@ -175,7 +176,7 @@ struct
       Format.fprintf fmt "@[scale %a@ by %a@ with %a@]"
         print_exp body
         Warp_type.print dr
-        (Warp.Utils.print_list_sep_r print_decl ";") locals
+        (pp_list ~pp_sep:pp_semicolon print_decl) locals
     | Annot { exp = e; kind = a; annot = ty; } ->
       Format.fprintf fmt "@[%a@ %a %a@]"
         print_exp e
@@ -188,10 +189,10 @@ struct
            Coercions.print c
        in
        Format.fprintf fmt "@[<b>{!@[<2>@[%a@]@ >> %a@ >> %a @]!}@]"
-         (Warp.Utils.print_list_r
-            print_ident_coercion
-            ","
-         ) ctx_c
+         (pp_list
+            ~pp_left:pp_breakable_space
+            ~pp_sep:pp_comma
+            print_ident_coercion) ctx_c
          print_exp e
          Coercions.print c
 

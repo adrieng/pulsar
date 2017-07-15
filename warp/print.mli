@@ -8,6 +8,8 @@ val pp_breakable_space : unit printer
 
 val pp_comma : unit printer
 
+val pp_semicolon : unit printer
+
 val pp_bool : bool printer
 
 val pp_int : int printer

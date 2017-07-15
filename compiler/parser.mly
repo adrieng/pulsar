@@ -146,7 +146,6 @@
 %left TIMES DIV
 %nonassoc MOD
 
-%nonassoc RRANGLE
 %left SEMICOLON
 
 %left WHERE

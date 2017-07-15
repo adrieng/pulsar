@@ -14,6 +14,9 @@ let pp_breakable_space fmt () =
 let pp_comma fmt () =
   Format.fprintf fmt ",@ "
 
+let pp_semicolon fmt () =
+  Format.fprintf fmt ";@ "
+
 let pp_bool fmt b =
   Format.fprintf fmt "%b" b
 
@@ -52,7 +55,7 @@ let pp_opt
 let pp_list
       ?(pp_left = pp_nothing)
       ?(pp_right = pp_nothing)
-      ?(pp_sep = pp_comma)
+      ?(pp_sep = pp_breakable_space)
       pp_elt
       fmt
       xs =

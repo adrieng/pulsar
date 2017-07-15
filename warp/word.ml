@@ -13,11 +13,12 @@ and desc =
   | Power of t * int
 
 let rec print_short fmt w =
+  let open Print in
   match w.desc with
   | Single i ->
      Format.fprintf fmt "%d" i
   | Concat w_l ->
-     Utils.print_list_r ~break:Utils.break_space print_short "" fmt w_l
+     pp_list print_short fmt w_l
   | Power ({ desc = Single i; _ }, j) ->
      Format.fprintf fmt "%d^%d"
        i
@@ -28,12 +29,13 @@ let rec print_short fmt w =
        j
 
 let rec print_full fmt w =
+  let open Print in
   match w.desc with
   | Single i ->
      Format.fprintf fmt "%d" i
   | Concat w_l ->
      Format.fprintf fmt "{ @[%a@] }"
-       (Utils.print_list_l print_full "") w_l
+       (pp_list print_full) w_l
   | Power (w, j) ->
      Format.fprintf fmt "%a^%d"
        print_full w
