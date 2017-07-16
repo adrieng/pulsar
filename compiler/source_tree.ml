@@ -68,7 +68,7 @@ sig
     | EConst of Const.const
     | EBy of { body : exp; dr : Warp_type.t; }
     | EAnnot of { exp : exp; kind : annot_kind; annot : Type.t; }
-    | ESub of (id * Coercions.t) list * exp * Coercions.t
+    | ESub of { ctx : (id * Coercions.t) list; exp : exp; res : Coercions.t; }
 
   and eq =
       {
@@ -140,7 +140,7 @@ struct
     | EConst of Const.const
     | EBy of { body : exp; dr : Warp_type.t; }
     | EAnnot of { exp : exp; kind : annot_kind; annot : Type.t; }
-    | ESub of (id * Coercions.t) list * exp * Coercions.t
+    | ESub of { ctx : (id * Coercions.t) list; exp : exp; res : Coercions.t; }
 
   and eq =
       {
@@ -232,7 +232,7 @@ struct
         print_annot_kind a
         Type.print ty
 
-    | ESub (ctx_c, e, c) ->
+    | ESub { ctx; exp; res; } ->
        let print_ident_coercion fmt (id, c) =
          Format.fprintf fmt "(%a <<@ %a)"
            print_id id
@@ -242,9 +242,9 @@ struct
          (pp_list
             ~pp_left:pp_breakable_space
             ~pp_sep:pp_comma
-            print_ident_coercion) ctx_c
-         print_exp e
-         Coercions.print c
+            print_ident_coercion) ctx
+         print_exp exp
+         Coercions.print res
 
   and print_exp_simple fmt e =
     match e.e_desc with
@@ -362,19 +362,20 @@ struct
                (Type.compare ty1 ty2)
                (fun () ->
                  compare_exp e1 e2))
-      | ESub (ctx_c1, e1, c1), ESub (ctx_c2, e2, c2) ->
+      | ESub { ctx = ctx1; exp = exp1; res = res1; },
+        ESub { ctx = ctx2; exp = exp2; res = res2; } ->
          let compare_ident_coercion (v1, c1) (v2, c2) =
            Warp.Utils.compare_both
              (compare_id v1 v2)
              (fun () -> Coercions.compare c1 c2)
          in
          Warp.Utils.compare_both
-           (compare_exp e1 e2)
+           (compare_exp exp1 exp2)
            (fun () ->
              Warp.Utils.compare_both
-               (Coercions.compare c1 c2)
+               (Coercions.compare res1 res2)
                (fun () ->
-                 Warp.Utils.compare_list compare_ident_coercion ctx_c1 ctx_c2))
+                 Warp.Utils.compare_list compare_ident_coercion ctx1 ctx2))
       | (EVar _ | ELam _ | EApp _ | EPair _ | EFst _ | ESnd _ | EWhere _
          | EConst _ | EBy _ | EAnnot _ | ESub _), _ ->
         Warp.Utils.compare_int (tag_to_int ed1) (tag_to_int ed2)

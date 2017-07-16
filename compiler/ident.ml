@@ -84,7 +84,9 @@ struct
 
   let print fmt s =
     let l = M.fold (fun x l -> x :: l) s [] in
-    Warp.Utils.print_list_r print "," fmt l
+    Warp.Print.(pp_list
+                  ~pp_sep:pp_comma
+                  print) fmt l
 end
 
 module Env =
@@ -117,8 +119,8 @@ struct
   open Format
 
   let print
-        ?(key_val_sep = Warp.Utils.comma_break_space)
-        ?(binding_sep = Warp.Utils.break_space)
+        ?(key_val_sep = Warp.Print.pp_comma)
+        ?(binding_sep = Warp.Print.pp_breakable_space)
         print_val
         fmt env =
     let size = cardinal env in

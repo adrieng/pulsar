@@ -64,8 +64,8 @@
   let make_by start stop body dr =
     make_exp start stop (Raw_tree.T.EBy { body; dr; })
 
-  let make_subty start stop ctx_c e c =
-    make_exp start stop (Raw_tree.T.ESub (ctx_c, e, c))
+  let make_subty start stop ctx exp res =
+    make_exp start stop (Raw_tree.T.ESub { ctx; exp; res; })
 
   let make_annot start stop e kind ty =
     make_exp start stop (Raw_tree.T.EAnnot { exp = e; kind; annot = ty; })

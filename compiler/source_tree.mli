@@ -56,7 +56,7 @@ sig
     | EConst of Const.const
     | EBy of { body : exp; dr : Warp_type.t; }
     | EAnnot of { exp : exp; kind : annot_kind; annot : Type.t; }
-    | ESub of (id * Coercions.t) list * exp * Coercions.t
+    | ESub of { ctx : (id * Coercions.t) list; exp : exp; res : Coercions.t; }
 
   (** Equations "lhs (: ty) = rhs" *)
   and eq =
