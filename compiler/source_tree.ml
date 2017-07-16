@@ -39,44 +39,44 @@ sig
 
   type pat =
     {
-      desc : pat_desc;
-      loc : Loc.loc;
-      ann : ann;
+      p_desc : pat_desc;
+      p_loc : Loc.loc;
+      p_ann : ann;
     }
 
   and pat_desc =
-    | Var of id
-    | Pair of pat * pat
-    | Cons of pat * pat
-    | Annot of pat * Type.t
+    | PVar of id
+    | PPair of pat * pat
+    | PCons of pat * pat
+    | PAnnot of pat * Type.t
 
   type exp =
       {
-        desc : exp_desc;
-        loc : Loc.loc;
-        ann : ann;
+        e_desc : exp_desc;
+        e_loc : Loc.loc;
+        e_ann : ann;
       }
 
   and exp_desc =
-    | Var of id
-    | Lam of pat * exp
-    | App of exp * exp
-    | Pair of exp * exp
-    | Fst of exp
-    | Snd of exp
-    | Where of { body : exp; is_rec : bool; eqs : eq list; }
-    | Const of Const.const
-    | By of { body : exp; dr : Warp_type.t; }
-    | Annot of { exp : exp; kind : annot_kind; annot : Type.t; }
-    | Sub of (id * Coercions.t) list * exp * Coercions.t
+    | EVar of id
+    | ELam of pat * exp
+    | EApp of exp * exp
+    | EPair of exp * exp
+    | EFst of exp
+    | ESnd of exp
+    | EWhere of { body : exp; is_rec : bool; eqs : eq list; }
+    | EConst of Const.const
+    | EBy of { body : exp; dr : Warp_type.t; }
+    | EAnnot of { exp : exp; kind : annot_kind; annot : Type.t; }
+    | ESub of (id * Coercions.t) list * exp * Coercions.t
 
   and eq =
       {
-        lhs : pat;
-        params : pat list;
-        res_ty : Type.t option;
-        rhs : exp;
-        locdf : Loc.loc;
+        eq_lhs : pat;
+        eq_params : pat list;
+        eq_ty : Type.t option;
+        eq_rhs : exp;
+        eq_loc : Loc.loc;
       }
 
   val print_exp : Format.formatter -> exp -> unit
@@ -96,8 +96,8 @@ sig
 
   type file =
       {
-        name : string;
-        phrases : phr list;
+        f_name : string;
+        f_phrases : phr list;
       }
 
   val print_file : Format.formatter -> file -> unit
@@ -111,77 +111,78 @@ struct
 
   type pat =
     {
-      desc : pat_desc;
-      loc : Loc.loc;
-      ann : ann;
+      p_desc : pat_desc;
+      p_loc : Loc.loc;
+      p_ann : ann;
     }
 
   and pat_desc =
-    | Var of id
-    | Pair of pat * pat
-    | Cons of pat * pat
-    | Annot of pat * Type.t
+    | PVar of id
+    | PPair of pat * pat
+    | PCons of pat * pat
+    | PAnnot of pat * Type.t
 
   type exp =
       {
-        desc : exp_desc;
-        loc : Loc.loc;
-        ann : ann;
+        e_desc : exp_desc;
+        e_loc : Loc.loc;
+        e_ann : ann;
       }
 
   and exp_desc =
-    | Var of I.id
-    | Lam of pat * exp
-    | App of exp * exp
-    | Pair of exp * exp
-    | Fst of exp
-    | Snd of exp
-    | Where of { body : exp; is_rec : bool; eqs : eq list; }
-    | Const of Const.const
-    | By of { body : exp; dr : Warp_type.t; }
-    | Annot of { exp : exp; kind : annot_kind; annot : Type.t; }
-    | Sub of (id * Coercions.t) list * exp * Coercions.t
+    | EVar of I.id
+    | ELam of pat * exp
+    | EApp of exp * exp
+    | EPair of exp * exp
+    | EFst of exp
+    | ESnd of exp
+    | EWhere of { body : exp; is_rec : bool; eqs : eq list; }
+    | EConst of Const.const
+    | EBy of { body : exp; dr : Warp_type.t; }
+    | EAnnot of { exp : exp; kind : annot_kind; annot : Type.t; }
+    | ESub of (id * Coercions.t) list * exp * Coercions.t
 
   and eq =
       {
-        lhs : pat;
-        params : pat list;
-        res_ty : Type.t option;
-        rhs : exp;
-        locdf : Loc.loc;
+        eq_lhs : pat;
+        eq_params : pat list;
+        eq_ty : Type.t option;
+        eq_rhs : exp;
+        eq_loc : Loc.loc;
       }
 
-  let rec print_pat fmt (p : pat) =
-    match p.desc with
-    | Var x ->
+  let rec print_pat fmt p =
+    match p.p_desc with
+    | PVar x ->
        print_id fmt x
-    | Pair (p1, p2) ->
+    | PPair (p1, p2) ->
        Format.fprintf fmt "(@[%a,@;%a@])"
          print_pat p1
          print_pat p2
-    | Cons (p1, p2) ->
+    | PCons (p1, p2) ->
        Format.fprintf fmt "(@[%a ::@;%a@])"
          print_pat p1
          print_pat p2
-    | Annot (p, ty) ->
+    | PAnnot (p, ty) ->
        Format.fprintf fmt "(@[%a :@;%a@])"
          print_pat p
          Type.print ty
 
   let rec print_exp_prio prio fmt e =
     let open Warp.Print in
-    match e.desc with
-    | Var x ->
+    match e.e_desc with
+    | EVar x ->
       print_id fmt x
 
-    | Lam (p, e) ->
+    | ELam (p, e) ->
       Format.fprintf fmt "@[<hov 2>%a %a %a@ %a@]"
         Pp.print_lam ()
         print_pat p
         Pp.print_warr ()
         print_exp e
 
-    | App ({ desc = App ({ desc = Const Const.Op op; _ }, e1); _ }, e2) ->
+    | EApp ({ e_desc =
+                EApp ({ e_desc = EConst Const.Op op; _ }, e1); _ }, e2) ->
        let prio' = Const.priority op in
        if prio' < prio
        then
@@ -193,45 +194,45 @@ struct
            Const.print_op op
            (print_exp_prio prio') e2
 
-    | App (e1, e2) ->
+    | EApp (e1, e2) ->
       Format.fprintf fmt "@[<hov 2>%a %a@]"
         print_exp e1
         print_exp_app e2
 
-    | Pair (e1, e2) ->
+    | EPair (e1, e2) ->
       Format.fprintf fmt "(@[<v>%a,@ %a@])"
         print_exp e1
         print_exp e2
 
-    | Where { body; is_rec; eqs; } ->
+    | EWhere { body; is_rec; eqs; } ->
       Format.fprintf fmt "@[%a where%s@ {@[<v 2>%a@]}@]"
         print_exp body
         (if is_rec then " rec" else "")
         (pp_list ~pp_sep:pp_semicolon print_eq) eqs
 
-    | Fst e ->
+    | EFst e ->
       Format.fprintf fmt "@[fst@ %a@]"
         print_exp e
 
-    | Snd e ->
+    | ESnd e ->
       Format.fprintf fmt "@[snd@ %a@]"
         print_exp e
 
-    | Const c ->
+    | EConst c ->
       Const.print_const fmt c
 
-    | By { body; dr; } ->
+    | EBy { body; dr; } ->
       Format.fprintf fmt "@[%a@ by %a@]"
         print_exp_simple body
         Warp_type.print dr
 
-    | Annot { exp = e; kind = a; annot = ty; } ->
+    | EAnnot { exp = e; kind = a; annot = ty; } ->
       Format.fprintf fmt "@[%a@ %a %a@]"
         print_exp e
         print_annot_kind a
         Type.print ty
 
-    | Sub (ctx_c, e, c) ->
+    | ESub (ctx_c, e, c) ->
        let print_ident_coercion fmt (id, c) =
          Format.fprintf fmt "(%a <<@ %a)"
            print_id id
@@ -246,16 +247,16 @@ struct
          Coercions.print c
 
   and print_exp_simple fmt e =
-    match e.desc with
-    | Var _ | Const (Const.Lit _) ->
+    match e.e_desc with
+    | EVar _ | EConst (Const.Lit _) ->
        print_exp fmt e
     | _ ->
        Format.fprintf fmt "(%a)"
          print_exp e
 
   and print_exp_app fmt e =
-    match e.desc with
-    | App (e1, e2) ->
+    match e.e_desc with
+    | EApp (e1, e2) ->
        Format.fprintf fmt "%a@ %a"
          print_exp e1
          print_exp_app e2
@@ -265,95 +266,95 @@ struct
   and print_exp fmt e =
     print_exp_prio 0 fmt e
 
-  and print_eq fmt { lhs; params; res_ty; rhs; _ } =
+  and print_eq fmt { eq_lhs; eq_params; eq_ty; eq_rhs; _ } =
     let print_res_ty =
       Warp.Print.pp_opt
         ~pp_left:Warp.Print.pp_breakable_space
         (fun fmt ty -> Format.fprintf fmt ": %a" Type.print ty)
     in
     Format.fprintf fmt "@[%a%a%a @,= %a@]@]"
-      print_pat lhs
-      Warp.Print.(pp_list ~pp_left:pp_breakable_space print_pat) params
-      print_res_ty res_ty
-      print_exp rhs
+      print_pat eq_lhs
+      Warp.Print.(pp_list ~pp_left:pp_breakable_space print_pat) eq_params
+      print_res_ty eq_ty
+      print_exp eq_rhs
 
   let rec compare_pat (p1 : pat) (p2 : pat) =
     if p1 == p2 then 0
     else
       let tag_to_int (pd : pat_desc) =
         match pd with
-        | Var _ -> 0
-        | Pair _ -> 1
-        | Cons _ -> 2
-        | Annot _ -> 3
+        | PVar _ -> 0
+        | PPair _ -> 1
+        | PCons _ -> 2
+        | PAnnot _ -> 3
       in
-      match p1.desc, p2.desc with
-      | Var v1, Var v2 ->
+      match p1.p_desc, p2.p_desc with
+      | PVar v1, PVar v2 ->
          compare_id v1 v2
-      | Pair (p11, p12), Pair (p21, p22)
-      | Cons (p11, p12), Cons (p21, p22) ->
+      | PPair (p11, p12), PPair (p21, p22)
+      | PCons (p11, p12), PCons (p21, p22) ->
          Warp.Utils.compare_both
            (compare_pat p11 p21)
            (fun () -> compare_pat p12 p22)
-      | Annot (p1, ty1), Annot (p2, ty2) ->
+      | PAnnot (p1, ty1), PAnnot (p2, ty2) ->
          Warp.Utils.compare_both
            (compare_pat p1 p2)
            (fun () -> Type.compare ty1 ty2)
-      | (Var _ | Pair _ | Cons _ | Annot _), _ ->
-         Warp.Utils.compare_int (tag_to_int p1.desc) (tag_to_int p2.desc)
+      | (PVar _ | PPair _ | PCons _ | PAnnot _), _ ->
+         Warp.Utils.compare_int (tag_to_int p1.p_desc) (tag_to_int p2.p_desc)
 
   let rec compare_exp e1 e2 =
-    if e1 == e2 then 0 else compare_exp_desc e1.desc e2.desc
+    if e1 == e2 then 0 else compare_exp_desc e1.e_desc e2.e_desc
 
   and compare_exp_desc ed1 ed2 =
     if ed1 == ed2 then 0
     else
       let tag_to_int ed =
         match ed with
-        | Var _ -> 0
-        | Lam _ -> 1
-        | App _ -> 2
-        | Pair _ -> 3
-        | Fst _ -> 4
-        | Snd _ -> 5
-        | Where _ -> 6
-        | Const _ -> 7
-        | By _ -> 8
-        | Annot _ -> 9
-        | Sub _ -> 10
+        | EVar _ -> 0
+        | ELam _ -> 1
+        | EApp _ -> 2
+        | EPair _ -> 3
+        | EFst _ -> 4
+        | ESnd _ -> 5
+        | EWhere _ -> 6
+        | EConst _ -> 7
+        | EBy _ -> 8
+        | EAnnot _ -> 9
+        | ESub _ -> 10
       in
       match ed1, ed2 with
-      | Var v1, Var v2 ->
+      | EVar v1, EVar v2 ->
         compare_id v1 v2
-      | Lam (p, e), Lam (p', e') ->
+      | ELam (p, e), ELam (p', e') ->
         Warp.Utils.compare_both
           (compare_pat p p')
           (fun () -> compare_exp e e')
-      | App (e1, e2), App (e1', e2')
-      | Pair (e1, e2), Pair (e1', e2') ->
+      | EApp (e1, e2), EApp (e1', e2')
+      | EPair (e1, e2), EPair (e1', e2') ->
          Warp.Utils.compare_both
            (compare_exp e1 e1')
            (fun () -> compare_exp e2 e2')
-      | Fst e, Fst e' | Snd e, Snd e' ->
+      | EFst e, EFst e' | ESnd e, ESnd e' ->
         compare_exp e e'
-      | Where { body = e1; is_rec = r1; eqs = eqs1; },
-        Where { body = e2; is_rec = r2; eqs = eqs2; } ->
+      | EWhere { body = e1; is_rec = r1; eqs = eqs1; },
+        EWhere { body = e2; is_rec = r2; eqs = eqs2; } ->
         Warp.Utils.compare_both
           (Warp.Utils.compare_bool r1 r2)
           (fun () ->
             Warp.Utils.compare_both
               (compare_exp e1 e2)
               (fun () -> Warp.Utils.compare_list compare_eq eqs1 eqs2))
-      | Const c, Const c' ->
+      | EConst c, EConst c' ->
         Const.compare_const c c'
-      | By { body = e1; dr = p1; },
-        By { body = e2; dr = p2; } ->
+      | EBy { body = e1; dr = p1; },
+        EBy { body = e2; dr = p2; } ->
         Warp.Utils.compare_both
           (Warp_type.compare p1 p2)
           (fun () ->
             compare_exp e1 e2)
-      | Annot { exp = e1; kind = k1; annot = ty1; },
-        Annot { exp = e2; kind = k2; annot = ty2; } ->
+      | EAnnot { exp = e1; kind = k1; annot = ty1; },
+        EAnnot { exp = e2; kind = k2; annot = ty2; } ->
          Warp.Utils.compare_both
            (compare_annot_kind k1 k2)
            (fun () ->
@@ -361,7 +362,7 @@ struct
                (Type.compare ty1 ty2)
                (fun () ->
                  compare_exp e1 e2))
-      | Sub (ctx_c1, e1, c1), Sub (ctx_c2, e2, c2) ->
+      | ESub (ctx_c1, e1, c1), ESub (ctx_c2, e2, c2) ->
          let compare_ident_coercion (v1, c1) (v2, c2) =
            Warp.Utils.compare_both
              (compare_id v1 v2)
@@ -374,13 +375,13 @@ struct
                (Coercions.compare c1 c2)
                (fun () ->
                  Warp.Utils.compare_list compare_ident_coercion ctx_c1 ctx_c2))
-      | (Var _ | Lam _ | App _ | Pair _ | Fst _ | Snd _ | Where _ | Const _ |
-          By _ | Annot _ | Sub _), _ ->
+      | (EVar _ | ELam _ | EApp _ | EPair _ | EFst _ | ESnd _ | EWhere _
+         | EConst _ | EBy _ | EAnnot _ | ESub _), _ ->
         Warp.Utils.compare_int (tag_to_int ed1) (tag_to_int ed2)
 
   and compare_eq
-      { lhs = p1; res_ty = ty1; rhs = e1; }
-      { lhs = p2; res_ty = ty2; rhs = e2; } =
+      { eq_lhs = p1; eq_ty = ty1; eq_rhs = e1; }
+      { eq_lhs = p2; eq_ty = ty2; eq_rhs = e2; } =
     Warp.Utils.compare_both
       (compare_pat p1 p2)
       (fun () ->
@@ -410,17 +411,17 @@ struct
 
   type file =
       {
-        name : string;
-        phrases : phr list;
+        f_name : string;
+        f_phrases : phr list;
       }
 
-  let print_file fmt { name; phrases; } =
-    Format.fprintf fmt "(* File \"%s\" *)@\n" name;
-    List.iter (fun phr -> Format.fprintf fmt "@\n%a@\n" print_phr phr) phrases
+  let print_file fmt { f_name; f_phrases; } =
+    Format.fprintf fmt "(* File \"%s\" *)@\n" f_name;
+    List.iter (fun phr -> Format.fprintf fmt "@\n%a@\n" print_phr phr) f_phrases
 
   let compare_file
-      { name = n1; phrases = body1; }
-      { name = n2; phrases = body2; } =
+      { f_name = n1; f_phrases = body1; }
+      { f_name = n2; f_phrases = body2; } =
     Warp.Utils.compare_both
       (Warp.Utils.compare_string n1 n2)
       (fun () -> Warp.Utils.compare_list compare_phr body1 body2)

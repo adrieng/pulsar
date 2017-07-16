@@ -3,50 +3,50 @@
 
   let make_file p phrases =
     {
-      Raw_tree.T.name = p.Lexing.pos_fname;
-      Raw_tree.T.phrases = phrases;
+      Raw_tree.T.f_name = p.Lexing.pos_fname;
+      Raw_tree.T.f_phrases = phrases;
     }
 
   let make_pat start stop desc : Raw_tree.T.pat =
     {
-      Raw_tree.T.desc = desc;
-      Raw_tree.T.loc = Loc.loc_of_lexing_pos_pair ~start ~stop;
-      Raw_tree.T.ann = ();
+      Raw_tree.T.p_desc = desc;
+      Raw_tree.T.p_loc = Loc.loc_of_lexing_pos_pair ~start ~stop;
+      Raw_tree.T.p_ann = ();
     }
 
   let make_eq start stop p params res_ty e =
     {
-      Raw_tree.T.lhs = p;
-      Raw_tree.T.params = params;
-      Raw_tree.T.res_ty = res_ty;
-      Raw_tree.T.rhs = e;
-      Raw_tree.T.locdf = Loc.loc_of_lexing_pos_pair ~start ~stop;
+      Raw_tree.T.eq_lhs = p;
+      Raw_tree.T.eq_params = params;
+      Raw_tree.T.eq_ty = res_ty;
+      Raw_tree.T.eq_rhs = e;
+      Raw_tree.T.eq_loc = Loc.loc_of_lexing_pos_pair ~start ~stop;
     }
 
   let make_exp start stop desc =
     {
-      Raw_tree.T.desc = desc;
-      Raw_tree.T.loc = Loc.loc_of_lexing_pos_pair ~start ~stop;
-      Raw_tree.T.ann = ();
+      Raw_tree.T.e_desc = desc;
+      Raw_tree.T.e_loc = Loc.loc_of_lexing_pos_pair ~start ~stop;
+      Raw_tree.T.e_ann = ();
     }
 
   let make_var start stop x =
-    make_exp start stop (Raw_tree.T.Var x)
+    make_exp start stop (Raw_tree.T.EVar x)
 
   let make_lam start stop (p : Raw_tree.T.pat) e =
-    make_exp start stop (Raw_tree.T.Lam (p, e))
+    make_exp start stop (Raw_tree.T.ELam (p, e))
 
   let make_pair start stop e1 e2 =
-    make_exp start stop (Raw_tree.T.Pair (e1, e2))
+    make_exp start stop (Raw_tree.T.EPair (e1, e2))
 
   let make_fst start stop e =
-    make_exp start stop (Raw_tree.T.Fst e)
+    make_exp start stop (Raw_tree.T.EFst e)
 
   let make_snd start stop e =
-    make_exp start stop (Raw_tree.T.Snd e)
+    make_exp start stop (Raw_tree.T.ESnd e)
 
   let make_where start stop body is_rec eqs =
-    make_exp start stop (Raw_tree.T.Where { body; is_rec; eqs; })
+    make_exp start stop (Raw_tree.T.EWhere { body; is_rec; eqs; })
 
   let make_extremal_or_pattern prefix ppattern =
     (* This is where we distinguish 0 the extremal pattern from 0 the integer.
@@ -56,22 +56,22 @@
     else Warp.Periodic.make_pattern ~prefix ~ppattern
 
   let make_const start stop c =
-    make_exp start stop (Raw_tree.T.Const c)
+    make_exp start stop (Raw_tree.T.EConst c)
 
   let make_const_lit start stop l =
     make_const start stop (Const.Lit l)
 
   let make_by start stop body dr =
-    make_exp start stop (Raw_tree.T.By { body; dr; })
+    make_exp start stop (Raw_tree.T.EBy { body; dr; })
 
   let make_subty start stop ctx_c e c =
-    make_exp start stop (Raw_tree.T.Sub (ctx_c, e, c))
+    make_exp start stop (Raw_tree.T.ESub (ctx_c, e, c))
 
   let make_annot start stop e kind ty =
-    make_exp start stop (Raw_tree.T.Annot { exp = e; kind; annot = ty; })
+    make_exp start stop (Raw_tree.T.EAnnot { exp = e; kind; annot = ty; })
 
   let make_op start stop op =
-    make_exp start stop (Raw_tree.T.Const (Const.Op op))
+    make_exp start stop (Raw_tree.T.EConst (Const.Op op))
 
   let make_binop_app e1 e2 e3 =
     Raw_tree.(make_app (make_app e1 e2) e3)
@@ -280,13 +280,13 @@ coercion_ctx:
 
 pat_desc:
 | id = IDENT
-  { Var id }
+  { PVar id }
 | LPAREN p1 = pat COMMA p2 = pat RPAREN
-  { Pair (p1, p2) }
+  { PPair (p1, p2) }
 | LPAREN p1 = pat CONS p2 = pat RPAREN
-  { Cons (p1, p2) }
+  { PCons (p1, p2) }
 | LPAREN p = pat COLON ty = ty RPAREN
-  { Annot (p, ty) }
+  { PAnnot (p, ty) }
 
 pat:
 | pd = pat_desc { make_pat $startpos $endpos pd }

@@ -25,47 +25,47 @@ sig
 
   type pat =
     {
-      desc : pat_desc;
-      loc : Loc.loc;
-      ann : ann;
+      p_desc : pat_desc;
+      p_loc : Loc.loc;
+      p_ann : ann;
     }
 
   and pat_desc =
-    | Var of id
-    | Pair of pat * pat
-    | Cons of pat * pat
-    | Annot of pat * Type.t
+    | PVar of id
+    | PPair of pat * pat
+    | PCons of pat * pat
+    | PAnnot of pat * Type.t
 
   (** Expressions, the main syntactic category *)
   type exp =
       {
-        desc : exp_desc;
-        loc : Loc.loc;
-        ann : ann;
+        e_desc : exp_desc;
+        e_loc : Loc.loc;
+        e_ann : ann;
       }
 
   (** Expression bodies *)
   and exp_desc =
-    | Var of id
-    | Lam of pat * exp
-    | App of exp * exp
-    | Pair of exp * exp
-    | Fst of exp
-    | Snd of exp
-    | Where of { body : exp; is_rec : bool; eqs : eq list; }
-    | Const of Const.const
-    | By of { body : exp; dr : Warp_type.t; }
-    | Annot of { exp : exp; kind : annot_kind; annot : Type.t; }
-    | Sub of (id * Coercions.t) list * exp * Coercions.t
+    | EVar of id
+    | ELam of pat * exp
+    | EApp of exp * exp
+    | EPair of exp * exp
+    | EFst of exp
+    | ESnd of exp
+    | EWhere of { body : exp; is_rec : bool; eqs : eq list; }
+    | EConst of Const.const
+    | EBy of { body : exp; dr : Warp_type.t; }
+    | EAnnot of { exp : exp; kind : annot_kind; annot : Type.t; }
+    | ESub of (id * Coercions.t) list * exp * Coercions.t
 
   (** Equations "lhs (: ty) = rhs" *)
   and eq =
       {
-        lhs : pat;
-        params : pat list;
-        res_ty : Type.t option;
-        rhs : exp;
-        locdf : Loc.loc;
+        eq_lhs : pat;
+        eq_params : pat list;
+        eq_ty : Type.t option;
+        eq_rhs : exp;
+        eq_loc : Loc.loc;
       }
 
   (** Pretty-print an expression *)
@@ -93,8 +93,8 @@ sig
   (** Complete files *)
   type file =
       {
-        name : string;
-        phrases : phr list;
+        f_name : string;
+        f_phrases : phr list;
       }
 
   (** Pretty-print a file *)

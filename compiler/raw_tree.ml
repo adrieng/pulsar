@@ -13,11 +13,11 @@ module T = Source_tree.Make(
 open T
 
 let join_loc e1 e2 =
-  Loc.join e1.loc e2.loc
+  Loc.join e1.e_loc e2.e_loc
 
 let make_app e1 e2 =
   {
-    desc = App (e1, e2);
-    loc = join_loc e1 e2;
-    ann = ();
+    e_desc = EApp (e1, e2);
+    e_loc = join_loc e1 e2;
+    e_ann = ();
   }
