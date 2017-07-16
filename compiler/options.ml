@@ -9,11 +9,14 @@ let yes_no r s =
 
 let pp_utf8 = ref false
 
+let debug = ref false
+
 let debug_lexing = ref false
 
 let debug_table =
   [
     "lexing", debug_lexing;
+    "all", debug;
   ]
 
 let debug_options =

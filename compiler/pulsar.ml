@@ -1,5 +1,6 @@
-open Type
+open Parse
 open Parser
+open Pass
 
 let handle_internal_errors f x =
   try f x
@@ -11,22 +12,13 @@ let handle_internal_errors f x =
     if !Options.debug_lexing then Format.eprintf "@\n";
     Format.eprintf "%a@." Parser_error.print_parsing_error err
 
-let parse_pulsar_file filename =
-  let ic = open_in filename in
-  let ctx = Lexer.ctx_from_utf8_channel ~filename ic in
-  let supplier () =
-    let tok, start, stop = Lexer.next_token_pos ctx in
-    if !Options.debug_lexing
-    then Format.eprintf "%a @?" Lexer.print_token tok;
-    tok, start, stop
-  in
-  let chk = Parser.Incremental.file Lexing.dummy_pos in
-  let file = Parser.MenhirInterpreter.loop supplier chk in
-  close_in ic;
-  file
+let compiler =
+  Parse.pass
 
 let process_pulsar_file filename =
-  let file = parse_pulsar_file filename in
+  let ctx = Pass.make_default ~filename in
+  let ic = open_in filename in
+  let file = Pass.run ~ctx compiler ic in
   Format.printf "%a@?" Raw_tree.T.print_file file
 
 let args =
