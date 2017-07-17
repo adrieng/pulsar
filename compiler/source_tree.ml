@@ -270,8 +270,8 @@ struct
     match e.e_desc with
     | EApp (e1, e2) ->
        Format.fprintf fmt "%a@ %a"
-         print_exp_simple e1
-         print_exp_app e2
+         print_exp_app e1
+         print_exp_simple e2
     | _ ->
        print_exp fmt e
 
