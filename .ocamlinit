@@ -1,10 +1,10 @@
 #load "str.cma";;
 #load "unix.cma";;
 #load "graphics.cma";;
-#directory "_build/default/clock"
-#load_rec "clock.cma";;
+#directory "_build/default/warp"
+#load_rec "warp.cma";;
 
-open Clock
+open Warp
 
 #install_printer Int.print;;
 #install_printer Rat.print;;
@@ -53,7 +53,7 @@ let print_ones ?(max = 10) p =
   in
   Format.printf "@[ones @[%a@] =@ @[%a@]@]@."
     Periodic.print p
-    (Utils.print_list_r Enat.print ",") l
+    (Print.pp_list Enat.print) l
 
 let print_on p q =
   Format.printf "@[@[%a@]@ on @[%a@]@ = @[%a@]@]@."
