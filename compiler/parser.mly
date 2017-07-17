@@ -7,6 +7,13 @@
       Raw_tree.T.f_phrases = phrases;
     }
 
+  let make_def start stop is_rec body =
+    {
+      Raw_tree.T.ph_desc = Raw_tree.T.PDef { is_rec; body; };
+      Raw_tree.T.ph_loc = Loc.loc_of_lexing_pos_pair ~start ~stop;
+      Raw_tree.T.ph_ann = ();
+    }
+
   let make_pat start stop desc : Raw_tree.T.pat =
     {
       Raw_tree.T.p_desc = desc;
@@ -21,6 +28,7 @@
       Raw_tree.T.eq_ty = res_ty;
       Raw_tree.T.eq_rhs = e;
       Raw_tree.T.eq_loc = Loc.loc_of_lexing_pos_pair ~start ~stop;
+      Raw_tree.T.eq_ann = ();
     }
 
   let make_exp start stop desc =
@@ -347,7 +355,8 @@ exp:
     { make_annot $startpos $endpos e kind ty }
 
 phrase:
-| LET is_rec = boption(REC) body = eq { Raw_tree.T.Def { is_rec; body; } }
+| LET is_rec = boption(REC) body = eq
+    { make_def $startpos $endpos is_rec body }
 
 file:
 | body = list(phrase) EOF { make_file $startpos body }

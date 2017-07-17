@@ -1,11 +1,10 @@
 module T = Source_tree.Make(
   struct
-    type id = Ident.t
-    let print_id = Ident.print
-    let compare_id = Ident.compare
+    module Id = Ident
 
-    type ann = unit
-    let print_ann (_ : Format.formatter) () = (() : unit)
-    let compare_ann () () = 0
+    module PatAnnot = Warp.Utils.PrintableOrderedUnit
+    module ExpAnnot = Warp.Utils.PrintableOrderedUnit
+    module EquAnnot = Warp.Utils.PrintableOrderedUnit
+    module PhrAnnot = Warp.Utils.PrintableOrderedUnit
   end
 )

@@ -538,6 +538,22 @@ sig
   include Map.OrderedType with type t := t
 end
 
+module PrintableOrderedUnit =
+struct
+  type t = unit
+  let print (_ : Format.formatter) () = ()
+  let compare () () = 0
+end
+
+module PrintableOrderedString =
+struct
+  type t = string
+  let print fmt s =
+    Format.fprintf fmt "%s" s
+  let compare (s1 : string) (s2 : string) =
+    Pervasives.compare s1 s2
+end
+
 let mod_b1 x y = succ (pred x mod y)
 
 let div_b1 x y = pred x / y

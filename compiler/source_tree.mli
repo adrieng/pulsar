@@ -8,13 +8,12 @@ val compare_annot_kind : annot_kind -> annot_kind -> int
 
 module type Info =
 sig
-  type id
-  val print_id : Format.formatter -> id -> unit
-  val compare_id : id -> id -> int
+  module Id : Warp.Utils.PrintableOrderedType
 
-  type ann
-  val print_ann : Format.formatter -> ann -> unit
-  val compare_ann : ann -> ann -> int
+  module PatAnnot : Warp.Utils.PrintableOrderedType
+  module ExpAnnot : Warp.Utils.PrintableOrderedType
+  module EquAnnot : Warp.Utils.PrintableOrderedType
+  module PhrAnnot : Warp.Utils.PrintableOrderedType
 end
 
 module type Tree =
@@ -27,11 +26,11 @@ sig
     {
       p_desc : pat_desc;
       p_loc : Loc.loc;
-      p_ann : ann;
+      p_ann : PatAnnot.t;
     }
 
   and pat_desc =
-    | PVar of id
+    | PVar of Id.t
     | PPair of pat * pat
     | PCons of pat * pat
     | PAnnot of pat * Type.t
@@ -41,12 +40,12 @@ sig
       {
         e_desc : exp_desc;
         e_loc : Loc.loc;
-        e_ann : ann;
+        e_ann : ExpAnnot.t;
       }
 
   (** Expression bodies *)
   and exp_desc =
-    | EVar of id
+    | EVar of Id.t
     | ELam of pat * exp
     | EApp of exp * exp
     | EPair of exp * exp
@@ -56,7 +55,7 @@ sig
     | EConst of Const.const
     | EBy of { body : exp; dr : Warp_type.t; }
     | EAnnot of { exp : exp; kind : annot_kind; annot : Type.t; }
-    | ESub of { ctx : (id * Coercions.t) list; exp : exp; res : Coercions.t; }
+    | ESub of { ctx : (Id.t * Coercions.t) list; exp : exp; res : Coercions.t; }
 
   (** Equations "lhs (: ty) = rhs" *)
   and eq =
@@ -66,6 +65,7 @@ sig
         eq_ty : Type.t option;
         eq_rhs : exp;
         eq_loc : Loc.loc;
+        eq_ann : EquAnnot.t;
       }
 
   (** Pretty-print an expression *)
@@ -82,7 +82,14 @@ sig
 
   (** Phrases, that is, top-level statements *)
   type phr =
-    | Def of { is_rec : bool; body : eq }
+    {
+      ph_desc : phr_desc;
+      ph_loc : Loc.loc;
+      ph_ann : PhrAnnot.t;
+    }
+
+  and phr_desc =
+    | PDef of { is_rec : bool; body : eq }
 
   (** Pretty-print a phrase *)
   val print_phr : Format.formatter -> phr -> unit
@@ -104,4 +111,8 @@ sig
   val compare_file : file -> file -> int
 end
 
-module Make (I : Info) : Tree with type id = I.id and type ann = I.ann
+module Make (I : Info) : Tree with type Id.t = I.Id.t
+                               and type PatAnnot.t = I.PatAnnot.t
+                               and type ExpAnnot.t = I.ExpAnnot.t
+                               and type EquAnnot.t = I.EquAnnot.t
+                               and type PhrAnnot.t = I.PhrAnnot.t

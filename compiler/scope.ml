@@ -99,13 +99,22 @@ and scope_eq is_rec prev_env eq =
     S.eq_ty = eq.R.eq_ty;
     S.eq_rhs = rhs;
     S.eq_loc = eq.R.eq_loc;
+    S.eq_ann = ();
   }
 
 let scope_phrase env phr =
-  match phr with
-  | R.Def { is_rec; body; } ->
-     let env, eq = scope_eq is_rec env body in
-     env, S.Def { is_rec; body = eq; }
+  let env, pd =
+    match phr.R.ph_desc with
+    | R.PDef { is_rec; body; } ->
+       let env, eq = scope_eq is_rec env body in
+       env, S.PDef { is_rec; body = eq; }
+  in
+  env,
+  {
+    S.ph_desc = pd;
+    S.ph_loc = phr.R.ph_loc;
+    S.ph_ann = ();
+  }
 
 let scope ctx file =
   Ident.reset_ctx ();

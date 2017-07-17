@@ -1,12 +1,11 @@
 module T = Source_tree.Make(
   struct
-    type id = string
-    let print_id fmt id = Format.fprintf fmt "%s" id
-    let compare_id = Warp.Utils.compare_string
+    module Id = Warp.Utils.PrintableOrderedString
 
-    type ann = unit
-    let print_ann (_ : Format.formatter) () = (() : unit)
-    let compare_ann () () = 0
+    module PatAnnot = Warp.Utils.PrintableOrderedUnit
+    module ExpAnnot = Warp.Utils.PrintableOrderedUnit
+    module EquAnnot = Warp.Utils.PrintableOrderedUnit
+    module PhrAnnot = Warp.Utils.PrintableOrderedUnit
   end
 )
 
