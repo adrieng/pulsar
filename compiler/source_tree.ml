@@ -57,6 +57,7 @@ sig
 
   and exp_desc =
     | EVar of Id.t
+    | EExternal of Name.t
     | ELam of pat * exp
     | EApp of exp * exp
     | EPair of exp * exp
@@ -137,6 +138,7 @@ struct
 
   and exp_desc =
     | EVar of Id.t
+    | EExternal of Name.t
     | ELam of pat * exp
     | EApp of exp * exp
     | EPair of exp * exp
@@ -180,6 +182,9 @@ struct
     match e.e_desc with
     | EVar x ->
       Id.print fmt x
+
+    | EExternal n ->
+       Name.print fmt n
 
     | ELam (p, e) ->
       Format.fprintf fmt "@[<hov 2>%a %a %a@ %a@]"
@@ -319,6 +324,7 @@ struct
       let tag_to_int ed =
         match ed with
         | EVar _ -> 0
+        | EExternal _ -> 11
         | ELam _ -> 1
         | EApp _ -> 2
         | EPair _ -> 3
@@ -332,7 +338,9 @@ struct
       in
       match ed1, ed2 with
       | EVar v1, EVar v2 ->
-        Id.compare v1 v2
+         Id.compare v1 v2
+      | EExternal n1, EExternal n2 ->
+         Name.compare n1 n2
       | ELam (p, e), ELam (p', e') ->
         Warp.Utils.compare_both
           (compare_pat p p')
@@ -383,8 +391,8 @@ struct
                (Coercions.compare res1 res2)
                (fun () ->
                  Warp.Utils.compare_list compare_ident_coercion ctx1 ctx2))
-      | (EVar _ | ELam _ | EApp _ | EPair _ | EFst _ | ESnd _ | EWhere _
-         | EConst _ | EBy _ | EAnnot _ | ESub _), _ ->
+      | (EVar _ | EExternal _ | ELam _ | EApp _ | EPair _ | EFst _ | ESnd _
+         | EWhere _ | EConst _ | EBy _ | EAnnot _ | ESub _), _ ->
         Warp.Utils.compare_int (tag_to_int ed1) (tag_to_int ed2)
 
   and compare_eq

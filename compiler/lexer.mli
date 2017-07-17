@@ -1,6 +1,7 @@
 (** Lexemes *)
 type token =
   | IDENT of string
+  | MODN of string
   | LAM
   | ARR
   | WARR
@@ -11,6 +12,7 @@ type token =
   | REC
   | LBRACE
   | RBRACE
+  | DOT
   | COLON
   | EQUAL
   | SEMICOLON

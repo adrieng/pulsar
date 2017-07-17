@@ -41,6 +41,9 @@
   let make_var start stop x =
     make_exp start stop (Raw_tree.T.EVar x)
 
+  let make_external start stop ln =
+    make_exp start stop (Raw_tree.T.EExternal ln)
+
   let make_lam start stop (p : Raw_tree.T.pat) e =
     make_exp start stop (Raw_tree.T.ELam (p, e))
 
@@ -92,6 +95,7 @@
 (* Tokens; should be the same as in lexer.mli *)
 
 %token<string> IDENT
+%token<string> MODN
 %token LAM
 %token LPAREN
 %token RPAREN
@@ -100,6 +104,7 @@
 %token REC
 %token LBRACE
 %token RBRACE
+%token DOT
 %token COLON
 %token EQUAL
 %token SEMICOLON
@@ -221,6 +226,11 @@ annot_kind:
 | COLON { Source_tree.Typing }
 | SUBTY { Source_tree.Subtyping }
 
+(* Identifiers *)
+
+longname:
+| modname = MODN DOT name = IDENT { Name.make ~modname ~name }
+
 (* Literals, operators, and constants *)
 
 %inline const_exp(C):
@@ -317,6 +327,8 @@ eqs:
 simple_exp:
 | id = IDENT
     { make_var $startpos $endpos id }
+| ln = longname
+    { make_external $startpos $endpos ln }
 | l = lit
     { make_const_lit $startpos $endpos l }
 | e = paren(exp)

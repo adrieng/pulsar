@@ -50,6 +50,8 @@ let rec scope_exp env e =
          try S.EVar (E.find id env)
          with Not_found -> unbound_identifier id e.R.e_loc
        end
+    | R.EExternal n ->
+       S.EExternal n
     | R.ELam (p, e) ->
        let env, p = scope_pat env p in
        S.ELam (p, scope_exp env e)

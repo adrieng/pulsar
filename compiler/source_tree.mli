@@ -46,6 +46,7 @@ sig
   (** Expression bodies *)
   and exp_desc =
     | EVar of Id.t
+    | EExternal of Name.t
     | ELam of pat * exp
     | EApp of exp * exp
     | EPair of exp * exp

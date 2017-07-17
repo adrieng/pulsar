@@ -1,8 +1,9 @@
 (* Tokens *)
 
 type token =
-  (* Var *)
+  (* Var and idents *)
   | IDENT of string
+  | MODN of string
   (* Lambda *)
   | LAM
   | ARR
@@ -16,6 +17,7 @@ type token =
   | REC
   | LBRACE
   | RBRACE
+  | DOT
   | COLON
   | EQUAL
   | SEMICOLON
@@ -69,6 +71,8 @@ let print_token fmt tok =
   match tok with
   | IDENT s ->
     Format.fprintf fmt "IDENT [%s]" s
+  | MODN s ->
+    Format.fprintf fmt "MODN [%s]" s
   | LAM ->
     Format.fprintf fmt "LAM (%a)"
       Pp.print_lam ()
@@ -92,6 +96,8 @@ let print_token fmt tok =
     Format.fprintf fmt "LBRACE"
   | RBRACE ->
     Format.fprintf fmt "RBRACE"
+  | DOT ->
+    Format.fprintf fmt "DOT"
   | COLON ->
     Format.fprintf fmt "COLON"
   | EQUAL ->
@@ -328,6 +334,10 @@ let id =
   [%sedlex.regexp?
       'a'..'z', Star ('a'..'z' | 'A'..'Z' | ascii_digit | "'" | "_")]
 
+let modn =
+  [%sedlex.regexp?
+      'A'..'Z', Star ('a'..'z' | 'A'..'Z' | ascii_digit | "_")]
+
 let bool =
   [%sedlex.regexp? "true" | "false"]
 
@@ -403,6 +413,7 @@ let rec next_token ctx =
   | "{" -> LBRACE
   | "}" -> RBRACE
   | "::" -> CONS
+  | "." -> DOT
   | ":" -> COLON
   | "=" -> EQUAL
   | ";" -> SEMICOLON
@@ -416,6 +427,7 @@ let rec next_token ctx =
   | "`" -> TICK
 
   | id -> keyword_or_ident (lexeme_ascii ctx)
+  | modn -> MODN (lexeme_ascii ctx)
 
   | white_space_no_newline -> next_token ctx
   | new_line -> register_new_line ctx; next_token ctx
