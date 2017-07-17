@@ -1,6 +1,11 @@
 module T = Source_tree.Make(
   struct
-    module Id = Ident
+    module Id =
+      struct
+        type t = Ident.t
+        let print = Ident.print_source
+        let compare = Ident.compare
+      end
 
     module PatAnnot = Warp.Utils.PrintableOrderedUnit
     module ExpAnnot = Warp.Utils.PrintableOrderedUnit

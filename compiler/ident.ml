@@ -76,6 +76,13 @@ let to_string id =
 
 let print fmt id = Format.fprintf fmt "%s" (to_string id)
 
+let print_source fmt id =
+  match id.kind with
+  | Source ->
+     Format.fprintf fmt "%s" id.name
+  | Internal ->
+     Format.fprintf fmt "%s" (to_string id)
+
 module Set =
 struct
   module M = Set.Make(Ident_ordered)

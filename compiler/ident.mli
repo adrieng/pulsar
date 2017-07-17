@@ -81,6 +81,9 @@ module Set :
     idents created in the same context. *)
 val print : Format.formatter -> t -> unit
 
+(** Pretty-print an identifier as it appears in source code. *)
+val print_source : Format.formatter -> t -> unit
+
 (** Turn an identifier into a concrete string. Guaranteed to be injective for
     all the idents created in the same context. *)
 val to_string : t -> string
