@@ -76,3 +76,6 @@ let print_radj ?(normalize = true) p =
 let print_adj ?(normalize = true) p =
   print_ladj ~normalize p;
   print_radj ~normalize p
+
+let div' p q =
+  on (ladj q) p

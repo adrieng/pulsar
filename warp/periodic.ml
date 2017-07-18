@@ -296,6 +296,52 @@ let radj p =
   | Enat.Fin n ->
      push (n - 1) pl
 
+exception FoundOmega of Word.t
+
+let div p q =
+  let rec loop res sum i max =
+    if i = max
+    then res, sum
+    else
+      let n = Enat.to_int @@ at q i in
+      let sum = sum + (Enat.to_int @@ at p i) in
+      let sum, res =
+        if n > 0
+        then 0, Word.(res ^^ singleton sum ^^ power (singleton 0) (n - 1))
+        else sum, res
+      in
+      loop res sum (i + 1) max
+  in
+  match p.v, q.v with
+  | Ext Omega, Ext Omega ->
+     let u_n = min (Word.length p.u) (Word.length q.u) in
+     let prefix, _ = loop Word.empty 0 0 u_n in
+     make_extremal ~prefix Omega
+  | Ext Omega, _ ->
+     let u_n = Word.length p.u in
+     let prefix, _ = loop Word.empty 0 0 u_n in
+     make_extremal ~prefix Omega
+  | _, Ext Omega ->
+     let u_n = Word.length q.u in
+     let prefix, sum = loop Word.empty 0 0 u_n in
+     let m = Enat.to_int @@ at p (u_n + 1) in
+     let prefix = Word.(prefix ^^ singleton (sum + m)) in
+     make_extremal ~prefix Zero
+  | _, Ext Zero ->
+     let u_n = Word.length q.u in
+     let prefix, _ = loop Word.empty 0 0 u_n in
+     make_extremal ~prefix Omega
+  | Ext Zero, Pat v ->
+     let u_n = max (Word.length p.u) (Word.length q.u) in
+     let prefix, _ = loop Word.empty 0 0 u_n in
+     make_extremal ~prefix Zero
+  | Pat p_v, Pat q_v ->
+     let u_n = max (Word.length p.u) (Word.length q.u) in
+     let v_n = Utils.lcm (Word.length p_v) (Word.length q_v) in
+     let prefix, sum = loop Word.empty 0 0 u_n in
+     let ppattern, _ = loop Word.empty sum u_n (u_n + v_n) in
+     make_pattern ~prefix ~ppattern
+
 let period_weight p =
   match p.v with
   | Ext Zero ->

@@ -28,6 +28,8 @@ val ladj : t -> t
 
 val radj : t -> t
 
+val div : t -> t -> t
+
 (** Algebra *)
 
 val weight : t -> Enat.t
