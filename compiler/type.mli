@@ -23,7 +23,7 @@ type t =
   | Fun of t * t
   | Warped of Warp_type.t * t
 
-(** Prett-print a tpe *)
+(** Pretty-print a type *)
 val print : Format.formatter -> t -> unit
 
 (** Compute the normal form of a tpe w.r.t. reversible tpe laws *)
