@@ -11,12 +11,12 @@ let handle_internal_errors f x =
   | Parser_error.Parsing_error err ->
     if !Options.debug_lexing then Format.eprintf "@\n";
     Format.eprintf "%a@." Parser_error.print_parsing_error err
-  | Scope.Scoping_error err ->
-    Format.eprintf "%a@." Scope.print_scoping_error err
+  | Scoping.Scoping_error err ->
+    Format.eprintf "%a@." Scoping.print_scoping_error err
 
 let compiler =
   Parse.pass
-  >>> Scope.pass
+  >>> Scoping.pass
 
 let process_pulsar_file filename =
   let ctx = Pass.make_default ~filename in
