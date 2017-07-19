@@ -259,7 +259,7 @@ struct
            Id.print id
            Coercions.print c
        in
-       Format.fprintf fmt "@[<b>{!@[<2>@[%a@]@ >> %a@ >> %a @]!}@]"
+       Format.fprintf fmt "@[<v 2>{!@[%a@]@ >> %a@ >> @[%a@]!}@]"
          (pp_list
             ~pp_left:pp_breakable_space
             ~pp_sep:pp_comma
