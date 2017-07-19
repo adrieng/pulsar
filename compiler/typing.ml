@@ -141,6 +141,16 @@ let later ty =
 
 (* Coercions and subtyping *)
 
+let rec is_simplified ty =
+  let open Type in
+  match ty with
+  | Warped (_, (Base _ | Stream _)) ->
+     true
+  | Warped (_, Fun (ty1, ty2)) | Prod (ty1, ty2) ->
+     is_simplified ty1 && is_simplified ty2
+  | _ ->
+     false
+
 let rec simplify_ty ty =
   let open Coercions in
   let open Type in
@@ -190,6 +200,8 @@ let rec simplify_ty ty =
 
 let precedes_coe ~loc ~orig_ty1 ~orig_ty2 ty ty' =
   let not_a_subtype clash_ty1 clash_ty2 =
+    assert (is_simplified clash_ty1);
+    assert (is_simplified clash_ty2);
     not_a_subtype ~ty1:orig_ty1 ~ty2:orig_ty2 ~clash_ty1 ~clash_ty2 loc
   in
   let rec loop ty ty' =
