@@ -37,3 +37,7 @@ val all_equal : elem -> t -> bool
 include Utils.PrintableOrderedType with type t := t
 
 val equal : t -> t -> bool
+
+val to_seq : t -> elem Seq.t
+
+val find_first_non_null_index : t -> int

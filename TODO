@@ -4,3 +4,4 @@
   e.g., 1 where { x = 2; x = 2; } should be rejected.
 * Allow contravariant subtyping in patterns
 * Implement a rudimentary module system
+* Rework the ugly bits of Warp/{Word,Periodic}

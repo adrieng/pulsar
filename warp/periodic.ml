@@ -346,8 +346,8 @@ let div p q =
      let u_n = max (Word.length p.u) (Word.length q.u) in
      let prefix, _ = loop Word.empty 0 0 u_n in
      make_extremal ~prefix Zero
-  | Pat _, Pat _ ->
-     let u_n = hyper_prefix p q in
+  | Pat _, Pat q_v ->
+     let u_n = hyper_prefix p q + Word.find_first_non_null_index q_v + 1 in
      let v_n = hyper_period p q in
      let prefix, sum = loop Word.empty 0 0 u_n in
      let ppattern, _ = loop Word.empty sum u_n (u_n + v_n) in

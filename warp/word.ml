@@ -203,3 +203,27 @@ let compare w1 w2 =
 
 let equal w1 w2 =
   compare w1 w2 = 0
+
+let to_seq w k =
+  let rec iter w =
+    match w.desc with
+    | Single n ->
+       k n
+    | Concat w_l ->
+       List.iter iter w_l
+    | Power (w, n) ->
+       for i = 1 to n do
+         iter w
+       done
+  in
+  iter w
+
+exception Found
+
+let find_first_non_null_index w =
+  let r = ref 0 in
+  if w.weight = 0 then invalid_arg "find_first_non_null_index";
+  try
+    to_seq w (fun i -> if i > 0 then raise Found);
+    assert false;
+  with Found -> !r
