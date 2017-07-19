@@ -60,6 +60,7 @@ sig
     | EExternal of Name.t
     | ELam of pat * exp
     | EApp of exp * exp
+    | ECons of exp * exp
     | EPair of exp * exp
     | EFst of exp
     | ESnd of exp
@@ -78,6 +79,8 @@ sig
         eq_loc : Loc.loc;
         eq_ann : EquAnnot.t;
       }
+
+  val print_pat : Format.formatter -> pat -> unit
 
   val print_exp : Format.formatter -> exp -> unit
 
@@ -141,6 +144,7 @@ struct
     | EExternal of Name.t
     | ELam of pat * exp
     | EApp of exp * exp
+    | ECons of exp * exp
     | EPair of exp * exp
     | EFst of exp
     | ESnd of exp
@@ -207,9 +211,14 @@ struct
            (print_exp_prio prio') e2
 
     | EApp (e1, e2) ->
-      Format.fprintf fmt "@[<hov 2>%a %a@]"
-        print_exp e1
+      Format.fprintf fmt "@[<hov 2>%a@ %a@]"
+        print_exp_simple e1
         print_exp_app e2
+
+    | ECons (e1, e2) ->
+      Format.fprintf fmt "@[<hov>%a ::@ %a@]"
+        print_exp e1
+        print_exp e2
 
     | EPair (e1, e2) ->
       Format.fprintf fmt "(@[<v>%a,@ %a@])"
@@ -327,6 +336,7 @@ struct
         | EExternal _ -> 11
         | ELam _ -> 1
         | EApp _ -> 2
+        | ECons _ -> 11
         | EPair _ -> 3
         | EFst _ -> 4
         | ESnd _ -> 5
@@ -346,7 +356,8 @@ struct
           (compare_pat p p')
           (fun () -> compare_exp e e')
       | EApp (e1, e2), EApp (e1', e2')
-      | EPair (e1, e2), EPair (e1', e2') ->
+      | EPair (e1, e2), EPair (e1', e2')
+      | ECons (e1, e2), ECons (e1', e2') ->
          Warp.Utils.compare_both
            (compare_exp e1 e1')
            (fun () -> compare_exp e2 e2')
@@ -391,8 +402,9 @@ struct
                (Coercions.compare res1 res2)
                (fun () ->
                  Warp.Utils.compare_list compare_ident_coercion ctx1 ctx2))
-      | (EVar _ | EExternal _ | ELam _ | EApp _ | EPair _ | EFst _ | ESnd _
-         | EWhere _ | EConst _ | EBy _ | EAnnot _ | ESub _), _ ->
+      | (EVar _ | EExternal _ | ELam _ | EApp _ | ECons _ | EPair _
+         | EFst _ | ESnd _ | EWhere _ | EConst _ | EBy _ | EAnnot _
+         | ESub _), _ ->
         Warp.Utils.compare_int (tag_to_int ed1) (tag_to_int ed2)
 
   and compare_eq

@@ -47,73 +47,47 @@ type t =
   | Fun of t * t
   | Warped of Warp_type.t * t
 
-let rec print fmt ty =
-  let in_pp_box f fmt x =
-    Format.fprintf fmt "@[%a@]" f x
-  in
-
-  let in_pp_par f fmt x =
-    Format.fprintf fmt "(%a)" (in_pp_box f) x
-  in
-
-  let rec print_prod fmt ty =
-    match ty with
-    | Base _ | Stream _ ->
-      print fmt ty
-    | Prod (ty1, ty2) ->
-      Format.fprintf fmt "%a@ %a %a"
-        print_prod ty1
-        Pp.print_times ()
-        print_prod ty2
-    | Fun _ ->
-      in_pp_par print_fun fmt ty
-    | Warped _ ->
-      in_pp_box print_box fmt ty
-
-  and print_fun fmt ty =
-    match ty with
-    | Base _ | Stream _ ->
-      print fmt ty
-    | Prod _ ->
-      in_pp_box print_prod fmt ty
-    | Fun ((Base _ | Stream _ | Warped _ | Prod _) as ty1, ty2) ->
-      Format.fprintf fmt "%a@ %a %a"
-        (in_pp_box print) ty1
-        Pp.print_arr ()
-        print_fun ty2
-    | Fun ((Fun _) as ty1, ty2) ->
-      Format.fprintf fmt "%a@ %a %a"
-        (in_pp_par print_fun) ty1
-        Pp.print_arr ()
-        print_fun ty2
-    | Warped _ ->
-      in_pp_box print_box fmt ty
-
-  and print_box fmt ty =
-    match ty with
-    | Base _ | Stream _ ->
-      print fmt ty
-    | Prod _ ->
-      in_pp_par print_prod fmt ty
-    | Fun _ ->
-      in_pp_par print_fun fmt ty
-    | Warped (ck, ty) ->
-      Format.fprintf fmt "%a@ %a %a"
-        Warp_type.print ck
-        Pp.print_mod ()
-        print_box ty
-  in
+let priority ty =
   match ty with
+  | Base _ | Stream _ ->
+     0
+  | Warped _ ->
+     10
+  | Fun _ ->
+     20
+  | Prod _ ->
+     30
+
+let rec print pri fmt ty =
+  let pri' = priority ty in
+  let print_rec = print pri in
+  let paren = pri < pri' in
+  if paren then Format.fprintf fmt "(@[";
+  begin match ty with
   | Base bty ->
      print_base fmt bty
   | Stream bty ->
-    Format.fprintf fmt "stream %a" print_base bty
-  | Prod _ ->
-    in_pp_box print_prod fmt ty
-  | Fun _ ->
-    in_pp_box print_fun fmt ty
-  | Warped _ ->
-    in_pp_box print_box fmt ty
+     Format.fprintf fmt "stream %a" print_base bty
+  | Prod (ty1, ty2) ->
+     Format.fprintf fmt "@[%a %a@ %a@]"
+       print_rec ty1
+       Pp.print_times ()
+       print_rec ty2;
+  | Fun (ty1, ty2) ->
+     Format.fprintf fmt "@[%a %a@ %a@]"
+       print_rec ty1
+       Pp.print_arr ()
+       print_rec ty2
+  | Warped (p, ty) ->
+     Format.fprintf fmt "@[%a %a@ %a@]"
+       Warp_type.print p
+       Pp.print_mod ()
+       print_rec ty
+  end;
+  if paren then Format.fprintf fmt "@])"
+
+let print =
+  print 500
 
 let rec normalize ty =
   let box p ty =

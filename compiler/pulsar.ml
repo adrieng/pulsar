@@ -13,16 +13,19 @@ let handle_internal_errors f x =
     Format.eprintf "%a@." Parser_error.print_parsing_error err
   | Scoping.Scoping_error err ->
     Format.eprintf "%a@." Scoping.print_scoping_error err
+  | Typing.Typing_error err ->
+    Format.eprintf "%a@." Typing.print_typing_error err
 
 let compiler =
   Parse.pass
   >>> Scoping.pass
+  >>> Typing.pass
 
 let process_pulsar_file filename =
   let ctx = Pass.make_default ~filename in
   let ic = open_in filename in
   let file = Pass.run ~ctx compiler ic in
-  Format.printf "%a@?" Scoped_tree.T.print_file file
+  Format.printf "%a@?" Typed_tree.T.print_file file
 
 let args =
     [

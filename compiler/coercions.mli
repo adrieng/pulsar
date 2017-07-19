@@ -28,3 +28,11 @@ val compare : t -> t -> int
 val equal : t -> t -> bool
 
 val print : Format.formatter -> t -> unit
+
+val invert : invertible -> invertible
+
+exception Ill_typed
+
+val output_type : t -> Type.t -> Type.t
+
+val input_type : t -> Type.t -> Type.t

@@ -1,4 +1,7 @@
-# Minor
+#-*- mode: org -*-
 
-* Utils.compare_both -> Utils.compare_pair
-* Clean up the printing mess in Utils
+* Scoping: disallow duplicate variables in equation blocks
+  e.g., 1 where { x = 2; x = 2; } should be rejected.
+* Allow contravariant subtyping in patterns
+* Implement a rudimentary module system
+* Rename Coercions into Coercion

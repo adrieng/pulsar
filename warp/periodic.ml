@@ -296,6 +296,17 @@ let radj p =
   | Enat.Fin n ->
      push (n - 1) pl
 
+let hyper_prefix p q =
+  max (Word.length p.u) (Word.length q.u)
+
+let hyper_period p q =
+  let len per =
+    match per with
+    | Ext _ -> 1
+    | Pat v -> Word.length v
+  in
+  Utils.lcm (len p.v) (len q.v)
+
 exception FoundOmega of Word.t
 
 let div p q =
@@ -335,9 +346,9 @@ let div p q =
      let u_n = max (Word.length p.u) (Word.length q.u) in
      let prefix, _ = loop Word.empty 0 0 u_n in
      make_extremal ~prefix Zero
-  | Pat p_v, Pat q_v ->
-     let u_n = max (Word.length p.u) (Word.length q.u) in
-     let v_n = Utils.lcm (Word.length p_v) (Word.length q_v) in
+  | Pat _, Pat _ ->
+     let u_n = hyper_prefix p q in
+     let v_n = hyper_period p q in
      let prefix, sum = loop Word.empty 0 0 u_n in
      let ppattern, _ = loop Word.empty sum u_n (u_n + v_n) in
      make_pattern ~prefix ~ppattern
@@ -497,3 +508,14 @@ let compare p q =
   Utils.compare_both
     (Word.compare p.u q.u)
     (fun () -> compare_per p.v q.v)
+
+let ( <= ) p q =
+  let rec loop sum_p sum_q i max =
+    if i >= max
+    then true
+    else
+      let sum_p = Enat.(sum_p + at p i) in
+      let sum_q = Enat.(sum_q + at q i) in
+      (sum_p <= sum_q) && loop sum_p sum_q (i + 1) max
+  in
+  loop (Enat.Fin 0) (Enat.Fin 0) 0 (hyper_prefix p q + hyper_period p q)

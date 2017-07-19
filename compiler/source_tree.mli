@@ -49,6 +49,7 @@ sig
     | EExternal of Name.t
     | ELam of pat * exp
     | EApp of exp * exp
+    | ECons of exp * exp
     | EPair of exp * exp
     | EFst of exp
     | ESnd of exp
@@ -68,6 +69,9 @@ sig
         eq_loc : Loc.loc;
         eq_ann : EquAnnot.t;
       }
+
+  (** Pretty-print a pattern *)
+  val print_pat : Format.formatter -> pat -> unit
 
   (** Pretty-print an expression *)
   val print_exp : Format.formatter -> exp -> unit

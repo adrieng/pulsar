@@ -53,14 +53,19 @@ let loc_of_lexing_pos_pair ~start ~stop =
   make_loc ~fn ~start ~stop
 
 let print_loc fmt { fn; start; stop; }  =
-  Format.fprintf fmt "File \"%s\", from %a to %a"
+  let print_pos_optional_line fmt pos =
+    if pos.lnum = start.lnum
+    then Format.fprintf fmt "%d" pos.cnum
+    else print_pos fmt pos
+  in
+  Format.fprintf fmt "\"%s\", from %a to %a"
     fn
     print_pos start
-    print_pos stop
+    print_pos_optional_line stop
 
 let print_loc_sameline fmt { fn; start; stop; }  =
   if start.lnum <> stop.lnum then invalid_arg "print_loc_sameline";
-  Format.fprintf fmt "File \"%s\", line %d, characters %d-%d"
+  Format.fprintf fmt "\"%s\", line %d, characters %d-%d"
     fn
     start.lnum
     start.cnum

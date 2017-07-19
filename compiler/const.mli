@@ -4,7 +4,6 @@ type op =
   | Minus
   | Times
   | Div
-  | Cons
 
 (** Pretty-print an operator *)
 val print_op : Format.formatter -> op -> unit
@@ -27,3 +26,6 @@ val print_const : Format.formatter -> const -> unit
 
 (** Comparison function for constants a la [Pervasives.compare] *)
 val compare_const : const -> const -> int
+
+(** Compute the type of a constant. *)
+val type_of : const -> Type.t

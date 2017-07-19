@@ -1,7 +1,7 @@
 let rec const (x : int) : stream int =
     x :: (const x) by `0(1)
 
-let rec map (f : int -> int) ((x :: xs) : stream int) =
+let rec map (f : int -> int) ((x :: xs) : stream int) : stream int =
     f x :: (map f xs) by `0(1)
 
 let rec nat : stream int =

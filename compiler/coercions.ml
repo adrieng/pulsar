@@ -110,41 +110,192 @@ let compare c1 c2 =
 let equal c1 c2 =
   compare c1 c2 = 0
 
-type ctx =
-  {
-    in_prod : bool;
-    in_arr : bool;
-  }
-
-let rec print ctx fmt c =
+let priority c =
   match c with
+  | Id | Invertible _ | Delay _ ->
+     0
+  | Warped _ ->
+     10
+  | Arr _ ->
+     20
+  | Prod _ ->
+     30
+  | Seq _ ->
+     40
+
+let rec print pri fmt c =
+  let pri' = priority c in
+  let print = print pri' in
+  let paren = pri < pri' in
+  if paren then Format.fprintf fmt "(@[";
+  begin match c with
   | Id ->
      Format.fprintf fmt "id"
   | Seq (c1, c2) ->
      Format.fprintf fmt "@[%a;@ %a@]"
-       (print ctx) c1
-       (print ctx) c2
+       print c1
+       print c2
   | Arr (c1, c2) ->
      Format.fprintf fmt "@[%a %a@ %a@]"
-       (print ctx) c1
+       (print_under_arr pri) c1
        Pp.print_arr ()
-       (print ctx) c2
+       print c2
   | Prod (c1, c2) ->
      Format.fprintf fmt "@[%a %a@ %a@]"
-       (print ctx) c1
+       print c1
        Pp.print_times ()
-       (print ctx) c2
+       print c2
   | Warped (p, c) ->
-     Format.fprintf fmt "@[%a@ %a %a@]"
+     Format.fprintf fmt "@[%a@ %a (@[<hov>%a@])@]"
        Warp_type.print p
        Pp.print_mod ()
-       (print ctx) c
+       print c
   | Invertible i ->
      print_invertible fmt i
   | Delay (p, q) ->
      Format.fprintf fmt "@[delay %a %a@]"
        Warp_type.print p
        Warp_type.print q
+  end;
+  if paren then Format.fprintf fmt "@])"
+
+and print_under_arr pri fmt c =
+  match c with
+  | Arr _ ->
+     Format.fprintf fmt "(%a)"
+       (print pri) c
+  | _ ->
+     print pri fmt c
 
 let print =
-  print { in_prod = false; in_arr = false; }
+  print 500
+
+let invert i =
+  match i with
+  | Wrap ->
+     Unwrap
+  | Unwrap ->
+     Wrap
+  | Concat (p, q) ->
+     Decat (p, q)
+  | Decat (p, q) ->
+     Concat (p, q)
+  | Dist ->
+     Fact
+  | Fact ->
+     Dist
+  | Infl ->
+     Defl
+  | Defl ->
+     Infl
+
+exception Ill_typed
+
+let get_base ty =
+  match ty with
+  | Type.Base bty ->
+     bty
+  | _ ->
+     raise Ill_typed
+
+let get_fun ty =
+  match ty with
+  | Type.Fun (ty1, ty2) ->
+     ty1, ty2
+  | _ ->
+     raise Ill_typed
+
+let get_prod ty =
+  match ty with
+  | Type.Prod (ty1, ty2) ->
+     ty1, ty2
+  | _ ->
+     raise Ill_typed
+
+let get_warped ty =
+  match ty with
+  | Type.Warped (p, ty) ->
+     p, ty
+  | _ ->
+     raise Ill_typed
+
+let get_warped_check q ty =
+  let p, ty = get_warped ty in
+  if not (Warp_type.equal p q) then raise Ill_typed;
+  ty
+
+let output_type_invertible i ty =
+  match i with
+  | Wrap ->
+     Type.Warped (Warp_type.one, ty)
+  | Unwrap ->
+     get_warped_check Warp_type.one ty
+  | Concat (p, q) ->
+     let ty = get_warped_check p ty in
+     let ty = get_warped_check q ty in
+     Type.Warped (Warp_type.on p q, ty)
+  | Decat (p, q) ->
+     let ty = get_warped_check (Warp_type.on p q) ty in
+     Type.Warped (p, Type.Warped (q, ty))
+  | Dist ->
+     let p, ty = get_warped ty in
+     let ty1, ty2 = get_prod ty in
+     Type.(Prod (Warped (p, ty1), Warped (p, ty2)))
+  | Fact ->
+     let ty1, ty2 = get_prod ty in
+     let p, ty1 = get_warped ty1 in
+     let q, ty2 = get_warped ty2 in
+     Type.(Prod (Warped (p, ty1), Warped (p, ty2)))
+  | Infl ->
+     ignore @@ get_base ty;
+     Type.Warped (Warp_type.omega, ty)
+  | Defl ->
+     let ty = get_warped_check Warp_type.omega ty in
+     ignore @@ get_base ty;
+     ty
+
+let rec output_type c ty =
+  match c with
+  | Id ->
+     ty
+  | Seq (c1, c2) ->
+     output_type c2 (output_type c1 ty)
+  | Arr (c1, c2) ->
+     let ty1', ty2 = get_fun ty in
+     Type.Fun (input_type c1 ty1', output_type c2 ty2)
+  | Prod (c1, c2) ->
+     let ty1, ty2 = get_prod ty in
+     Type.Prod (output_type c1 ty1, output_type c2 ty2)
+  | Warped (p, c) ->
+     let ty = get_warped_check p ty in
+     let ty = output_type c ty in
+     Type.Warped (p, ty)
+  | Invertible i ->
+     output_type_invertible i ty
+  | Delay (p, q) ->
+     let ty = get_warped_check p ty in
+     if not Warp_type.(q <= p) then raise Ill_typed;
+     Type.Warped (q, ty)
+
+and input_type c ty =
+  match c with
+  | Id ->
+     ty
+  | Seq (c1, c2) ->
+     input_type c1 (input_type c2 ty)
+  | Arr (c1, c2) ->
+     let ty1, ty2' = get_fun ty in
+     Type.Fun (output_type c1 ty1, input_type c2 ty2')
+  | Prod (c1, c2) ->
+     let ty1', ty2' = get_prod ty in
+     Type.Prod (input_type c1 ty1', input_type c2 ty2')
+  | Warped (p, c) ->
+     let ty = get_warped_check p ty in
+     let ty = input_type c ty in
+     Type.Warped (p, ty)
+  | Invertible i ->
+     output_type_invertible (invert i) ty
+  | Delay (p, q) ->
+     let ty = get_warped_check q ty in
+     if not Warp_type.(q <= p) then raise Ill_typed;
+     Type.Warped (p, ty)

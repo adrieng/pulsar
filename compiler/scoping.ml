@@ -57,6 +57,8 @@ let rec scope_exp env e =
        S.ELam (p, scope_exp env e)
     | R.EApp (e1, e2) ->
        S.EApp (scope_exp env e1, scope_exp env e2)
+    | R.ECons (e1, e2) ->
+       S.ECons (scope_exp env e1, scope_exp env e2)
     | R.EPair (e1, e2) ->
        S.EPair (scope_exp env e1, scope_exp env e2)
     | R.EFst e ->
@@ -108,8 +110,8 @@ let scope_phrase env phr =
   let env, pd =
     match phr.R.ph_desc with
     | R.PDef { is_rec; body; } ->
-       let env, eq = scope_eq is_rec env body in
-       env, S.PDef { is_rec; body = eq; }
+       let env, body = scope_eq is_rec env body in
+       env, S.PDef { is_rec; body; }
   in
   env,
   {
@@ -118,7 +120,7 @@ let scope_phrase env phr =
     S.ph_ann = ();
   }
 
-let scope ctx file =
+let scope_file ctx file =
   Ident.reset_ctx ();
   let _, phrases =
     Warp.Utils.mapfold_left scope_phrase E.empty file.R.f_phrases
@@ -132,5 +134,5 @@ let pass =
   Pass.atomic
     ~pp_in:Raw_tree.T.print_file
     ~pp_out:Scoped_tree.T.print_file
-    ~name:"scope"
-    scope
+    ~name:"scoping"
+    scope_file

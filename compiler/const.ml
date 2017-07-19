@@ -3,7 +3,6 @@ type op =
   | Minus
   | Times
   | Div
-  | Cons
 
 let print_op fmt op =
   match op with
@@ -15,8 +14,6 @@ let print_op fmt op =
     Pp.print_times fmt ()
   | Div ->
     Format.fprintf fmt "/"
-  | Cons ->
-    Format.fprintf fmt "::"
 
 let compare_op op1 op2 =
   if op1 == op2 then 0
@@ -27,16 +24,13 @@ let compare_op op1 op2 =
       | Minus -> 1
       | Times -> 2
       | Div -> 3
-      | Cons -> 4
     in
     match op1, op2 with
     | Plus, Plus
     | Minus, Minus
     | Times, Times
     | Div, Div
-    | Cons, Cons->
-      0
-    | (Plus | Minus | Times | Div | Cons), _ ->
+    | (Plus | Minus | Times | Div), _ ->
       Warp.Utils.compare_int (tag_to_int op1) (tag_to_int op2)
 
 let priority op =
@@ -45,8 +39,12 @@ let priority op =
      20
   | Times | Div ->
      30
-  | Cons ->
-     10
+
+let type_of_op op =
+  let intt = Type.Base Type.Int in
+  match op with
+  | Plus | Minus | Times | Div ->
+     Type.(Fun (intt, Fun (intt, intt)))
 
 type const =
   | Lit of Scal.t
@@ -87,3 +85,12 @@ let compare_const c1 c2 =
       Warp.Periodic.compare p1 p2
     | (Lit _ | Op _ | When _ | Merge _), _ ->
       Warp.Utils.compare_int (tag_to_int c1) (tag_to_int c2)
+
+let type_of c =
+  match c with
+  | Lit s ->
+     Type.Base (Scal.type_of s)
+  | Op o ->
+     type_of_op o
+  | When _ | Merge _ ->
+     assert false               (* TODO *)

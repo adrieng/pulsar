@@ -51,3 +51,7 @@ val print_utf8 : bool ref
 include Utils.PrintableOrderedType with type t := t
 
 val quick_normalize : t -> t
+
+(** Extensional order *)
+
+val ( <= ) : t -> t -> bool

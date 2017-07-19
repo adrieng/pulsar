@@ -47,6 +47,9 @@
   let make_lam start stop (p : Raw_tree.T.pat) e =
     make_exp start stop (Raw_tree.T.ELam (p, e))
 
+  let make_cons start stop e1 e2 =
+    make_exp start stop (Raw_tree.T.ECons (e1, e2))
+
   let make_pair start stop e1 e2 =
     make_exp start stop (Raw_tree.T.EPair (e1, e2))
 
@@ -247,7 +250,6 @@ lit:
 | MINUS { Const.Minus }
 | TIMES { Const.Times }
 | DIV { Const.Div }
-| CONS { Const.Cons }
 
 %inline cwhen:
 | WHEN p = pword { Const.When p }
@@ -351,6 +353,9 @@ exp:
 
 | LPAREN e1 = exp COMMA e2 = exp RPAREN
     { make_pair $startpos $endpos e1 e2 }
+| e1 = exp CONS e2 = exp
+    { make_cons $startpos $endpos e1 e2 }
+
 | e = exp WHERE ir = boption(REC) eqs = eqs
     { make_where $startpos $endpos e ir eqs }
 | c = const_exp(paren(const))
