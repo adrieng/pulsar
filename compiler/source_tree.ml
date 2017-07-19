@@ -212,8 +212,8 @@ struct
 
     | EApp (e1, e2) ->
       Format.fprintf fmt "@[<hov 2>%a@ %a@]"
-        print_exp_simple e1
-        print_exp_app e2
+        print_exp_app e1
+        print_exp_simple e2
 
     | ECons (e1, e2) ->
       Format.fprintf fmt "@[<hov>%a ::@ %a@]"
