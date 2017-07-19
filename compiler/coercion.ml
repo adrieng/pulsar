@@ -306,22 +306,37 @@ and input_type c ty =
 
 let rec seq (c1, c2) =
   match c1, c2 with
-  | c1, Seq (c2, c3) ->
+  | Seq (c1, c2), c3 ->
      begin match seq (c2, c3) with
      | Seq (c2, c3) ->
-        seq (seq (c1, c2), c3)
-     | c4 ->
-        seq (c1, c4)
+        Seq (seq (c1, c2), c3)
+     | c2 ->
+        seq (c1, c2)
      end
+
+  | c1, Seq (c2, c3) ->
+     begin match seq (c1, c2) with
+     | Seq (c1, c2) ->
+        Seq (seq (c1, c2), c3)
+     | c1 ->
+        seq (c1, c3)
+     end
+
   | Id, _ ->
      c2
+
   | _, Id ->
      c1
+
   | Prod (c11, c12), Prod (c21, c22) ->
      prod (seq (c11, c21), seq (c12, c22))
 
+  | Arr (c11, c12), Arr (c21, c22) ->
+     arr (seq (c21, c11), seq (c12, c22))
+
   | Invertible i, Invertible i' when equal_invertible i (invert i') ->
      Id
+
   | _ ->
      Seq (c1, c2)
 
@@ -329,6 +344,7 @@ and arr (c1, c2) =
   match c1, c2 with
   | Id, Id ->
      Id
+
   | _ ->
      Arr (c1, c2)
 
@@ -336,6 +352,7 @@ and prod (c1, c2) =
   match c1, c2 with
   | Id, Id ->
      Id
+
   | _ ->
      Prod (c1, c2)
 
@@ -343,8 +360,10 @@ and warped (p, c) =
   match c with
   | Id ->
      Id
+
   | Seq (c1, c2) ->
      seq (warped (p, c1), warped (p, c2))
+
   | _ ->
      Warped (p, c)
 
