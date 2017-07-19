@@ -39,9 +39,6 @@ let equal ck1 ck2 =
 let unit =
   Warp Warp.Periodic.one
 
-let on ck1 ck2 =
-  On (ck1, ck2)
-
 let make p =
   Warp p
 
@@ -50,6 +47,12 @@ let one =
 
 let omega =
   Warp Warp.Periodic.omega
+
+let on ck1 ck2 =
+  let res = On (ck1, ck2) in
+  if equal ck1 one || equal ck1 omega || equal ck2 one || equal ck2 omega
+  then Warp (normalize res)
+  else res
 
 let ( <= ) p q =
   Warp.Periodic.(normalize p <= normalize q)
