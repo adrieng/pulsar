@@ -278,23 +278,23 @@ lit:
 (* Coercions *)
 
 invertible:
-| WRAP { Coercions.Wrap }
-| UNWRAP { Coercions.Unwrap }
-| CONCAT p = warp_ty q = warp_ty { Coercions.Concat (p, q) }
-| DECAT p = warp_ty q = warp_ty { Coercions.Decat (p, q) }
-| DIST { Coercions.Dist }
-| FACT { Coercions.Fact }
-| INFL { Coercions.Infl }
-| DEFL { Coercions.Defl }
+| WRAP { Coercion.Wrap }
+| UNWRAP { Coercion.Unwrap }
+| CONCAT p = warp_ty q = warp_ty { Coercion.Concat (p, q) }
+| DECAT p = warp_ty q = warp_ty { Coercion.Decat (p, q) }
+| DIST { Coercion.Dist }
+| FACT { Coercion.Fact }
+| INFL { Coercion.Infl }
+| DEFL { Coercion.Defl }
 
 coercion:
-| ID { Coercions.Id }
-| c1 = coercion SEMICOLON c2 = coercion { Coercions.Seq (c1, c2) }
-| c1 = coercion ARR c2 = coercion { Coercions.Arr (c1, c2) }
-| c1 = coercion TIMES c2 = coercion { Coercions.Prod (c1, c2) }
-| p = warp_ty MOD c = coercion { Coercions.Warped (p, c) }
-| i = invertible { Coercions.Invertible i }
-| DELAY p = warp_ty q = warp_ty { Coercions.Delay (p, q) }
+| ID { Coercion.Id }
+| c1 = coercion SEMICOLON c2 = coercion { Coercion.Seq (c1, c2) }
+| c1 = coercion ARR c2 = coercion { Coercion.Arr (c1, c2) }
+| c1 = coercion TIMES c2 = coercion { Coercion.Prod (c1, c2) }
+| p = warp_ty MOD c = coercion { Coercion.Warped (p, c) }
+| i = invertible { Coercion.Invertible i }
+| DELAY p = warp_ty q = warp_ty { Coercion.Delay (p, q) }
 | c = paren(coercion) { c }
 
 ident_coercion:

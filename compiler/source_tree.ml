@@ -68,7 +68,7 @@ sig
     | EConst of Const.const
     | EBy of { body : exp; dr : Warp_type.t; }
     | EAnnot of { exp : exp; kind : annot_kind; annot : Type.t; }
-    | ESub of { ctx : (Id.t * Coercions.t) list; exp : exp; res : Coercions.t; }
+    | ESub of { ctx : (Id.t * Coercion.t) list; exp : exp; res : Coercion.t; }
 
   and eq =
       {
@@ -152,7 +152,7 @@ struct
     | EConst of Const.const
     | EBy of { body : exp; dr : Warp_type.t; }
     | EAnnot of { exp : exp; kind : annot_kind; annot : Type.t; }
-    | ESub of { ctx : (Id.t * Coercions.t) list; exp : exp; res : Coercions.t; }
+    | ESub of { ctx : (Id.t * Coercion.t) list; exp : exp; res : Coercion.t; }
 
   and eq =
       {
@@ -257,7 +257,7 @@ struct
        let print_ident_coercion fmt (id, c) =
          Format.fprintf fmt "(%a <<@ %a)"
            Id.print id
-           Coercions.print c
+           Coercion.print c
        in
        Format.fprintf fmt "@[<v 2>{!@[%a@]@ >> %a@ >> @[%a@]!}@]"
          (pp_list
@@ -265,7 +265,7 @@ struct
             ~pp_sep:pp_comma
             print_ident_coercion) ctx
          print_exp exp
-         Coercions.print res
+         Coercion.print res
 
   and print_exp_simple fmt e =
     match e.e_desc with
@@ -393,13 +393,13 @@ struct
          let compare_ident_coercion (v1, c1) (v2, c2) =
            Warp.Utils.compare_both
              (Id.compare v1 v2)
-             (fun () -> Coercions.compare c1 c2)
+             (fun () -> Coercion.compare c1 c2)
          in
          Warp.Utils.compare_both
            (compare_exp exp1 exp2)
            (fun () ->
              Warp.Utils.compare_both
-               (Coercions.compare res1 res2)
+               (Coercion.compare res1 res2)
                (fun () ->
                  Warp.Utils.compare_list compare_ident_coercion ctx1 ctx2))
       | (EVar _ | EExternal _ | ELam _ | EApp _ | ECons _ | EPair _

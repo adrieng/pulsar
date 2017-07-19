@@ -13,7 +13,7 @@ type infer_kind =
 type typing_error =
   | Type_clash of { expected : expectation; actual : Type.t; loc : Loc.loc; }
   | Cannot_infer of { kind : infer_kind; loc : Loc.loc; }
-  | Cannot_coerce of { ty : Type.t; coe : Coercions.t; loc : Loc.loc; }
+  | Cannot_coerce of { ty : Type.t; coe : Coercion.t; loc : Loc.loc; }
   | Ill_typed_pat of { pat : Scoped_tree.T.pat; expected : Type.t; }
   | Not_a_subtype of { ty1 : Type.t; ty2 : Type.t;
                        clash_ty1 : Type.t; clash_ty2 : Type.t;
