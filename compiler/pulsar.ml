@@ -46,7 +46,8 @@ let process filename =
     Printf.eprintf "%s: don't know what to do with %s\n"
       Sys.argv.(0)
       filename;
-    Arg.usage args usage
+    Arg.usage args usage;
+    exit 1
 
 let _ =
   Arg.parse args (fun s -> files := s :: !files) usage;
