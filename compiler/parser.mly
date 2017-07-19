@@ -167,19 +167,19 @@
 
 %nonassoc SUBTY
 
-%right ARR
-%left PLUS MINUS
-%left TIMES DIV
-%nonassoc MOD
-%right CONS
-
-%left SEMICOLON
-
 %left LAM
 %left WHERE
 %left COLON
 %left APP
 %left WHEN
+
+%left SEMICOLON
+
+%right ARR
+%left PLUS MINUS
+%left TIMES DIV
+%nonassoc MOD
+%right CONS
 
 %%
 

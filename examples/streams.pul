@@ -4,5 +4,11 @@ let rec const (x : int) : stream int =
 let rec map (f : int -> int) ((x :: xs) : stream int) : stream int =
     f x :: (map f xs) by `0(1)
 
+let zero =
+    const 0
+
+let one =
+    map (λ (x : int) ⇒ x + 1) zero
+
 let rec nat : stream int =
-    0 :: map (λ (x : int) ⇒ x + 1) nat
+    0 :: (map (λ (x : int) ⇒ x + 1) nat) by `0(1)
