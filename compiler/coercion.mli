@@ -31,8 +31,22 @@ val print : Format.formatter -> t -> unit
 
 val invert : invertible -> invertible
 
+(** {2 Typing} *)
+
 exception Ill_typed
 
 val output_type : t -> Type.t -> Type.t
 
 val input_type : t -> Type.t -> Type.t
+
+(** {2 Equational theory} *)
+
+val seq : t * t -> t
+
+val arr : t * t -> t
+
+val prod : t * t -> t
+
+val warped : Warp_type.t * t -> t
+
+val delay : Warp_type.t * Warp_type.t -> t

@@ -224,6 +224,8 @@ let get_warped_check q ty =
   if not (Warp_type.equal p q) then raise Ill_typed;
   ty
 
+(* Typing *)
+
 let output_type_invertible i ty =
   match i with
   | Wrap ->
@@ -299,3 +301,54 @@ and input_type c ty =
      let ty = get_warped_check q ty in
      if not Warp_type.(q <= p) then raise Ill_typed;
      Type.Warped (p, ty)
+
+(* Equational theory *)
+
+let rec seq (c1, c2) =
+  match c1, c2 with
+  | c1, Seq (c2, c3) ->
+     begin match seq (c2, c3) with
+     | Seq (c2, c3) ->
+        seq (seq (c1, c2), c3)
+     | c4 ->
+        seq (c1, c4)
+     end
+  | Id, _ ->
+     c2
+  | _, Id ->
+     c1
+  | Prod (c11, c12), Prod (c21, c22) ->
+     prod (seq (c11, c21), seq (c12, c22))
+
+  | Invertible i, Invertible i' when equal_invertible i (invert i') ->
+     Id
+  | _ ->
+     Seq (c1, c2)
+
+and arr (c1, c2) =
+  match c1, c2 with
+  | Id, Id ->
+     Id
+  | _ ->
+     Arr (c1, c2)
+
+and prod (c1, c2) =
+  match c1, c2 with
+  | Id, Id ->
+     Id
+  | _ ->
+     Prod (c1, c2)
+
+and warped (p, c) =
+  match c with
+  | Id ->
+     Id
+  | Seq (c1, c2) ->
+     seq (warped (p, c1), warped (p, c2))
+  | _ ->
+     Warped (p, c)
+
+and delay (p, q) =
+  if Warp_type.equal p q
+  then Id
+  else Delay (p, q)
