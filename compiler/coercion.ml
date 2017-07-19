@@ -340,6 +340,15 @@ let rec seq (c1, c2) =
   | _ ->
      Seq (c1, c2)
 
+and seqs cs =
+  match cs with
+  | [] ->
+     Id
+  | [c] ->
+     c
+  | c :: cs ->
+     seq (c, seqs cs)
+
 and arr (c1, c2) =
   match c1, c2 with
   | Id, Id ->
@@ -357,12 +366,42 @@ and prod (c1, c2) =
      Prod (c1, c2)
 
 and warped (p, c) =
+  let open Warp_type in
   match c with
   | Id ->
      Id
 
   | Seq (c1, c2) ->
      seq (warped (p, c1), warped (p, c2))
+
+  | Prod (c1, c2) ->
+     seqs
+       [
+         Invertible Dist;
+         prod (warped (p, c1), warped (p, c2));
+         Invertible Fact;
+       ]
+
+  | Invertible Wrap ->
+     Invertible (Decat (p, one))
+
+  | Invertible Unwrap ->
+     Invertible (Concat (p, one))
+
+  | Invertible Defl ->
+     seqs
+       [
+         Invertible (Concat (p, omega));
+         Delay (on p omega, p);
+       ]
+
+  | Delay (q, r) ->
+     seqs
+       [
+         Invertible (Concat (p, q));
+         Delay (on p q, on p r);
+         Invertible (Decat (p, r));
+       ]
 
   | _ ->
      Warped (p, c)
@@ -371,3 +410,20 @@ and delay (p, q) =
   if Warp_type.equal p q
   then Id
   else Delay (p, q)
+
+let rec reduce c =
+  match c with
+  | Id ->
+     Id
+  | Seq (c1, c2) ->
+     seq (reduce c1, reduce c2)
+  | Arr (c1, c2) ->
+     arr (reduce c1, reduce c2)
+  | Prod (c1, c2) ->
+     prod (reduce c1, reduce c2)
+  | Warped (p, c) ->
+     warped (p, reduce c)
+  | Invertible i ->
+     Invertible i
+  | Delay (p, q) ->
+     delay (p, q)

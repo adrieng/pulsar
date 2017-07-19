@@ -41,7 +41,11 @@ val input_type : t -> Type.t -> Type.t
 
 (** {2 Equational theory} *)
 
+(** {3 Smart constructors} *)
+
 val seq : t * t -> t
+
+val seqs : t list -> t
 
 val arr : t * t -> t
 
@@ -50,3 +54,7 @@ val prod : t * t -> t
 val warped : Warp_type.t * t -> t
 
 val delay : Warp_type.t * Warp_type.t -> t
+
+(** {3 Coercion reduction} *)
+
+val reduce : t -> t
