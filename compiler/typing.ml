@@ -248,9 +248,9 @@ let div_ctx env p =
     let open Type in
     match ty with
     | Warped (q, ty) ->
-       let p_div_q = Warp_type.div p q in
-       Warped (p_div_q, ty),
-       Coercions.(Invertible (Decat (p, p_div_q)))
+       let q_div_p = Warp_type.div q p in
+       Warped (q_div_p, ty),
+       Coercions.(Invertible (Decat (p, q_div_p)))
     | Prod (ty1, ty2) ->
        let ty1, c1 = div_ty ty1 in
        let ty2, c2 = div_ty ty2 in
