@@ -89,6 +89,13 @@
 
   let make_binop_app e1 e2 e3 =
     Raw_tree.(make_app (make_app e1 e2) e3)
+
+  let rec make_app_l e e_l =
+    match e_l with
+    | [] ->
+       e
+    | e' :: e_l ->
+       make_app_l (Raw_tree.make_app e e') e_l
 %}
 
 %start<Raw_tree.T.file> file
@@ -341,8 +348,8 @@ exp:
     { e }
 | LAM p = pat WARR e = exp %prec LAM
     { make_lam $startpos $endpos p e }
-| e1 = simple_exp e2 = exp %prec APP
-    { Raw_tree.make_app e1 e2 }
+| e = simple_exp e_l = nonempty_list(simple_exp) %prec APP
+    { make_app_l e e_l }
 
 | e1 = exp op = eop e2 = exp
     { make_binop_app op e1 e2 }
