@@ -12,6 +12,14 @@ let rec print fmt ck =
       Pp.print_mod ()
       print ck2
 
+let print fmt ck =
+  match ck with
+  | On _ ->
+     Format.fprintf fmt "(@[%a@])"
+       print ck
+  | _ ->
+     print fmt ck
+
 let rec normalize ck =
   match ck with
   | Warp p ->
