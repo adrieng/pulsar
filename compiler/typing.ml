@@ -203,8 +203,6 @@ let rec simplify_ty ty =
 
 let precedes_coe ~loc ~orig_ty1 ~orig_ty2 ty ty' =
   let not_a_subtype clash_ty1 clash_ty2 =
-    assert (is_simplified clash_ty1);
-    assert (is_simplified clash_ty2);
     not_a_subtype ~ty1:orig_ty1 ~ty2:orig_ty2 ~clash_ty1 ~clash_ty2 loc
   in
   let rec loop ty ty' =
@@ -232,6 +230,8 @@ let precedes_coe ~loc ~orig_ty1 ~orig_ty2 ty ty' =
 let subty_coe ~loc ty1 ty2 =
   let ty1', c1, _ = simplify_ty ty1 in
   let ty2', _, c2' = simplify_ty ty2 in
+  assert (is_simplified ty1');
+  assert (is_simplified ty2');
   let c3 = precedes_coe ~loc ~orig_ty1:ty1 ~orig_ty2:ty2 ty1' ty2' in
   Coercions.(Seq (Seq (c1, c3), c2'))
 
