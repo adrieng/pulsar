@@ -75,7 +75,7 @@ let rec print pri fmt ty =
        print_rec ty2;
   | Fun (ty1, ty2) ->
      Format.fprintf fmt "@[%a %a@ %a@]"
-       print_rec ty1
+       (print (pri' - 1)) ty1
        Pp.print_arr ()
        print_rec ty2
   | Warped (p, ty) ->
