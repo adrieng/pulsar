@@ -97,14 +97,17 @@ let print_typing_error fmt err =
        Type.print expected
   | Not_a_subtype { ty1; ty2; clash_ty1; clash_ty2; loc; } ->
      Format.fprintf fmt
-       "@[<v 2>Type error in %a:@;@[%a@] is not a subtype of @[%a@]"
+       "@[<v 2>Type error in %a:@;@[<hv>%a@;is not a subtype of@;%a@]"
        Loc.print_loc loc
        Type.print ty1
        Type.print ty2;
-     Format.fprintf fmt
-       "@;since @[<hv>%a@;is not a subtype of@;%a@]@]"
-       Type.print clash_ty1
-       Type.print clash_ty2
+     if ty1 <> clash_ty1 || ty2 <> clash_ty2
+     then
+       Format.fprintf fmt
+         "@;since@;@[<hv>%a@;is not a subtype of@;%a@]"
+         Type.print clash_ty1
+         Type.print clash_ty2;
+     Format.fprintf fmt "@]"
 
 (* Utilities *)
 
