@@ -60,7 +60,7 @@ let priority ty =
 
 let rec print pri fmt ty =
   let pri' = priority ty in
-  let print_rec = print pri in
+  let print_rec = print pri' in
   let paren = pri < pri' in
   if paren then Format.fprintf fmt "(@[";
   begin match ty with
