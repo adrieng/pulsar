@@ -13,10 +13,18 @@ let debug = ref false
 
 let debug_lexing = ref false
 
+let debug_parsing = ref false
+
+let debug_scoping = ref false
+
+let debug_typing = ref false
+
 let debug_table =
   [
     "lexing", debug_lexing;
-    "all", debug;
+    "parsing", debug_parsing;
+    "scoping", debug_scoping;
+    "typing", debug_typing;
   ]
 
 let debug_options =
@@ -28,3 +36,10 @@ let set_debug s =
     r := true
   with Not_found ->
     invalid_arg ("set_debug: " ^ s)
+
+let pass_debug s =
+  try
+    let r = List.assoc s debug_table in
+    !r
+  with Not_found ->
+    false

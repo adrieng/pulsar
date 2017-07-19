@@ -40,9 +40,15 @@ let ( >>> ) p1 p2 =
   Seq (p1, p2)
 
 let run_atomic ctx at x =
-  if !Options.debug then Format.eprintf "(* Running pass %s *)@." at.name;
+  if !Options.debug || Options.pass_debug at.name
+  then Format.eprintf "(* Running pass %s *)@." at.name;
   let y = at.body ctx x in
-  if !Options.debug then Format.eprintf "(* Finished running %s *)@." at.name;
+  if !Options.debug || Options.pass_debug at.name
+  then
+    begin
+      Format.eprintf "(* Finished running %s *)@." at.name;
+      Format.eprintf "%a@." at.pp_out y;
+    end;
   y
 
 let run ~ctx p x =
@@ -56,3 +62,21 @@ let run ~ctx p x =
        loop p2 y
   in
   loop p x
+
+let command_line_arguments p =
+  let rec pass_names : type a. a t -> string list =
+    fun p ->
+    match p with
+    | Atomic { name; _ } ->
+       [name]
+    | Seq (p1, p2) ->
+       pass_names p1 @ pass_names p2
+  in
+  [
+    "-debug",
+    Arg.Set Options.debug,
+    " display debugging information";
+    "-debug-pass",
+    Arg.Symbol (pass_names p, Options.set_debug),
+    " display debugging information for pass";
+  ]

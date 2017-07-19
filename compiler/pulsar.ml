@@ -32,10 +32,8 @@ let args =
       "-utf8",
       Arg.Symbol (["yes"; "no"], Options.yes_no Options.pp_utf8),
       " use UTF-8 pretty-printing (default: yes)";
-      "-debug",
-      Arg.Symbol (Options.debug_options, Options.set_debug),
-      " display debugging information";
     ]
+    @ Pass.command_line_arguments compiler
 
 let usage = "pulsar <options> <files>"
 

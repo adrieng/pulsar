@@ -20,3 +20,5 @@ val atomic :
 val ( >>> ) : ('a -> 'b) t -> ('b -> 'c) t -> ('a -> 'c) t
 
 val run : ctx:ctx -> ('a -> 'b) t -> 'a -> 'b
+
+val command_line_arguments : 'a t -> (string * Arg.spec * string) list
