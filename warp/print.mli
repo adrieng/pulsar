@@ -2,9 +2,13 @@ type 'a printer = Format.formatter -> 'a -> unit
 
 val pp_nothing : 'a printer
 
+val pp_space : unit printer
+
 val pp_break : unit printer
 
 val pp_breakable_space : unit printer
+
+val pp_strong_break : unit printer
 
 val pp_comma : unit printer
 

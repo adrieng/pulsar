@@ -162,7 +162,7 @@ let rec print pri fmt c =
 and print_under_arr pri fmt c =
   match c with
   | Arr _ ->
-     Format.fprintf fmt "(%a)"
+     Format.fprintf fmt "(@[%a@])"
        (print pri) c
   | _ ->
      print pri fmt c

@@ -255,14 +255,14 @@ struct
 
     | ESub { ctx; exp; res; } ->
        let print_ident_coercion fmt (id, c) =
-         Format.fprintf fmt "(%a <<@ %a)"
+         Format.fprintf fmt "@[<hov 2>%a <<@ %a@]"
            Id.print id
            Coercion.print c
        in
-       Format.fprintf fmt "@[<v 2>{!@[%a@]@ >> %a@ >> @[%a@]!}@]"
+       Format.fprintf fmt "@[<hv 1>{!%a@ >> %a@ >> @[%a@] !}@]"
          (pp_list
-            ~pp_left:pp_breakable_space
-            ~pp_sep:pp_comma
+            ~pp_left:pp_space
+            ~pp_sep:(fun fmt () -> Format.fprintf fmt "@;| ")
             print_ident_coercion) ctx
          print_exp exp
          Coercion.print res

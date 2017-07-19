@@ -5,11 +5,17 @@ type 'a printer = formatter -> 'a -> unit
 let pp_nothing _ _ =
   ()
 
+let pp_space fmt () =
+  Format.fprintf fmt " "
+
 let pp_break fmt () =
   Format.fprintf fmt "@,"
 
 let pp_breakable_space fmt () =
   Format.fprintf fmt "@ "
+
+let pp_strong_break fmt () =
+  Format.fprintf fmt "@;"
 
 let pp_comma fmt () =
   Format.fprintf fmt ",@ "
