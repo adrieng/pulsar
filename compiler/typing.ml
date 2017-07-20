@@ -164,13 +164,13 @@ let rec simplify_ty ty =
     match ty with
     | Base _ ->
        Warped (Warp_type.omega, ty),
-       Invertible Infl,
-       Invertible Defl
+       invertible Infl,
+       invertible Defl
 
     | Stream _ ->
        Warped (Warp_type.one, ty),
-       Invertible Wrap,
-       Invertible Unwrap
+       invertible Wrap,
+       invertible Unwrap
 
     | Prod (ty1, ty2) ->
        let ty1, c11, c12 = simplify_ty ty1 in
@@ -183,14 +183,14 @@ let rec simplify_ty ty =
        let ty1, c11, c12 = simplify_ty ty1 in
        let ty2, c21, c22 = simplify_ty ty2 in
        Warped (Warp_type.one, Fun (ty1, ty2)),
-       Coercion.(seq (arr (c12, c21), Invertible Wrap)),
-       Coercion.(seq (Invertible Unwrap, arr (c11, c22)))
+       Coercion.(seq (arr (c12, c21), invertible Wrap)),
+       Coercion.(seq (invertible Unwrap, arr (c11, c22)))
 
     | Warped (p, Prod (ty1, ty2)) ->
        let ty, c1, c2 = simplify_ty (Prod (Warped (p, ty1), Warped (p, ty2))) in
        ty,
-       Coercion.(seq (Invertible Dist, c1)),
-       Coercion.(seq (c2, Invertible Fact))
+       Coercion.(seq (invertible Dist, c1)),
+       Coercion.(seq (c2, invertible Fact))
 
     | Warped (p, ty) ->
        let q, ty, c1, c2 =
@@ -202,8 +202,8 @@ let rec simplify_ty ty =
             assert false
        in
        Warped (Warp_type.on p q, ty),
-       Coercion.(seq (warped (p, c1), Invertible (Concat (p, q)))),
-       Coercion.(seq (Invertible (Decat (p, q)), warped (p, c2)))
+       Coercion.(seq (warped (p, c1), invertible (Concat (p, q)))),
+       Coercion.(seq (invertible (Decat (p, q)), warped (p, c2)))
 
 let precedes_coe ~loc ~orig_ty1 ~orig_ty2 ty ty' =
   let not_a_subtype clash_ty1 clash_ty2 =
@@ -254,7 +254,7 @@ let div_ctx env p =
          seqs
            [
              delay (q, Warp_type.on p q_div_p);
-             Invertible (Decat (p, q_div_p))
+             invertible (Decat (p, q_div_p))
            ]
        )
     | Prod (ty1, ty2) ->

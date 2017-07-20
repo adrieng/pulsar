@@ -53,6 +53,8 @@ val prod : t * t -> t
 
 val warped : Warp_type.t * t -> t
 
+val invertible : invertible -> t
+
 val delay : Warp_type.t * Warp_type.t -> t
 
 (** {3 Coercion reduction} *)

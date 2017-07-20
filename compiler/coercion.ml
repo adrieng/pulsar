@@ -377,34 +377,56 @@ and warped (p, c) =
   | Prod (c1, c2) ->
      seqs
        [
-         Invertible Dist;
+         invertible Dist;
          prod (warped (p, c1), warped (p, c2));
-         Invertible Fact;
+         invertible Fact;
        ]
 
-  | Invertible Wrap ->
-     Invertible (Decat (p, one))
-
-  | Invertible Unwrap ->
-     Invertible (Concat (p, one))
+  | Warped (q, c) ->
+     seqs
+       [
+         invertible (Concat (p, q));
+         warped (Warp_type.on p q, c);
+         invertible (Decat (p, q));
+       ]
 
   | Invertible Defl ->
      seqs
        [
-         Invertible (Concat (p, omega));
+         invertible (Concat (p, omega));
          Delay (on p omega, p);
        ]
 
   | Delay (q, r) ->
      seqs
        [
-         Invertible (Concat (p, q));
+         invertible (Concat (p, q));
          Delay (on p q, on p r);
-         Invertible (Decat (p, r));
+         invertible (Decat (p, r));
        ]
 
   | _ ->
-     Warped (p, c)
+     if equal p one
+     then seqs [invertible Unwrap; c; invertible Wrap]
+     else Warped (p, c)
+
+and invertible i =
+  let open Warp_type in
+  match i with
+  | Concat (p, q) when equal p one ->
+     Invertible Unwrap
+
+  | Concat (p, q) when equal q one ->
+     warped (p, Invertible Wrap)
+
+  | Decat (p, q) when equal p one ->
+     Invertible Wrap
+
+  | Decat (p, q) when equal q one ->
+     warped (p, Invertible Unwrap)
+
+  | _ ->
+     Invertible i
 
 and delay (p, q) =
   if Warp_type.equal p q
@@ -424,6 +446,6 @@ let rec reduce c =
   | Warped (p, c) ->
      warped (p, reduce c)
   | Invertible i ->
-     Invertible i
+     invertible i
   | Delay (p, q) ->
      delay (p, q)
