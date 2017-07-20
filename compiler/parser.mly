@@ -76,6 +76,9 @@
   let make_where start stop body block =
     make_exp start stop (Raw_tree.T.EWhere { body; block; })
 
+  let make_let start stop block body =
+    make_exp start stop (Raw_tree.T.ELet { block; body; })
+
   let make_extremal_or_pattern prefix ppattern =
     (* This is where we distinguish 0 the extremal pattern from 0 the integer.
        This cannot be done cleanly in the lexer. *)
@@ -146,6 +149,7 @@
 %token CONS
 %token BY
 %token LET
+%token IN
 %token VAL
 %token BOOL
 %token CHAR
@@ -183,6 +187,7 @@
 %nonassoc SUBTY
 
 %left LAM
+%nonassoc LET
 %left WHERE
 %left COLON
 %left WHEN
@@ -382,6 +387,8 @@ exp:
 | e1 = exp CONS e2 = exp
     { make_cons $startpos $endpos e1 e2 }
 
+| LET block = block IN e = exp %prec LET
+    { make_let $startpos $endpos block e }
 | e = exp WHERE block = block
     { make_where $startpos $endpos e block }
 | c = const_exp(paren(const))

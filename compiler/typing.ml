@@ -450,6 +450,11 @@ let rec type_exp env e =
        let e, _, t2 = inv_prod e in
        t2, T.ESnd e
 
+    | S.ELet { block; body; } ->
+       let env, block = type_block env block in
+       let body = type_exp env body in
+       e_ty body, T.ELet { block; body; }
+
     | S.EWhere { body; block; } ->
        let env, block = type_block env block in
        let body = type_exp env body in

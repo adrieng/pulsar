@@ -65,6 +65,9 @@ let rec scope_exp env e =
        S.EFst (scope_exp env e)
     | R.ESnd e ->
        S.ESnd (scope_exp env e)
+    | R.ELet { block; body; } ->
+       let env, block = scope_block env block in
+       S.ELet { block; body = scope_exp env body; }
     | R.EWhere { body; block; } ->
        let env, block = scope_block env block in
        S.EWhere { body = scope_exp env body; block; }

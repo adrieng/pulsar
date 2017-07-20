@@ -29,7 +29,7 @@ module Vars(T : Source_tree.Tree with type Id.t = Ident.t) =
       | EFst exp | ESnd exp | EBy { body = exp; _ }
       | EAnnot { exp; _ } | ESub { exp; _ } ->
          free_vars_exp exp
-      | EWhere { body; block; } ->
+      | ELet { block; body; } | EWhere { body; block; } ->
          let locals, vars = free_vars_block block in
          S.union vars (S.diff (free_vars_exp body) locals)
 

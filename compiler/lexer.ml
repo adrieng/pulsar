@@ -38,8 +38,9 @@ type token =
   | CONS
   (* Warp *)
   | BY
-  (* Phrases *)
+  (* Phrases, declarations *)
   | LET
+  | IN
   | VAL
   (* Base types *)
   | BOOL
@@ -134,6 +135,8 @@ let print_token fmt tok =
     Format.fprintf fmt "BY"
   | LET ->
     Format.fprintf fmt "LET"
+  | IN ->
+    Format.fprintf fmt "IN"
   | VAL ->
     Format.fprintf fmt "VAL"
   | MOD ->
@@ -297,6 +300,7 @@ let find_keyword =
         "merge", MERGE;
         "by", BY;
         "let", LET;
+        "in", IN;
         "val", VAL;
         "bool", BOOL;
         "char", CHAR;

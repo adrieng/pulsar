@@ -30,6 +30,7 @@ type token =
   | CONS
   | BY
   | LET
+  | IN
   | VAL
   | BOOL
   | CHAR
