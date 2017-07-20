@@ -66,9 +66,7 @@ let rec scope_exp env e =
     | R.ESnd e ->
        S.ESnd (scope_exp env e)
     | R.EWhere { body; is_rec; eqs; } ->
-       let env, eqs =
-         Warp.Utils.mapfold_left (scope_eq is_rec) env eqs
-       in
+       let env, eqs = scope_eqs is_rec env eqs in
        S.EWhere { body = scope_exp env body; is_rec; eqs; }
     | R.EConst c ->
        S.EConst c
@@ -89,14 +87,11 @@ let rec scope_exp env e =
     S.e_ann = ();
   }
 
-and scope_eq is_rec prev_env eq =
-  let env, lhs = scope_pat prev_env eq.R.eq_lhs in
-  let local_env = if is_rec then env else prev_env in
+and scope_eq env lhs eq =
   let local_env, params =
-    Warp.Utils.mapfold_left scope_pat local_env eq.R.eq_params
+    Warp.Utils.mapfold_left scope_pat env eq.R.eq_params
   in
   let rhs = scope_exp local_env eq.R.eq_rhs in
-  env,
   {
     S.eq_lhs = lhs;
     S.eq_params = params;
@@ -106,11 +101,20 @@ and scope_eq is_rec prev_env eq =
     S.eq_ann = ();
   }
 
+and scope_eqs is_rec env eqs =
+  let new_env, lhss =
+    let add new_env eq = scope_pat new_env eq.R.eq_lhs in
+    Warp.Utils.mapfold_left add env eqs
+  in
+  let env = if is_rec then new_env else env in
+  new_env, List.map2 (scope_eq env) lhss eqs
+
 let scope_phrase env phr =
   let env, pd =
     match phr.R.ph_desc with
     | R.PDef { is_rec; body; } ->
-       let env, body = scope_eq is_rec env body in
+       let env, eqs = scope_eqs is_rec env [body] in
+       let body = Warp.Utils.get_single eqs in
        env, S.PDef { is_rec; body; }
     | R.PDecl { id = s; ty; } ->
        let id = Ident.make_source s in
