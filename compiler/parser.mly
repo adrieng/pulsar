@@ -7,6 +7,13 @@
       Raw_tree.T.f_phrases = phrases;
     }
 
+  let make_decl start stop id ty =
+    {
+      Raw_tree.T.ph_desc = Raw_tree.T.PDecl { id; ty; };
+      Raw_tree.T.ph_loc = Loc.loc_of_lexing_pos_pair ~start ~stop;
+      Raw_tree.T.ph_ann = ();
+    }
+
   let make_def start stop is_rec body =
     {
       Raw_tree.T.ph_desc = Raw_tree.T.PDef { is_rec; body; };
@@ -132,6 +139,7 @@
 %token CONS
 %token BY
 %token LET
+%token VAL
 %token BOOL
 %token CHAR
 %token FLOAT
@@ -380,6 +388,8 @@ exp:
 phrase:
 | LET is_rec = boption(REC) body = eq
     { make_def $startpos $endpos is_rec body }
+| VAL id = IDENT COLON ty = ty
+    { make_decl $startpos $endpos id ty }
 
 file:
 | body = list(phrase) EOF { make_file $startpos body }

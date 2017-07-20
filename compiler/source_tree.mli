@@ -95,6 +95,7 @@ sig
 
   and phr_desc =
     | PDef of { is_rec : bool; body : eq }
+    | PDecl of { id : Id.t; ty : Type.t }
 
   (** Pretty-print a phrase *)
   val print_phr : Format.formatter -> phr -> unit

@@ -538,6 +538,8 @@ let type_phrase env phr =
        let local_env = bind_req_eq env body in
        let env, body = type_eq local_env env body in
        env, eq_ty body, T.PDef { is_rec = true; body; }
+    | S.PDecl { id; ty; } ->
+       E.add id ty env, ty, T.PDecl { id; ty; }
   in
   env,
   {

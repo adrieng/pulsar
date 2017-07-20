@@ -40,6 +40,7 @@ type token =
   | BY
   (* Phrases *)
   | LET
+  | VAL
   (* Base types *)
   | BOOL
   | CHAR
@@ -133,6 +134,8 @@ let print_token fmt tok =
     Format.fprintf fmt "BY"
   | LET ->
     Format.fprintf fmt "LET"
+  | VAL ->
+    Format.fprintf fmt "VAL"
   | MOD ->
     Format.fprintf fmt "MOD (%a)"
       Pp.print_mod ()
@@ -294,6 +297,7 @@ let find_keyword =
         "merge", MERGE;
         "by", BY;
         "let", LET;
+        "val", VAL;
         "bool", BOOL;
         "char", CHAR;
         "float", FLOAT;
@@ -396,6 +400,8 @@ let rec next_token ctx =
     LINT (lexeme_int ctx)
   | float ->
     LFLOAT (lexeme_float ctx)
+
+  | "\\w" | 0x03C9 -> OMEGA
 
   | "<<" -> LLANGLE
   | ">>" -> RRANGLE

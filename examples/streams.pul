@@ -12,3 +12,5 @@ let one =
 
 let rec nat : stream int =
     0 :: (map (λ (x : int) ⇒ x + 1) nat) by `0(1)
+
+val const : `(ω) ⊛ (int → stream int)

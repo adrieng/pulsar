@@ -99,6 +99,7 @@ sig
 
   and phr_desc =
     | PDef of { is_rec : bool; body : eq; }
+    | PDecl of { id : Id.t; ty : Type.t }
 
   val print_phr : Format.formatter -> phr -> unit
 
@@ -426,6 +427,7 @@ struct
 
   and phr_desc =
     | PDef of { is_rec : bool; body : eq }
+    | PDecl of { id : Id.t; ty : Type.t }
 
   let print_phr fmt phr =
     match phr.ph_desc with
@@ -433,16 +435,32 @@ struct
       Format.fprintf fmt "@[let%s %a@]"
         (if is_rec then " rec" else "")
         print_eq body
+    | PDecl { id; ty; } ->
+       Format.fprintf fmt "@[val %a@ : %a@]"
+         Id.print id
+         Type.print ty
 
   let compare_phr phr1 phr2 =
+    let tag_to_int phr =
+      match phr.ph_desc with
+      | PDef _ -> 0
+      | PDecl _ -> 1
+    in
     if phr1 == phr2 then 0
     else
       match phr1.ph_desc, phr2.ph_desc with
-      | PDef { is_rec = r1; body = b1 },
-        PDef { is_rec = r2; body = b2 } ->
+      | PDef { is_rec = r1; body = b1; },
+        PDef { is_rec = r2; body = b2; } ->
          Warp.Utils.compare_both
            (Warp.Utils.compare_bool r1 r2)
            (fun () -> compare_eq b1 b2)
+      | PDecl { id = id1; ty = ty1; },
+        PDecl { id = id2; ty = ty2; } ->
+         Warp.Utils.compare_both
+           (Id.compare id1 id2)
+           (fun () -> Type.compare ty1 ty2)
+      | (PDef _ | PDecl _), _ ->
+         Warp.Utils.compare_int (tag_to_int phr1) (tag_to_int phr2)
 
   type file =
       {
@@ -452,7 +470,13 @@ struct
 
   let print_file fmt { f_name; f_phrases; } =
     Format.fprintf fmt "(* File \"%s\" *)@\n" f_name;
-    List.iter (fun phr -> Format.fprintf fmt "@\n%a@\n" print_phr phr) f_phrases
+    Warp.Print.pp_list
+      ~pp_left:(fun fmt () -> Format.fprintf fmt "@\n")
+      ~pp_sep:(fun fmt () -> Format.fprintf fmt "@\n@\n")
+      print_phr
+      fmt
+      f_phrases;
+    ()
 
   let compare_file
       { f_name = n1; f_phrases = body1; }

@@ -112,6 +112,9 @@ let scope_phrase env phr =
     | R.PDef { is_rec; body; } ->
        let env, body = scope_eq is_rec env body in
        env, S.PDef { is_rec; body; }
+    | R.PDecl { id = s; ty; } ->
+       let id = Ident.make_source s in
+       E.add s id env, S.PDecl { id; ty; }
   in
   env,
   {
