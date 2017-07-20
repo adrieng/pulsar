@@ -15,5 +15,5 @@ let parse_pulsar_file ctx ic =
 let pass =
   Pass.atomic
     ~pp_out:Raw_tree.T.print_file
-    ~name:"parse"
+    ~name:"parsing"
     parse_pulsar_file
