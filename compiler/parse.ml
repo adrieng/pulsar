@@ -7,7 +7,12 @@ let parse_pulsar_file ctx ic =
     then Format.eprintf "%a @?" Lexer.print_token tok;
     tok, start, stop
   in
-  let chk = Parser.Incremental.file Lexing.dummy_pos in
+  let chk =
+    let initial_pos =
+      Lexing.{ pos_fname = filename; pos_lnum = 0; pos_bol = 0; pos_cnum = 0; }
+    in
+    Parser.Incremental.file initial_pos
+  in
   let file = Parser.MenhirInterpreter.loop supplier chk in
   close_in ic;
   file
