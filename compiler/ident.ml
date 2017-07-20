@@ -94,6 +94,15 @@ struct
     Warp.Print.(pp_list
                   ~pp_sep:pp_comma
                   print) fmt l
+
+  let unions ss =
+    let rec loop acc ss =
+      match ss with
+      | [] -> acc
+      | s :: ss ->
+         loop (union acc s) ss
+    in
+    loop empty ss
 end
 
 module Env =
@@ -106,6 +115,10 @@ struct
     List.fold_left (fun env (id, x) -> M.add id x env) M.empty l
 
   let union env1 env2 = M.fold (fun k v env2 -> M.add k v env2) env1 env2
+
+  let trim env set =
+    let add k v env = if Set.mem k set then M.add k v env else env in
+    M.fold add env M.empty
 
   let mapfold f env acc =
     let add k v (env, acc) =

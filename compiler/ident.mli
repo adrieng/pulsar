@@ -45,12 +45,20 @@ val hash : t -> int
 (** Equality testing for idents; fast *)
 val equal : t -> t -> bool
 
+(** Sets of idents with printing *)
+module Set :
+  sig
+    include Set.S with type elt = t
+    val print : Format.formatter -> t -> unit
+  end
+
 (** Extended ident-indexed maps *)
 module Env :
   sig
     include Map.S with type key = t
     val of_assoc_list : (key * 'a) list -> 'a t
     val union : 'a t -> 'a t -> 'a t
+    val trim : 'a t -> Set.t -> 'a t
     val print :
       ?key_val_sep:unit Warp.Print.printer ->
       ?binding_sep:unit Warp.Print.printer ->
@@ -68,13 +76,6 @@ module Env :
       'a t ->
       'b ->
       'a t * 'b
-  end
-
-(** Sets of idents with printing *)
-module Set :
-  sig
-    include Set.S with type elt = t
-    val print : Format.formatter -> t -> unit
   end
 
 (** Pretty-print an identifier. Guaranteed to be injective for all the

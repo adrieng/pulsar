@@ -13,3 +13,5 @@ module T = Source_tree.Make(
     module PhrAnnot = Warp.Utils.PrintableOrderedUnit
   end
 )
+
+module V = Source_tree_utils.Vars(T)
