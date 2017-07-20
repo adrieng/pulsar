@@ -53,7 +53,7 @@ sig
     | EPair of exp * exp
     | EFst of exp
     | ESnd of exp
-    | EWhere of { body : exp; is_rec : bool; eqs : eq list; }
+    | EWhere of { body : exp; block : block; }
     | EConst of Const.const
     | EBy of { body : exp; dr : Warp_type.t; }
     | EAnnot of { exp : exp; kind : annot_kind; annot : Type.t; }
@@ -70,6 +70,14 @@ sig
         eq_ann : EquAnnot.t;
       }
 
+  (** Equation blocks rec? { eq1; ...; eqN } *)
+  and block =
+    {
+      b_rec : bool;
+      b_body : eq list;
+      b_loc : Loc.loc;
+    }
+
   (** Pretty-print a pattern *)
   val print_pat : Format.formatter -> pat -> unit
 
@@ -78,6 +86,9 @@ sig
 
   (** Pretty-print an equation *)
   val print_eq : Format.formatter -> eq -> unit
+
+  (** Pretty-print a block *)
+  val print_block : Format.formatter -> block -> unit
 
   (** Comparison function for expressions a la [Pervasives.compare]. *)
   val compare_exp : exp -> exp -> int
@@ -94,7 +105,7 @@ sig
     }
 
   and phr_desc =
-    | PDef of { is_rec : bool; body : eq }
+    | PDef of block
     | PDecl of { id : Id.t; ty : Type.t }
 
   (** Pretty-print a phrase *)

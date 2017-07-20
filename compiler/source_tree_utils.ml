@@ -29,10 +29,8 @@ module Vars(T : Source_tree.Tree with type Id.t = Ident.t) =
       | EFst exp | ESnd exp | EBy { body = exp; _ }
       | EAnnot { exp; _ } | ESub { exp; _ } ->
          free_vars_exp exp
-      | EWhere { body; is_rec; eqs; } ->
-         let locals = vars_pats (List.map (fun eq -> eq.eq_lhs) eqs) in
-         let vars = free_vars_eqs eqs in
-         let vars = if is_rec then S.diff vars locals else vars in
+      | EWhere { body; block; } ->
+         let locals, vars = free_vars_block block in
          S.union vars (S.diff (free_vars_exp body) locals)
 
     and free_vars_eq { eq_params; eq_rhs; _ } =
@@ -42,4 +40,12 @@ module Vars(T : Source_tree.Tree with type Id.t = Ident.t) =
     and free_vars_eqs eqs =
       let union vars eq = S.union vars @@ free_vars_eq eq in
       List.fold_left union S.empty eqs
+
+    and free_vars_block { b_rec; b_body; } =
+      let locals = vars_pats (List.map (fun eq -> eq.eq_lhs) b_body) in
+      let vars =
+        let union vars eq = S.union vars @@ free_vars_eq eq in
+        List.fold_left union S.empty b_body
+      in
+      locals, if b_rec then S.diff vars locals else vars
   end

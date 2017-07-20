@@ -450,17 +450,10 @@ let rec type_exp env e =
        let e, _, t2 = inv_prod e in
        t2, T.ESnd e
 
-    | S.EWhere { body; is_rec; eqs; } ->
-       let local_env =
-         if is_rec
-         then List.fold_left bind_req_eq env eqs
-         else env
-       in
-       let env, eqs =
-         Warp.Utils.mapfold_left (type_eq local_env) env eqs
-       in
+    | S.EWhere { body; block; } ->
+       let env, block = type_block env block in
        let body = type_exp env body in
-       e_ty body, T.EWhere { body; is_rec; eqs; }
+       e_ty body, T.EWhere { body; block; }
 
     | S.EConst c ->
        Const.type_of c, T.EConst c
@@ -528,24 +521,34 @@ and type_eq local_env env eq =
     T.eq_ann = ty;
   }
 
+and type_block env { S.b_rec; S.b_body; S.b_loc; } =
+  let local_env =
+    if b_rec then List.fold_left bind_req_eq env b_body else env
+  in
+  let env, b_body =
+    Warp.Utils.mapfold_left (type_eq local_env) env b_body
+  in
+  env,
+  {
+    T.b_rec;
+    T.b_body;
+    T.b_loc;
+  }
+
 let type_phrase env phr =
-  let env, ty, pd =
+  let env, pd =
     match phr.S.ph_desc with
-    | S.PDef { is_rec = false; body; } ->
-       let env, body = type_eq env env body in
-       env, eq_ty body, T.PDef { is_rec = false; body; }
-    | S.PDef { is_rec = true; body; } ->
-       let local_env = bind_req_eq env body in
-       let env, body = type_eq local_env env body in
-       env, eq_ty body, T.PDef { is_rec = true; body; }
+    | S.PDef block ->
+       let env, block = type_block env block in
+       env, T.PDef block
     | S.PDecl { id; ty; } ->
-       E.add id ty env, ty, T.PDecl { id; ty; }
+       E.add id ty env, T.PDecl { id; ty; }
   in
   env,
   {
     T.ph_desc = pd;
     T.ph_loc = phr.S.ph_loc;
-    T.ph_ann = ty;
+    T.ph_ann = ();
   }
 
 let type_file ctx file =

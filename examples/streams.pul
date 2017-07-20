@@ -1,32 +1,45 @@
-let rec const (x : int) : stream int =
-    x :: (const x) by `0(1)
+let rec {
+    const (x : int) : stream int =
+          x :: (const x) by `0(1)
+}
 
-let rec map (f : int -> int) ((x :: xs) : stream int) : stream int =
-    f x :: (map f xs) by `0(1)
+let rec {
+    map (f : int -> int) ((x :: xs) : stream int) : stream int =
+        f x :: (map f xs) by `0(1)
+}
 
-let zero =
-    const 0
+let {
+    zero = const 0
+}
 
-let one =
-    map (λ (x : int) ⇒ x + 1) zero
+let {
+    one = map (λ (x : int) ⇒ x + 1) zero
+}
 
-let rec nat : stream int =
-    0 :: (map (λ (x : int) ⇒ x + 1) nat) by `0(1)
+let rec {
+    nat : stream int =
+        0 :: (map (λ (x : int) ⇒ x + 1) nat) by `0(1)
+}
 
 val not : `(ω) ⊛ (bool → bool)
 
-let rec h ((x :: xs) : stream bool) : `(2) ⊛ stream bool =
-    (x :: (not x :: ys) by `0(1)) by `(2)
-       where { ys = (h xs) by `0(1) }
+let rec {
+    h ((x :: xs) : stream bool) : `(2) ⊛ stream bool =
+      (x :: (not x :: ys) by `0(1)) by `(2)
+      where { ys = (h xs) by `0(1) }
+}
 
 val tail : `(ω) ⊛ (stream bool → `0(1) ⊛ stream bool)
 
-let rec thuemorse : stream bool =
-    false :: (tail ys) by `0(2)
-       where { ys = (h thuemorse) by `0(1) }
+let rec {
+    thuemorse : stream bool =
+        false :: (tail ys) by `0(2)
+        where { ys = (h thuemorse) by `0(1) }
+}
 
 val incr : stream int -> stream int
 
-let (nat, pos) = (nat, pos)
-    where rec { nat : `(1 0) ⊛ stream int = (0 :: pos) by `(1 0);
-                pos : `(0 1) ⊛ stream int = (incr nat) by `(0 1) }
+let rec {
+    nat : `(1 0) ⊛ stream int = (0 :: pos) by `(1 0);
+    pos : `(0 1) ⊛ stream int = (incr nat) by `(0 1)
+}

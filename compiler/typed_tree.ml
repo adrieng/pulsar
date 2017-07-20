@@ -10,7 +10,7 @@ module T = Source_tree.Make(
     module PatAnnot = Type
     module ExpAnnot = Type
     module EquAnnot = Type
-    module PhrAnnot = Type
+    module PhrAnnot = Warp.Utils.PrintableOrderedUnit
   end
 )
 

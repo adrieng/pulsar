@@ -64,7 +64,7 @@ sig
     | EPair of exp * exp
     | EFst of exp
     | ESnd of exp
-    | EWhere of { body : exp; is_rec : bool; eqs : eq list; }
+    | EWhere of { body : exp; block : block; }
     | EConst of Const.const
     | EBy of { body : exp; dr : Warp_type.t; }
     | EAnnot of { exp : exp; kind : annot_kind; annot : Type.t; }
@@ -80,11 +80,20 @@ sig
         eq_ann : EquAnnot.t;
       }
 
+  and block =
+    {
+      b_rec : bool;
+      b_body : eq list;
+      b_loc : Loc.loc;
+    }
+
   val print_pat : Format.formatter -> pat -> unit
 
   val print_exp : Format.formatter -> exp -> unit
 
   val print_eq : Format.formatter -> eq -> unit
+
+  val print_block : Format.formatter -> block -> unit
 
   val compare_exp : exp -> exp -> int
 
@@ -98,7 +107,7 @@ sig
     }
 
   and phr_desc =
-    | PDef of { is_rec : bool; body : eq; }
+    | PDef of block
     | PDecl of { id : Id.t; ty : Type.t }
 
   val print_phr : Format.formatter -> phr -> unit
@@ -149,7 +158,7 @@ struct
     | EPair of exp * exp
     | EFst of exp
     | ESnd of exp
-    | EWhere of { body : exp; is_rec : bool; eqs : eq list; }
+    | EWhere of { body : exp; block : block; }
     | EConst of Const.const
     | EBy of { body : exp; dr : Warp_type.t; }
     | EAnnot of { exp : exp; kind : annot_kind; annot : Type.t; }
@@ -164,6 +173,13 @@ struct
         eq_loc : Loc.loc;
         eq_ann : EquAnnot.t;
       }
+
+  and block =
+    {
+      b_rec : bool;
+      b_body : eq list;
+      b_loc : Loc.loc;
+    }
 
   let rec print_pat fmt p =
     match p.p_desc with
@@ -226,11 +242,10 @@ struct
         print_exp e1
         print_exp e2
 
-    | EWhere { body; is_rec; eqs; } ->
-      Format.fprintf fmt "@[%a where%s@ {@[<v 2>%a@]}@]"
+    | EWhere { body; block; } ->
+      Format.fprintf fmt "@[<v 2>%a@ where %a@]"
         print_exp body
-        (if is_rec then " rec" else "")
-        (pp_list ~pp_sep:pp_semicolon print_eq) eqs
+        print_block block
 
     | EFst e ->
       Format.fprintf fmt "@[fst@ %a@]"
@@ -300,6 +315,11 @@ struct
       print_res_ty eq_ty
       print_exp eq_rhs
 
+  and print_block fmt { b_rec; b_body; } =
+    Format.fprintf fmt "%s{@[%a@]}"
+        (if b_rec then "rec " else "")
+        Warp.Print.(pp_list ~pp_sep:pp_semicolon print_eq) b_body
+
   let rec compare_pat (p1 : pat) (p2 : pat) =
     if p1 == p2 then 0
     else
@@ -364,14 +384,11 @@ struct
            (fun () -> compare_exp e2 e2')
       | EFst e, EFst e' | ESnd e, ESnd e' ->
         compare_exp e e'
-      | EWhere { body = e1; is_rec = r1; eqs = eqs1; },
-        EWhere { body = e2; is_rec = r2; eqs = eqs2; } ->
+      | EWhere { body = e1; block = b1; },
+        EWhere { body = e2; block = b2; } ->
         Warp.Utils.compare_both
-          (Warp.Utils.compare_bool r1 r2)
-          (fun () ->
-            Warp.Utils.compare_both
-              (compare_exp e1 e2)
-              (fun () -> Warp.Utils.compare_list compare_eq eqs1 eqs2))
+          (compare_exp e1 e2)
+          (fun () -> compare_block b1 b2)
       | EConst c, EConst c' ->
         Const.compare_const c c'
       | EBy { body = e1; dr = p1; },
@@ -418,6 +435,13 @@ struct
           (Warp.Utils.compare_opt Type.compare ty1 ty2)
           (fun () -> compare_exp e1 e2))
 
+  and compare_block
+    { b_rec = r1; b_body = b1; _ }
+    { b_rec = r2; b_body = b2; _ } =
+    Warp.Utils.compare_both
+      (Warp.Utils.compare_bool r1 r2)
+      (fun () -> Warp.Utils.compare_list compare_eq b1 b2)
+
   type phr =
     {
       ph_desc : phr_desc;
@@ -426,15 +450,14 @@ struct
     }
 
   and phr_desc =
-    | PDef of { is_rec : bool; body : eq }
+    | PDef of block
     | PDecl of { id : Id.t; ty : Type.t }
 
   let print_phr fmt phr =
     match phr.ph_desc with
-    | PDef { is_rec; body; } ->
-      Format.fprintf fmt "@[let%s %a@]"
-        (if is_rec then " rec" else "")
-        print_eq body
+    | PDef block ->
+      Format.fprintf fmt "@[let@ %a@]"
+        print_block block
     | PDecl { id; ty; } ->
        Format.fprintf fmt "@[val %a@ : %a@]"
          Id.print id
@@ -449,11 +472,8 @@ struct
     if phr1 == phr2 then 0
     else
       match phr1.ph_desc, phr2.ph_desc with
-      | PDef { is_rec = r1; body = b1; },
-        PDef { is_rec = r2; body = b2; } ->
-         Warp.Utils.compare_both
-           (Warp.Utils.compare_bool r1 r2)
-           (fun () -> compare_eq b1 b2)
+      | PDef b1, PDef b2 ->
+         compare_block b1 b2
       | PDecl { id = id1; ty = ty1; },
         PDecl { id = id2; ty = ty2; } ->
          Warp.Utils.compare_both

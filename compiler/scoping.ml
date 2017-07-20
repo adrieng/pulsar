@@ -65,9 +65,9 @@ let rec scope_exp env e =
        S.EFst (scope_exp env e)
     | R.ESnd e ->
        S.ESnd (scope_exp env e)
-    | R.EWhere { body; is_rec; eqs; } ->
-       let env, eqs = scope_eqs is_rec env eqs in
-       S.EWhere { body = scope_exp env body; is_rec; eqs; }
+    | R.EWhere { body; block; } ->
+       let env, block = scope_block env block in
+       S.EWhere { body = scope_exp env body; block; }
     | R.EConst c ->
        S.EConst c
     | R.EBy { body; dr; } ->
@@ -101,21 +101,25 @@ and scope_eq env lhs eq =
     S.eq_ann = ();
   }
 
-and scope_eqs is_rec env eqs =
+and scope_block env { b_rec; b_body; b_loc; } =
   let new_env, lhss =
     let add new_env eq = scope_pat new_env eq.R.eq_lhs in
-    Warp.Utils.mapfold_left add env eqs
+    Warp.Utils.mapfold_left add env b_body
   in
-  let env = if is_rec then new_env else env in
-  new_env, List.map2 (scope_eq env) lhss eqs
+  let env = if b_rec then new_env else env in
+  new_env,
+  {
+    S.b_rec;
+    S.b_body = List.map2 (scope_eq env) lhss b_body;
+    S.b_loc;
+  }
 
 let scope_phrase env phr =
   let env, pd =
     match phr.R.ph_desc with
-    | R.PDef { is_rec; body; } ->
-       let env, eqs = scope_eqs is_rec env [body] in
-       let body = Warp.Utils.get_single eqs in
-       env, S.PDef { is_rec; body; }
+    | R.PDef block ->
+       let env, block = scope_block env block in
+       env, S.PDef block
     | R.PDecl { id = s; ty; } ->
        let id = Ident.make_source s in
        E.add s id env, S.PDecl { id; ty; }
