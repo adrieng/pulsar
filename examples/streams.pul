@@ -24,3 +24,9 @@ val tail : `(ω) ⊛ (stream bool → `0(1) ⊛ stream bool)
 let rec thuemorse : stream bool =
     false :: (tail ys) by `0(2)
        where { ys = (h thuemorse) by `0(1) }
+
+val incr : stream int -> stream int
+
+let (nat, pos) = (nat, pos)
+    where rec { nat : `(1 0) ⊛ stream int = (0 :: pos) by `(1 0);
+                pos : `(0 1) ⊛ stream int = (incr nat) by `(0 1) }
