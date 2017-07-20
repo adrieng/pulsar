@@ -250,7 +250,13 @@ let div_ctx env p =
     | Warped (q, ty) ->
        let q_div_p = Warp_type.div q p in
        Warped (q_div_p, ty),
-       Coercion.(Invertible (Decat (p, q_div_p)))
+       Coercion.(
+         seqs
+           [
+             delay (q, Warp_type.on p q_div_p);
+             Invertible (Decat (p, q_div_p))
+           ]
+       )
     | Prod (ty1, ty2) ->
        let ty1, c1 = div_ty ty1 in
        let ty2, c2 = div_ty ty2 in
