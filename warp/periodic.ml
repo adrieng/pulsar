@@ -516,6 +516,6 @@ let ( <= ) p q =
     else
       let sum_p = Enat.(sum_p + at p i) in
       let sum_q = Enat.(sum_q + at q i) in
-      (sum_p <= sum_q) && loop sum_p sum_q (i + 1) max
+      Enat.(sum_p <= sum_q) && loop sum_p sum_q (i + 1) max
   in
   loop (Enat.Fin 0) (Enat.Fin 0) 0 (hyper_prefix p q + hyper_period p q)

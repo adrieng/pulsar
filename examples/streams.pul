@@ -14,3 +14,6 @@ let rec nat : stream int =
     0 :: (map (λ (x : int) ⇒ x + 1) nat) by `0(1)
 
 val const : `(ω) ⊛ (int → stream int)
+
+let rec h ((x :: xs) : stream int) : `(2) ⊛ stream int =
+    (const 0) by `(2)
