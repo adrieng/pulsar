@@ -202,6 +202,13 @@
 %inline paren(X):
 | LPAREN x = X RPAREN { x }
 
+%inline brace(X):
+| LBRACE x = X RBRACE { x }
+
+ending_list(SEP, X):
+| x = X; option(SEP) { [x] }
+| x = X; SEP; xs = ending_list(SEP, X) { x :: xs }
+
 (* Periodic warps *)
 
 int:
@@ -209,7 +216,7 @@ int:
 
 singleton_or_brace_tword:
 | i = int { Warp.Word.singleton i }
-| LBRACE w = nonempty_tword RBRACE { w }
+| w = brace(nonempty_tword) { w }
 
 nonempty_tword:
 | l = nonempty_list(singleton_or_brace_tword)
@@ -332,19 +339,17 @@ pat_desc:
 pat:
 | pd = pat_desc { make_pat $startpos $endpos pd }
 
-(* Definitions *)
-
-res_ty:
-| { None }
-| COLON ty = ty { Some ty }
+(* Equations and blocks *)
 
 eq:
-| p = pat params = list(pat) res_ty = res_ty EQUAL e = exp
+| p = pat params = list(pat) res_ty = option(preceded(COLON, ty)) EQUAL e = exp
     { make_eq $startpos $endpos p params res_ty e }
 
 block:
-| is_rec = boption(REC) LBRACE body = separated_list(SEMICOLON, eq) RBRACE
+| is_rec = boption(REC)
+  LBRACE body = ending_list(SEMICOLON, eq) RBRACE
     { make_block $startpos $endpos is_rec body }
+
 (* Expressions *)
 
 simple_exp:
@@ -393,7 +398,7 @@ exp:
     { make_annot $startpos $endpos e kind ty }
 
 phrase:
-| LET block = block
+| block = block
     { make_def $startpos $endpos block }
 | VAL id = IDENT COLON ty = ty
     { make_decl $startpos $endpos id ty }
