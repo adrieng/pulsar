@@ -31,7 +31,7 @@ type token =
   | BY
   | LET
   | IN
-  | VAL
+  | EXTERN
   | BOOL
   | CHAR
   | FLOAT

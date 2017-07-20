@@ -150,7 +150,7 @@
 %token BY
 %token LET
 %token IN
-%token VAL
+%token EXTERN
 %token BOOL
 %token CHAR
 %token FLOAT
@@ -407,7 +407,7 @@ exp:
 phrase:
 | block = block
     { make_def $startpos $endpos block }
-| VAL id = IDENT COLON ty = ty
+| EXTERN id = IDENT COLON ty = ty
     { make_decl $startpos $endpos id ty }
 
 file:

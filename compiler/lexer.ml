@@ -41,7 +41,7 @@ type token =
   (* Phrases, declarations *)
   | LET
   | IN
-  | VAL
+  | EXTERN
   (* Base types *)
   | BOOL
   | CHAR
@@ -137,8 +137,8 @@ let print_token fmt tok =
     Format.fprintf fmt "LET"
   | IN ->
     Format.fprintf fmt "IN"
-  | VAL ->
-    Format.fprintf fmt "VAL"
+  | EXTERN ->
+    Format.fprintf fmt "EXTERN"
   | MOD ->
     Format.fprintf fmt "MOD (%a)"
       Pp.print_mod ()
@@ -301,7 +301,7 @@ let find_keyword =
         "by", BY;
         "let", LET;
         "in", IN;
-        "val", VAL;
+        "extern", EXTERN;
         "bool", BOOL;
         "char", CHAR;
         "float", FLOAT;
