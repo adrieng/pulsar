@@ -390,6 +390,12 @@ and warped (p, c) =
          invertible (Decat (p, q));
        ]
 
+  | Invertible Wrap ->
+     invertible (Decat (p, one))
+
+  | Invertible Unwrap ->
+     invertible (Concat (p, one))
+
   | Invertible Defl ->
      seqs
        [
@@ -416,14 +422,8 @@ and invertible i =
   | Concat (p, q) when equal p one ->
      Invertible Unwrap
 
-  | Concat (p, q) when equal q one ->
-     warped (p, Invertible Wrap)
-
   | Decat (p, q) when equal p one ->
      Invertible Wrap
-
-  | Decat (p, q) when equal q one ->
-     warped (p, Invertible Unwrap)
 
   | _ ->
      Invertible i
