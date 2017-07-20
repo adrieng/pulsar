@@ -5,3 +5,6 @@
 * Allow contravariant subtyping in patterns
 * Implement a rudimentary module system
 * Rework the ugly bits of Warp/{Word,Periodic}
+* Introduce a type of equation blocks in Source_tree
+* Implement auto-scaling of closed terms
+* Implement let bindings

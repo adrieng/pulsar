@@ -13,7 +13,14 @@ let one =
 let rec nat : stream int =
     0 :: (map (λ (x : int) ⇒ x + 1) nat) by `0(1)
 
-val const : `(ω) ⊛ (int → stream int)
+val not : `(ω) ⊛ (bool → bool)
 
-let rec h ((x :: xs) : stream int) : `(2) ⊛ stream int =
-    (const 0) by `(2)
+let rec h ((x :: xs) : stream bool) : `(2) ⊛ stream bool =
+    (x :: (not x :: ys) by `0(1)) by `(2)
+       where { ys = (h xs) by `0(1) }
+
+val tail : `(ω) ⊛ (stream bool → `0(1) ⊛ stream bool)
+
+let rec thuemorse : stream bool =
+    false :: (tail ys) by `0(2)
+       where { ys = (h thuemorse) by `0(1) }
