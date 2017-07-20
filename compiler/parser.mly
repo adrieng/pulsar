@@ -170,7 +170,6 @@
 %left LAM
 %left WHERE
 %left COLON
-%left APP
 %left WHEN
 
 %left SEMICOLON
@@ -348,7 +347,7 @@ exp:
     { e }
 | LAM p = pat WARR e = exp %prec LAM
     { make_lam $startpos $endpos p e }
-| e = simple_exp e_l = nonempty_list(simple_exp) %prec APP
+| e = simple_exp e_l = nonempty_list(simple_exp)
     { make_app_l e e_l }
 
 | e1 = exp op = eop e2 = exp
