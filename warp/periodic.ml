@@ -14,15 +14,12 @@ type t =
 
 (** Printing *)
 
-let print_utf8 =
-  ref true
-
 let print_period fmt per =
   match per with
   | Ext Zero ->
      Format.fprintf fmt "0"
   | Ext Omega ->
-     if !print_utf8
+     if !Warp.Print.utf8_output
      then Format.fprintf fmt "\xCF\x89"
      else Format.fprintf fmt "w"
   | Pat w ->
