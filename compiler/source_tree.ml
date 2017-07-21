@@ -1,25 +1,60 @@
-type annot_kind =
-  | Typing
-  | Subtyping
+module AnnotKind =
+struct
+  type t =
+    | Typing
+    | Subtyping
 
-let print_annot_kind fmt k =
-  match k with
-  | Typing ->
-     Format.fprintf fmt ":"
-  | Subtyping ->
-     Format.fprintf fmt "<:"
-
-let compare_annot_kind k1 k2 =
-  let tag_to_int k =
+  let print fmt k =
     match k with
-    | Typing -> 0
-    | Subtyping -> 1
-  in
-  match k1, k2 with
-  | Typing, Typing | Subtyping, Subtyping ->
-     0
-  | (Typing | Subtyping), _ ->
-     Warp.Utils.compare_int (tag_to_int k1) (tag_to_int k2)
+    | Typing ->
+       Format.fprintf fmt ":"
+    | Subtyping ->
+       Format.fprintf fmt "<:"
+
+  let compare k1 k2 =
+    let tag_to_int k =
+      match k with
+      | Typing -> 0
+      | Subtyping -> 1
+    in
+    match k1, k2 with
+    | Typing, Typing | Subtyping, Subtyping ->
+       0
+    | (Typing | Subtyping), _ ->
+       Warp.Utils.compare_int (tag_to_int k1) (tag_to_int k2)
+end
+
+module BlockKind =
+struct
+
+  type t =
+    | Seq
+    | Par
+    | Rec
+
+  let default =
+    Seq
+
+  let print fmt k =
+    match k with
+    | Seq ->
+       Format.fprintf fmt "seq"
+    | Par ->
+       Format.fprintf fmt "par"
+    | Rec ->
+       Format.fprintf fmt "rec"
+
+  let compare k1 k2 =
+    let tag_to_int k =
+      match k with
+      | Seq -> 0
+      | Par -> 1
+      | Rec -> 2
+    in
+    if k1 = k2
+    then 0
+    else Warp.Utils.compare_int (tag_to_int k1) (tag_to_int k2)
+end
 
 module type Info =
 sig
@@ -68,7 +103,7 @@ sig
     | EWhere of { body : exp; block : block; }
     | EConst of Const.const
     | EBy of { body : exp; dr : Warp_type.t; }
-    | EAnnot of { exp : exp; kind : annot_kind; annot : Type.t; }
+    | EAnnot of { exp : exp; kind : AnnotKind.t; annot : Type.t; }
     | ESub of { ctx : (Id.t * Coercion.t) list; exp : exp; res : Coercion.t; }
 
   and eq =
@@ -83,7 +118,7 @@ sig
 
   and block =
     {
-      b_rec : bool;
+      b_kind : BlockKind.t;
       b_body : eq list;
       b_loc : Loc.loc;
     }
@@ -163,7 +198,7 @@ struct
     | EWhere of { body : exp; block : block; }
     | EConst of Const.const
     | EBy of { body : exp; dr : Warp_type.t; }
-    | EAnnot of { exp : exp; kind : annot_kind; annot : Type.t; }
+    | EAnnot of { exp : exp; kind : AnnotKind.t; annot : Type.t; }
     | ESub of { ctx : (Id.t * Coercion.t) list; exp : exp; res : Coercion.t; }
 
   and eq =
@@ -178,7 +213,7 @@ struct
 
   and block =
     {
-      b_rec : bool;
+      b_kind : BlockKind.t;
       b_body : eq list;
       b_loc : Loc.loc;
     }
@@ -273,7 +308,7 @@ struct
     | EAnnot { exp = e; kind = a; annot = ty; } ->
       Format.fprintf fmt "@[%a@ %a %a@]"
         print_exp e
-        print_annot_kind a
+        AnnotKind.print a
         Type.print ty
 
     | ESub { ctx; exp; res; } ->
@@ -322,10 +357,10 @@ struct
       print_res_ty eq_ty
       print_exp eq_rhs
 
-  and print_block fmt { b_rec; b_body; } =
-    Format.fprintf fmt "%s{@[%a@]}"
-        (if b_rec then "rec " else "")
-        Warp.Print.(pp_list ~pp_sep:pp_semicolon print_eq) b_body
+  and print_block fmt { b_kind; b_body; } =
+    Format.fprintf fmt "%a {@[%a@]}"
+      BlockKind.print b_kind
+      Warp.Print.(pp_list ~pp_sep:pp_semicolon print_eq) b_body
 
   let rec compare_pat (p1 : pat) (p2 : pat) =
     if p1 == p2 then 0
@@ -410,7 +445,7 @@ struct
       | EAnnot { exp = e1; kind = k1; annot = ty1; },
         EAnnot { exp = e2; kind = k2; annot = ty2; } ->
          Warp.Utils.compare_both
-           (compare_annot_kind k1 k2)
+           (AnnotKind.compare k1 k2)
            (fun () ->
              Warp.Utils.compare_both
                (Type.compare ty1 ty2)
@@ -446,10 +481,10 @@ struct
           (fun () -> compare_exp e1 e2))
 
   and compare_block
-    { b_rec = r1; b_body = b1; _ }
-    { b_rec = r2; b_body = b2; _ } =
+    { b_kind = k1; b_body = b1; _ }
+    { b_kind = k2; b_body = b2; _ } =
     Warp.Utils.compare_both
-      (Warp.Utils.compare_bool r1 r2)
+      (BlockKind.compare k1 k2)
       (fun () -> Warp.Utils.compare_list compare_eq b1 b2)
 
   type phr =

@@ -66,9 +66,9 @@
   let make_snd start stop e =
     make_exp start stop (Raw_tree.T.ESnd e)
 
-  let make_block start stop b_rec b_body =
+  let make_block start stop b_kind b_body =
     {
-      Raw_tree.T.b_rec;
+      Raw_tree.T.b_kind;
       Raw_tree.T.b_body;
       Raw_tree.T.b_loc = Loc.loc_of_lexing_pos_pair start stop;
     }
@@ -129,6 +129,8 @@
 %token COMMA
 %token WHERE
 %token REC
+%token PAR
+%token SEQ
 %token LBRACE
 %token RBRACE
 %token DOT
@@ -259,8 +261,14 @@ ty:
 | ty = paren(ty) { ty }
 
 annot_kind:
-| COLON { Source_tree.Typing }
-| SUBTY { Source_tree.Subtyping }
+| COLON { Source_tree.AnnotKind.Typing }
+| SUBTY { Source_tree.AnnotKind.Subtyping }
+
+%inline block_kind:
+| { Source_tree.BlockKind.default }
+| SEQ { Source_tree.BlockKind.Seq }
+| PAR { Source_tree.BlockKind.Par }
+| REC { Source_tree.BlockKind.Rec }
 
 (* Identifiers *)
 
@@ -351,9 +359,9 @@ eq:
     { make_eq $startpos $endpos p params res_ty e }
 
 block:
-| is_rec = boption(REC)
+| block_kind = block_kind
   LBRACE body = ending_list(SEMICOLON, eq) RBRACE
-    { make_block $startpos $endpos is_rec body }
+    { make_block $startpos $endpos block_kind body }
 
 (* Expressions *)
 

@@ -2,6 +2,8 @@ module E = Warp.Utils.Env
 module R = Raw_tree.T
 module S = Scoped_tree.T
 
+(* Error handling *)
+
 type scoping_error =
   | Unbound_identifier of string * Loc.loc
 
@@ -16,6 +18,14 @@ let print_scoping_error fmt err =
      Format.fprintf fmt "Unbound identifier %s at %a"
        id
        Loc.print_loc loc
+
+(* Debugging *)
+
+let print_env fmt env =
+  Format.fprintf fmt "[@[%a@]]"
+    (E.print ~sep:";" Warp.Print.pp_string Ident.print) env
+
+(* Main code *)
 
 let rec scope_pat env p =
   let env, pd =
@@ -104,16 +114,35 @@ and scope_eq env lhs eq =
     S.eq_ann = ();
   }
 
-and scope_block env { b_rec; b_body; b_loc; } =
-  let new_env, lhss =
-    let add new_env eq = scope_pat new_env eq.R.eq_lhs in
-    Warp.Utils.mapfold_left add env b_body
+and scope_block env { b_kind; b_body; b_loc; } =
+  let per_eq_envs, lhss =
+    let add envs eq =
+      let new_env, pat = scope_pat env eq.R.eq_lhs in
+      new_env :: envs, pat
+    in
+    Warp.Utils.mapfold_left add [] b_body
   in
-  let env = if b_rec then new_env else env in
+  let new_env =
+    let merge_right loser winner = E.merge_biased ~winner ~loser in
+    List.fold_left merge_right env per_eq_envs
+  in
+  let per_eq_envs =
+    match b_kind with
+    | Seq ->
+       let add_merge (current_env, per_eq_envs) new_env =
+         let new_env = E.merge_biased ~winner:new_env ~loser:current_env in
+         (new_env, current_env :: per_eq_envs)
+       in
+       List.(rev @@ snd @@ fold_left add_merge (env, []) @@ rev per_eq_envs)
+    | Par ->
+       List.map (fun _ -> env) per_eq_envs
+    | Rec ->
+       List.map (fun _ -> new_env) per_eq_envs
+  in
   new_env,
   {
-    S.b_rec;
-    S.b_body = List.map2 (scope_eq env) lhss b_body;
+    S.b_kind;
+    S.b_body = Warp.Utils.map3 scope_eq per_eq_envs lhss b_body;
     S.b_loc;
   }
 

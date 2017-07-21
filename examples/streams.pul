@@ -2,20 +2,15 @@ rec
 {
     const (x : int) : stream int =
           x :: (const x) by `0(1);
-}
 
-rec
-{
     map (f : int -> int) ((x :: xs) : stream int) : stream int =
         f x :: (map f xs) by `0(1)
 }
 
 {
-    zero = const 0
-}
+    zero = const 0;
 
-{
-    one = map (λ (x : int) ⇒ x + 1) zero
+    one = map (λ (x : int) ⇒ x + 1) zero;
 }
 
 rec

@@ -280,6 +280,9 @@ sig
     'a t ->
     unit
   val disjoint_union : 'a t -> 'a t -> 'a t
+  (** [merge_biased_left ~winner ~loser] merges [winner] and [loser], preferring
+  the bindings in [winner] in case of duplication. *)
+  val merge_biased : winner:'a t -> loser:'a t -> 'a t
 end
 
 module MakeMap(S : Map.OrderedType) : MyMap with type key = S.t =
@@ -308,6 +311,15 @@ struct
       if mem k m2 then raise Non_disjoint else add k v m2
     in
     fold add m1 m2
+
+  let merge_biased ~winner ~loser =
+    let select_left _ v1 v2 =
+      match v1, v2 with
+      | None, _ -> v2
+      | _, None -> v1
+      | Some _, Some _ -> v1
+    in
+    merge select_left winner loser
 end
 
 module OrderedString =

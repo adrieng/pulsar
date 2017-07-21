@@ -37,15 +37,29 @@ module Vars(T : Source_tree.Tree with type Id.t = Ident.t) =
       let locals = vars_pats eq_params in
       S.diff (free_vars_exp eq_rhs) locals
 
-    and free_vars_eqs eqs =
-      let union vars eq = S.union vars @@ free_vars_eq eq in
-      List.fold_left union S.empty eqs
-
-    and free_vars_block { b_rec; b_body; } =
-      let locals = vars_pats (List.map (fun eq -> eq.eq_lhs) b_body) in
-      let vars =
+    and free_vars_block { b_kind; b_body; } =
+      let free_vars_eqs eqs =
         let union vars eq = S.union vars @@ free_vars_eq eq in
-        List.fold_left union S.empty b_body
+        List.fold_left union S.empty eqs
       in
-      locals, if b_rec then S.diff vars locals else vars
+
+      let bound_vars_block () =
+        vars_pats (List.map (fun eq -> eq.eq_lhs) b_body)
+      in
+
+      let open Source_tree.BlockKind in
+      match b_kind with
+      | Seq ->
+         let add_eq (bound, free) eq =
+           let new_bound = vars_pat eq.eq_lhs in
+           S.union bound new_bound, S.diff (free_vars_eq eq) bound
+         in
+         List.fold_left add_eq (S.empty, S.empty) b_body
+
+      | Par ->
+         bound_vars_block (), free_vars_eqs b_body
+
+      | Rec ->
+         let bound_vars = bound_vars_block () in
+         bound_vars, S.diff (free_vars_eqs b_body) bound_vars
   end

@@ -15,6 +15,8 @@ type token =
   (* Local declarations *)
   | WHERE
   | REC
+  | SEQ
+  | PAR
   | LBRACE
   | RBRACE
   | DOT
@@ -94,6 +96,10 @@ let print_token fmt tok =
     Format.fprintf fmt "WHERE"
   | REC ->
     Format.fprintf fmt "REC"
+  | SEQ ->
+    Format.fprintf fmt "SEQ"
+  | PAR ->
+    Format.fprintf fmt "PAR"
   | LBRACE ->
     Format.fprintf fmt "LBRACE"
   | RBRACE ->
@@ -296,6 +302,8 @@ let find_keyword =
       [
         "where", WHERE;
         "rec", REC;
+        "seq", SEQ;
+        "par", PAR;
         "when", WHEN;
         "merge", MERGE;
         "by", BY;

@@ -10,6 +10,8 @@ type token =
   | COMMA
   | WHERE
   | REC
+  | SEQ
+  | PAR
   | LBRACE
   | RBRACE
   | DOT

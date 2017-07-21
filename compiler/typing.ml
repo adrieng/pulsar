@@ -391,7 +391,7 @@ let rec type_pat env p =
     T.p_ann = ty;
   }
 
-let bind_req_eq local_env eq =
+let bind_rec_eq local_env eq =
   let res_ty =
     match eq.S.eq_ty with
     | None -> cannot_infer ~kind:(Eq eq) ~loc:eq.S.eq_loc
@@ -504,7 +504,7 @@ let rec type_exp env e =
     T.e_ann = ty;
   }
 
-and type_eq local_env env eq =
+and type_eq local_env external_env eq =
   let local_env, params =
     Warp.Utils.mapfold_left type_pat local_env eq.S.eq_params
   in
@@ -515,8 +515,8 @@ and type_eq local_env env eq =
     | Some ty -> coerce eq.S.eq_loc rhs ty
   in
   let ty = build_fun_ty (e_ty rhs :: List.rev_map p_ty params) in
-  let env, lhs = expect_pat env eq.S.eq_lhs ty in
-  env,
+  let external_env, lhs = expect_pat external_env eq.S.eq_lhs ty in
+  external_env,
   {
     T.eq_lhs = lhs;
     T.eq_params = params;
@@ -526,16 +526,22 @@ and type_eq local_env env eq =
     T.eq_ann = ty;
   }
 
-and type_block env { S.b_rec; S.b_body; S.b_loc; } =
-  let local_env =
-    if b_rec then List.fold_left bind_req_eq env b_body else env
-  in
+and type_block env { S.b_kind; S.b_body; S.b_loc; } =
   let env, b_body =
-    Warp.Utils.mapfold_left (type_eq local_env) env b_body
+    match b_kind with
+    | Seq ->
+       let type_eq external_env eq = type_eq external_env external_env eq in
+       Warp.Utils.mapfold_left type_eq env b_body
+    | Par ->
+       let type_eq external_env eq = type_eq env external_env eq in
+       Warp.Utils.mapfold_left type_eq env b_body
+    | Rec ->
+       let local_env = List.fold_left bind_rec_eq env b_body in
+       Warp.Utils.mapfold_left (type_eq local_env) env b_body
   in
   env,
   {
-    T.b_rec;
+    T.b_kind;
     T.b_body;
     T.b_loc;
   }

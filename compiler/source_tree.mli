@@ -1,10 +1,23 @@
-type annot_kind =
-  | Typing
-  | Subtyping
+module AnnotKind :
+sig
+  type t =
+    | Typing
+    | Subtyping
 
-val print_annot_kind : Format.formatter -> annot_kind -> unit
+  include Warp.Utils.PrintableOrderedType with type t := t
+end
 
-val compare_annot_kind : annot_kind -> annot_kind -> int
+module BlockKind :
+sig
+  type t =
+    | Seq
+    | Par
+    | Rec
+
+  val default : t
+
+  include Warp.Utils.PrintableOrderedType with type t := t
+end
 
 module type Info =
 sig
@@ -57,7 +70,7 @@ sig
     | EWhere of { body : exp; block : block; }
     | EConst of Const.const
     | EBy of { body : exp; dr : Warp_type.t; }
-    | EAnnot of { exp : exp; kind : annot_kind; annot : Type.t; }
+    | EAnnot of { exp : exp; kind : AnnotKind.t; annot : Type.t; }
     | ESub of { ctx : (Id.t * Coercion.t) list; exp : exp; res : Coercion.t; }
 
   (** Equations "lhs (: ty) = rhs" *)
@@ -71,10 +84,10 @@ sig
         eq_ann : EquAnnot.t;
       }
 
-  (** Equation blocks rec? { eq1; ...; eqN } *)
+  (** Equation blocks kind { eq1; ...; eqN } *)
   and block =
     {
-      b_rec : bool;
+      b_kind : BlockKind.t;
       b_body : eq list;
       b_loc : Loc.loc;
     }
