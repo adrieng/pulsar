@@ -15,9 +15,9 @@ let unbound_identifier id loc =
 let print_scoping_error fmt err =
   match err with
   | Unbound_identifier (id, loc) ->
-     Format.fprintf fmt "Unbound identifier %s at %a"
-       id
+     Format.fprintf fmt "%a: scoping error, unbound identifier %s"
        Loc.print_loc loc
+       id
 
 (* Debugging *)
 

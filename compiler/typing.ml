@@ -74,30 +74,30 @@ let print_typing_error fmt err =
   match err with
   | Type_clash { expected; actual; loc; } ->
      Format.fprintf fmt
-       "@[<v 2>Type error in %a:@;expected a type %a but got %a@]"
+       "@[<hv 2>%a: type error,@;expected a type %a but got %a@]"
        Loc.print_loc loc
        print_expectation expected
        Type.print actual
   | Cannot_infer { kind; loc; } ->
      Format.fprintf fmt
-       "@[<v 2>Type error in %a:@;cannot guess the type of %a@]"
+       "@[<hv 2>%a: type error,@;cannot guess the type of %a@]"
        Loc.print_loc loc
        print_infer_kind kind
   | Cannot_coerce { ty; coe; loc; } ->
      Format.fprintf fmt
-       "@[<v 2>Type error in %a:@;cannot apply coercion %a to @[%a@]@]"
+       "@[<hv 2>%a: type error,@;cannot apply coercion %a to @[%a@]@]"
        Loc.print_loc loc
        Coercion.print coe
        Type.print ty
   | Ill_typed_pat { pat; expected; } ->
      Format.fprintf fmt
-       "@[<v 2>Type error in %a:@;cannot type pattern %a with %a@]"
+       "@[<hv 2>%a: type error,@;cannot type pattern %a with %a@]"
        Loc.print_loc pat.S.p_loc
        S.print_pat pat
        Type.print expected
   | Not_a_subtype { ty1; ty2; clash_ty1; clash_ty2; loc; } ->
      Format.fprintf fmt
-       "@[<v 2>Type error in %a:@;@[<hv>%a@;is not a subtype of@;%a@]"
+       "@[<hv 2>%a: type error,@;@[<hv>%a@;is not a subtype of@;%a@]"
        Loc.print_loc loc
        Type.print ty1
        Type.print ty2;

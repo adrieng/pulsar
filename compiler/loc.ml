@@ -58,10 +58,10 @@ let print_loc fmt { fn; start; stop; }  =
     then Format.fprintf fmt "%d" pos.cnum
     else print_pos fmt pos
   in
-  Format.fprintf fmt "\"%s\", from %a to %a"
+  Format.fprintf fmt "%s %a-%a"
     fn
     print_pos start
-    print_pos_optional_line stop
+    print_pos stop
 
 let print_loc_sameline fmt { fn; start; stop; }  =
   if start.lnum <> stop.lnum then invalid_arg "print_loc_sameline";
