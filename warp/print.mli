@@ -2,6 +2,8 @@ val utf8_output : bool ref
 
 type 'a printer = Format.formatter -> 'a -> unit
 
+val string_of : 'a printer -> 'a -> string
+
 val pp_nothing : 'a printer
 
 val pp_space : unit printer
@@ -25,6 +27,8 @@ val pp_thick_arrow : unit printer
 val pp_circledast : unit printer
 
 val pp_lambda : unit printer
+
+val pp_omega : unit printer
 
 val pp_bool : bool printer
 

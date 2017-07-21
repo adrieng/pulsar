@@ -1,8 +1,13 @@
 open Format
 
-let utf8_output = ref false
+let utf8_output = ref true
 
 type 'a printer = formatter -> 'a -> unit
+
+let string_of pp x =
+  ignore @@ Format.flush_str_formatter ();
+  Format.fprintf Format.str_formatter "%a@?" pp x;
+  Format.flush_str_formatter ()
 
 let pp_nothing _ _ =
   ()
@@ -49,6 +54,11 @@ let pp_lambda fmt () =
   if !utf8_output
   then Format.fprintf fmt "\xCE\xBB"
   else Format.fprintf fmt "\\"
+
+let pp_omega fmt () =
+  if !utf8_output
+  then Format.fprintf fmt "\xCF\x89"
+  else Format.fprintf fmt "\\w"
 
 let pp_bool fmt b =
   Format.fprintf fmt "%b" b

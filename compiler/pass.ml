@@ -73,15 +73,7 @@ let command_line_arguments p =
        pass_names p1 @ pass_names p2
   in
   [
-    "-debug",
-    Arg.Set Options.debug,
-    " display debugging information";
-
     "-debug-pass",
     Arg.Symbol (pass_names p, Options.set_debug),
     " display debugging information for pass";
-
-    "-i",
-    Arg.Set Options.display_types,
-    " display types";
   ]

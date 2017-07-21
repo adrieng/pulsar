@@ -19,9 +19,7 @@ let print_period fmt per =
   | Ext Zero ->
      Format.fprintf fmt "0"
   | Ext Omega ->
-     if !Warp.Print.utf8_output
-     then Format.fprintf fmt "\xCF\x89"
-     else Format.fprintf fmt "w"
+     Print.pp_omega fmt ()
   | Pat w ->
      Word.print fmt w
 

@@ -31,12 +31,8 @@ let process_pulsar_file filename =
   ignore @@ Pass.run ~ctx compiler ic
 
 let args =
-    [
-      "-utf8",
-      Arg.Symbol (["yes"; "no"], Options.yes_no Warp.Print.utf8_output),
-      " use UTF-8 pretty-printing (default: yes)";
-    ]
-    @ Pass.command_line_arguments compiler
+  Options.global_command_line_arguments
+  @ Pass.command_line_arguments compiler
 
 let usage = "pulsar <options> <files>"
 
