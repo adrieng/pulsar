@@ -6,16 +6,25 @@ module S = Scoped_tree.T
 
 type scoping_error =
   | Unbound_identifier of string * Loc.loc
+  | Duplicate_identifier of string * Loc.loc
 
 exception Scoping_error of scoping_error
 
 let unbound_identifier id loc =
   raise (Scoping_error (Unbound_identifier (id, loc)))
 
+let duplicate_identifier id loc =
+  raise (Scoping_error (Duplicate_identifier (id, loc)))
+
 let print_scoping_error fmt err =
   match err with
   | Unbound_identifier (id, loc) ->
      Format.fprintf fmt "%a: scoping error, unbound identifier %s"
+       Loc.print_loc loc
+       id
+  | Duplicate_identifier (id, loc) ->
+     Format.fprintf fmt
+       "%a: scoping error, the identifier %s is bound multiple times in block"
        Loc.print_loc loc
        id
 
@@ -117,14 +126,18 @@ and scope_eq env lhs eq =
 and scope_block env { b_kind; b_body; b_loc; } =
   let per_eq_envs, lhss =
     let add envs eq =
-      let new_env, pat = scope_pat env eq.R.eq_lhs in
+      let new_env, pat = scope_pat E.empty eq.R.eq_lhs in
       new_env :: envs, pat
     in
     Warp.Utils.mapfold_left add [] b_body
   in
   let new_env =
-    let merge_right loser winner = E.merge_biased ~winner ~loser in
-    List.fold_left merge_right env per_eq_envs
+    let merge env1 env2 =
+      try E.disjoint_union env1 env2
+      with E.Non_disjoint id -> duplicate_identifier id b_loc
+    in
+    let new_env = List.fold_left merge E.empty per_eq_envs in
+    E.merge_biased ~winner:new_env ~loser:env
   in
   let per_eq_envs =
     match b_kind with

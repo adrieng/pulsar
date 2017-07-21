@@ -1,5 +1,6 @@
 type scoping_error =
   | Unbound_identifier of string * Loc.loc
+  | Duplicate_identifier of string * Loc.loc
 
 exception Scoping_error of scoping_error
 

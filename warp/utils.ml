@@ -279,6 +279,7 @@ sig
     Format.formatter ->
     'a t ->
     unit
+  exception Non_disjoint of key
   val disjoint_union : 'a t -> 'a t -> 'a t
   (** [merge_biased_left ~winner ~loser] merges [winner] and [loser], preferring
   the bindings in [winner] in case of duplication. *)
@@ -304,11 +305,11 @@ struct
       map;
     Format.fprintf fmt "@]"
 
-  exception Non_disjoint
+  exception Non_disjoint of key
 
   let disjoint_union m1 m2 =
     let add k v m2 =
-      if mem k m2 then raise Non_disjoint else add k v m2
+      if mem k m2 then raise (Non_disjoint k) else add k v m2
     in
     fold add m1 m2
 
