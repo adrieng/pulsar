@@ -44,4 +44,4 @@ let print_interface fmt file =
     (Warp.Print.pp_list
        ~pp_sep:(fun fmt () -> Format.fprintf fmt "@;@;")
        print_binding)
-    (Ident.Env.to_assoc_list file)
+    (Ident.Env.to_list file)

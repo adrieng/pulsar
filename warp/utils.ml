@@ -269,7 +269,7 @@ let rec gcd a b = if b = 0 then a else gcd b (a mod b)
 
 let lcm a b = (a * b) / gcd a b
 
-module type MyMap =
+module type ExtMap =
 sig
   include Map.S
   val print :
@@ -284,9 +284,13 @@ sig
   (** [merge_biased_left ~winner ~loser] merges [winner] and [loser], preferring
   the bindings in [winner] in case of duplication. *)
   val merge_biased : winner:'a t -> loser:'a t -> 'a t
+
+  val to_list : 'a t -> (key * 'a) list
+
+  val of_list : (key * 'a) list -> 'a t
 end
 
-module MakeMap(S : Map.OrderedType) : MyMap with type key = S.t =
+module MakeMap(S : Map.OrderedType) : ExtMap with type key = S.t =
 struct
   module M = Map.Make(S)
   include M
@@ -321,6 +325,12 @@ struct
       | Some _, Some _ -> v1
     in
     merge select_left winner loser
+
+  let of_list l =
+    List.fold_left (fun env (id, x) -> M.add id x env) M.empty l
+
+  let to_list env =
+    fold (fun k v l -> (k, v) :: l) env []
 end
 
 module OrderedString =

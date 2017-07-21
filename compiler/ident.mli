@@ -55,18 +55,8 @@ module Set :
 (** Extended ident-indexed maps *)
 module Env :
   sig
-    include Map.S with type key = t
-    val of_assoc_list : (key * 'a) list -> 'a t
-    val to_assoc_list : 'a t -> (key * 'a) list
-    val union : 'a t -> 'a t -> 'a t
+    include Warp.Utils.ExtMap with type key = t
     val trim : 'a t -> Set.t -> 'a t
-    val print :
-      ?key_val_sep:unit Warp.Print.printer ->
-      ?binding_sep:unit Warp.Print.printer ->
-      (Format.formatter -> 'a -> unit) ->
-      Format.formatter ->
-      'a t ->
-      unit
     val mapfold :
       (key * 'a -> 'b -> (key * 'a) * 'b) ->
       'a t ->
@@ -77,6 +67,7 @@ module Env :
       'a t ->
       'b ->
       'a t * 'b
+    val print : ?sep:string -> 'a Warp.Print.printer -> 'a t Warp.Print.printer
   end
 
 (** Pretty-print an identifier. Guaranteed to be injective for all the
