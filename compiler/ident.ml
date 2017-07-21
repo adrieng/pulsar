@@ -77,11 +77,10 @@ let to_string id =
 let print fmt id = Format.fprintf fmt "%s" (to_string id)
 
 let print_source fmt id =
-  match id.kind with
-  | Source ->
-     Format.fprintf fmt "%s" id.name
-  | Internal ->
-     Format.fprintf fmt "%s" (to_string id)
+  let repr =
+    if id.kind = Source && not !Options.debug then id.name else to_string id
+  in
+  Format.fprintf fmt "%s" repr
 
 module Set =
 struct
