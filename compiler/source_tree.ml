@@ -247,9 +247,9 @@ struct
 
     | ELam (p, e) ->
       Format.fprintf fmt "@[<hov 2>%a %a %a@ %a@]"
-        Pp.print_lam ()
+        Warp.Print.pp_lambda ()
         print_pat p
-        Pp.print_warr ()
+        Warp.Print.pp_thick_arrow ()
         print_exp e
 
     | EApp ({ e_desc =

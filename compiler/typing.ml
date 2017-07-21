@@ -53,10 +53,10 @@ let rec print_expectation fmt e =
      Format.fprintf fmt "(Stream _)"
   | Prod ->
      Format.fprintf fmt "(_ %a _)"
-       Pp.print_times ()
+       Warp.Print.pp_times ()
   | Fun ->
      Format.fprintf fmt "(_ %a _)"
-       Pp.print_arr ()
+       Warp.Print.pp_arrow ()
   | Sub e ->
      Format.fprintf fmt "coercible to %a"
        print_expectation e

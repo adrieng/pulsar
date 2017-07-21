@@ -11,7 +11,7 @@ let print_op fmt op =
   | Minus ->
     Format.fprintf fmt "-"
   | Times ->
-    Pp.print_times fmt ()
+    Warp.Print.pp_times fmt ()
   | Div ->
     Format.fprintf fmt "/"
 

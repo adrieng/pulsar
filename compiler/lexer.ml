@@ -79,13 +79,13 @@ let print_token fmt tok =
     Format.fprintf fmt "MODN [%s]" s
   | LAM ->
     Format.fprintf fmt "LAM (%a)"
-      Pp.print_lam ()
+      Warp.Print.pp_lambda ()
   | ARR ->
     Format.fprintf fmt "ARR (%a)"
-      Pp.print_arr ()
+      Warp.Print.pp_arrow ()
   | WARR ->
     Format.fprintf fmt "WARR (%a)"
-      Pp.print_warr ()
+      Warp.Print.pp_thick_arrow ()
   | LPAREN ->
     Format.fprintf fmt "LPAREN"
   | RPAREN ->
@@ -128,7 +128,7 @@ let print_token fmt tok =
     Format.fprintf fmt "MINUS"
   | TIMES ->
     Format.fprintf fmt "TIMES (%a)"
-      Pp.print_times ()
+      Warp.Print.pp_times ()
   | DIV ->
     Format.fprintf fmt "DIV"
   | WHEN ->
@@ -147,7 +147,7 @@ let print_token fmt tok =
     Format.fprintf fmt "EXTERN"
   | MOD ->
     Format.fprintf fmt "MOD (%a)"
-      Pp.print_mod ()
+      Warp.Print.pp_circledast ()
   | BOOL ->
     Format.fprintf fmt "BOOL"
   | CHAR ->

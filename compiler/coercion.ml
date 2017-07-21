@@ -138,17 +138,17 @@ let rec print pri fmt c =
   | Arr (c1, c2) ->
      Format.fprintf fmt "@[%a %a@ %a@]"
        (print_under_arr pri) c1
-       Pp.print_arr ()
+       Warp.Print.pp_arrow ()
        print c2
   | Prod (c1, c2) ->
      Format.fprintf fmt "@[%a %a@ %a@]"
        print c1
-       Pp.print_times ()
+       Warp.Print.pp_times ()
        print c2
   | Warped (p, c) ->
      Format.fprintf fmt "@[%a@ %a (@[<hov>%a@])@]"
        Warp_type.print p
-       Pp.print_mod ()
+       Warp.Print.pp_circledast ()
        print c
   | Invertible i ->
      print_invertible fmt i

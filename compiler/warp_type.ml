@@ -9,7 +9,7 @@ let rec print fmt ck =
   | On (ck1, ck2) ->
     Format.fprintf fmt "@[%a@ %a %a@]"
       print ck1
-      Pp.print_mod ()
+      Warp.Print.pp_circledast ()
       print ck2
 
 let print fmt ck =

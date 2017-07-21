@@ -71,17 +71,17 @@ let rec print pri fmt ty =
   | Prod (ty1, ty2) ->
      Format.fprintf fmt "@[%a %a@ %a@]"
        print_rec ty1
-       Pp.print_times ()
+       Warp.Print.pp_times ()
        print_rec ty2;
   | Fun (ty1, ty2) ->
      Format.fprintf fmt "@[%a %a@ %a@]"
        (print (pri' - 1)) ty1
-       Pp.print_arr ()
+       Warp.Print.pp_arrow ()
        print_rec ty2
   | Warped (p, ty) ->
      Format.fprintf fmt "@[%a %a@ %a@]"
        Warp_type.print p
-       Pp.print_mod ()
+       Warp.Print.pp_circledast ()
        print_rec ty
   end;
   if paren then Format.fprintf fmt "@])"

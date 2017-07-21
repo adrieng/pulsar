@@ -1,3 +1,5 @@
+val utf8_output : bool ref
+
 type 'a printer = Format.formatter -> 'a -> unit
 
 val pp_nothing : 'a printer
@@ -13,6 +15,16 @@ val pp_strong_break : unit printer
 val pp_comma : unit printer
 
 val pp_semicolon : unit printer
+
+val pp_times : unit printer
+
+val pp_arrow : unit printer
+
+val pp_thick_arrow : unit printer
+
+val pp_circledast : unit printer
+
+val pp_lambda : unit printer
 
 val pp_bool : bool printer
 

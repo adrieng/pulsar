@@ -1,5 +1,7 @@
 open Format
 
+let utf8_output = ref false
+
 type 'a printer = formatter -> 'a -> unit
 
 let pp_nothing _ _ =
@@ -22,6 +24,31 @@ let pp_comma fmt () =
 
 let pp_semicolon fmt () =
   Format.fprintf fmt ";@ "
+
+let pp_times fmt () =
+  if !utf8_output
+  then Format.fprintf fmt "\xC3\x97"
+  else Format.fprintf fmt "*"
+
+let pp_arrow fmt () =
+  if !utf8_output
+  then Format.fprintf fmt "\xE2\x86\x92"
+  else Format.fprintf fmt "->"
+
+let pp_thick_arrow fmt () =
+  if !utf8_output
+  then Format.fprintf fmt "\xE2\x87\x92"
+  else Format.fprintf fmt "=>"
+
+let pp_circledast fmt () =
+  if !utf8_output
+  then Format.fprintf fmt "\xE2\x8A\x9B"
+  else Format.fprintf fmt "<*>"
+
+let pp_lambda fmt () =
+  if !utf8_output
+  then Format.fprintf fmt "\xCE\xBB"
+  else Format.fprintf fmt "\\"
 
 let pp_bool fmt b =
   Format.fprintf fmt "%b" b

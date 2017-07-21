@@ -7,8 +7,6 @@ let yes_no r s =
   | _ ->
     invalid_arg ("yes_no: yes or no expected, got " ^ s)
 
-let pp_utf8 = ref false
-
 let debug = ref false
 
 let debug_lexing = ref false
