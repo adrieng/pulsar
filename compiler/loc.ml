@@ -53,11 +53,6 @@ let loc_of_lexing_pos_pair ~start ~stop =
   make_loc ~fn ~start ~stop
 
 let print_loc fmt { fn; start; stop; }  =
-  let print_pos_optional_line fmt pos =
-    if pos.lnum = start.lnum
-    then Format.fprintf fmt "%d" pos.cnum
-    else print_pos fmt pos
-  in
   Format.fprintf fmt "%s %a-%a"
     fn
     print_pos start
