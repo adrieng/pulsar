@@ -242,7 +242,7 @@ pword:
         { make_extremal_or_pattern u v }
 
 warp_ty:
-| TICK p = pword { Warp_type.make p }
+| TICK p = pword { Warp.Formal.make p }
 
 (* Types *)
 

@@ -1,8 +1,8 @@
 type invertible =
   | Wrap
   | Unwrap
-  | Concat of Warp_type.t * Warp_type.t
-  | Decat of Warp_type.t * Warp_type.t
+  | Concat of Warp.Formal.t * Warp.Formal.t
+  | Decat of Warp.Formal.t * Warp.Formal.t
   | Dist
   | Fact
   | Infl
@@ -13,9 +13,9 @@ type t =
   | Seq of t * t
   | Arr of t * t
   | Prod of t * t
-  | Warped of Warp_type.t * t
+  | Warped of Warp.Formal.t * t
   | Invertible of invertible
-  | Delay of Warp_type.t * Warp_type.t
+  | Delay of Warp.Formal.t * Warp.Formal.t
 
 let compare_invertible i1 i2 =
   let tag_to_int i =
@@ -42,8 +42,8 @@ let compare_invertible i1 i2 =
   | Decat (p1, q1), Decat (p2, q2)
     ->
      Warp.Utils.compare_both
-       (Warp_type.compare p1 p2)
-       (fun () -> Warp_type.compare q1 q2)
+       (Warp.Formal.compare p1 p2)
+       (fun () -> Warp.Formal.compare q1 q2)
   | (Wrap | Unwrap | Concat _ | Decat _ | Dist | Fact | Infl | Defl), _ ->
      Warp.Utils.compare_int (tag_to_int i1) (tag_to_int i2)
 
@@ -58,12 +58,12 @@ let print_invertible fmt i =
      Format.fprintf fmt "unwrap"
   | Concat (p, q) ->
      Format.fprintf fmt "@[concat@ %a@ %a@]"
-       Warp_type.print p
-       Warp_type.print q
+       Warp.Formal.print p
+       Warp.Formal.print q
   | Decat (p, q) ->
      Format.fprintf fmt "@[decat@ %a@ %a@]"
-       Warp_type.print p
-       Warp_type.print q
+       Warp.Formal.print p
+       Warp.Formal.print q
   | Dist ->
      Format.fprintf fmt "dist"
   | Fact ->
@@ -96,14 +96,14 @@ let compare c1 c2 =
        (fun () -> compare c1_2 c2_2)
   | Warped (p1, c1), Warped (p2, c2) ->
      Warp.Utils.compare_both
-       (Warp_type.compare p1 p2)
+       (Warp.Formal.compare p1 p2)
        (fun () -> compare c1 c2)
   | Invertible i1, Invertible i2 ->
      compare_invertible i1 i2
   | Delay (p1, q1), Delay (p2, q2) ->
      Warp.Utils.compare_both
-       (Warp_type.compare p1 p2)
-       (fun () -> Warp_type.compare q1 q2)
+       (Warp.Formal.compare p1 p2)
+       (fun () -> Warp.Formal.compare q1 q2)
   | (Id | Seq _ | Arr _ | Prod _ | Warped _ | Invertible _ | Delay _), _ ->
      Warp.Utils.compare_int (tag_to_int c1) (tag_to_int c2)
 
@@ -147,15 +147,15 @@ let rec print pri fmt c =
        print c2
   | Warped (p, c) ->
      Format.fprintf fmt "@[%a@ %a (@[<hov>%a@])@]"
-       Warp_type.print p
+       Warp.Formal.print p
        Warp.Print.pp_circledast ()
        print c
   | Invertible i ->
      print_invertible fmt i
   | Delay (p, q) ->
      Format.fprintf fmt "@[delay %a %a@]"
-       Warp_type.print p
-       Warp_type.print q
+       Warp.Formal.print p
+       Warp.Formal.print q
   end;
   if paren then Format.fprintf fmt "@])"
 
@@ -221,7 +221,7 @@ let get_warped ty =
 
 let get_warped_check q ty =
   let p, ty = get_warped ty in
-  if not (Warp_type.equal p q) then raise Ill_typed;
+  if not (Warp.Formal.equal p q) then raise Ill_typed;
   ty
 
 (* Typing *)
@@ -229,15 +229,15 @@ let get_warped_check q ty =
 let output_type_invertible i ty =
   match i with
   | Wrap ->
-     Type.Warped (Warp_type.one, ty)
+     Type.Warped (Warp.Formal.one, ty)
   | Unwrap ->
-     get_warped_check Warp_type.one ty
+     get_warped_check Warp.Formal.one ty
   | Concat (p, q) ->
      let ty = get_warped_check p ty in
      let ty = get_warped_check q ty in
-     Type.Warped (Warp_type.on p q, ty)
+     Type.Warped (Warp.Formal.on p q, ty)
   | Decat (p, q) ->
-     let ty = get_warped_check (Warp_type.on p q) ty in
+     let ty = get_warped_check (Warp.Formal.on p q) ty in
      Type.Warped (p, Type.Warped (q, ty))
   | Dist ->
      let p, ty = get_warped ty in
@@ -250,9 +250,9 @@ let output_type_invertible i ty =
      Type.(Prod (Warped (p, ty1), Warped (p, ty2)))
   | Infl ->
      ignore @@ get_base ty;
-     Type.Warped (Warp_type.omega, ty)
+     Type.Warped (Warp.Formal.omega, ty)
   | Defl ->
-     let ty = get_warped_check Warp_type.omega ty in
+     let ty = get_warped_check Warp.Formal.omega ty in
      ignore @@ get_base ty;
      ty
 
@@ -276,7 +276,7 @@ let rec output_type c ty =
      output_type_invertible i ty
   | Delay (p, q) ->
      let ty = get_warped_check p ty in
-     if not Warp_type.(q <= p) then raise Ill_typed;
+     if not Warp.Formal.(q <= p) then raise Ill_typed;
      Type.Warped (q, ty)
 
 and input_type c ty =
@@ -299,7 +299,7 @@ and input_type c ty =
      output_type_invertible (invert i) ty
   | Delay (p, q) ->
      let ty = get_warped_check q ty in
-     if not Warp_type.(q <= p) then raise Ill_typed;
+     if not Warp.Formal.(q <= p) then raise Ill_typed;
      Type.Warped (p, ty)
 
 (* Equational theory *)
@@ -366,7 +366,7 @@ and prod (c1, c2) =
      Prod (c1, c2)
 
 and warped (p, c) =
-  let open Warp_type in
+  let open Warp.Formal in
   match c with
   | Id ->
      Id
@@ -386,7 +386,7 @@ and warped (p, c) =
      seqs
        [
          invertible (Concat (p, q));
-         warped (Warp_type.on p q, c);
+         warped (Warp.Formal.on p q, c);
          invertible (Decat (p, q));
        ]
 
@@ -417,7 +417,7 @@ and warped (p, c) =
      else Warped (p, c)
 
 and invertible i =
-  let open Warp_type in
+  let open Warp.Formal in
   match i with
   | Concat (p, q) when equal p one ->
      Invertible Unwrap
@@ -429,7 +429,7 @@ and invertible i =
      Invertible i
 
 and delay (p, q) =
-  if Warp_type.equal p q
+  if Warp.Formal.equal p q
   then Id
   else Delay (p, q)
 

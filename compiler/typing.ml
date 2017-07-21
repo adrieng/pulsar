@@ -155,12 +155,12 @@ let rec simplify_ty ty =
   else
     match ty with
     | Base _ ->
-       Warped (Warp_type.omega, ty),
+       Warped (Warp.Formal.omega, ty),
        invertible Infl,
        invertible Defl
 
     | Stream _ ->
-       Warped (Warp_type.one, ty),
+       Warped (Warp.Formal.one, ty),
        invertible Wrap,
        invertible Unwrap
 
@@ -174,7 +174,7 @@ let rec simplify_ty ty =
     | Fun (ty1, ty2) ->
        let ty1, c11, c12 = simplify_ty ty1 in
        let ty2, c21, c22 = simplify_ty ty2 in
-       Warped (Warp_type.one, Fun (ty1, ty2)),
+       Warped (Warp.Formal.one, Fun (ty1, ty2)),
        Coercion.(seq (arr (c12, c21), invertible Wrap)),
        Coercion.(seq (invertible Unwrap, arr (c11, c22)))
 
@@ -193,7 +193,7 @@ let rec simplify_ty ty =
          | _ ->
             assert false
        in
-       Warped (Warp_type.on p q, ty),
+       Warped (Warp.Formal.on p q, ty),
        Coercion.(seq (warped (p, c1), invertible (Concat (p, q)))),
        Coercion.(seq (invertible (Decat (p, q)), warped (p, c2)))
 
@@ -215,7 +215,7 @@ let precedes_coe ~loc ~orig_ty1 ~orig_ty2 ty ty' =
          let c1 = loop ty1' ty1 in
          let c2 = loop ty2 ty2' in
          Coercion.arr (c1, c2)
-      | Warped (p, ty), Warped (q, ty') when Warp_type.(q <= p) ->
+      | Warped (p, ty), Warped (q, ty') when Warp.Formal.(q <= p) ->
          let c = loop ty ty' in
          Coercion.(seq (warped (p, c), delay (p, q)))
       | _ ->
@@ -240,12 +240,12 @@ let div_ctx env p =
     let open Type in
     match ty with
     | Warped (q, ty) ->
-       let q_div_p = Warp_type.div q p in
+       let q_div_p = Warp.Formal.div q p in
        Warped (q_div_p, ty),
        Coercion.(
          seqs
            [
-             delay (q, Warp_type.on p q_div_p);
+             delay (q, Warp.Formal.on p q_div_p);
              invertible (Decat (p, q_div_p))
            ]
        )

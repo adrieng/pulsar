@@ -70,7 +70,7 @@ sig
     | ELet of { block : block; body : exp; }
     | EWhere of { body : exp; block : block; }
     | EConst of Const.const
-    | EBy of { body : exp; dr : Warp_type.t; }
+    | EBy of { body : exp; dr : Warp.Formal.t; }
     | EAnnot of { exp : exp; kind : AnnotKind.t; annot : Type.t; }
     | ESub of { ctx : (Id.t * Coercion.t) list; exp : exp; res : Coercion.t; }
 

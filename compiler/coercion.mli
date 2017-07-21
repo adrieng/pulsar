@@ -1,8 +1,8 @@
 type invertible =
   | Wrap
   | Unwrap
-  | Concat of Warp_type.t * Warp_type.t
-  | Decat of Warp_type.t * Warp_type.t
+  | Concat of Warp.Formal.t * Warp.Formal.t
+  | Decat of Warp.Formal.t * Warp.Formal.t
   | Dist
   | Fact
   | Infl
@@ -13,9 +13,9 @@ type t =
   | Seq of t * t
   | Arr of t * t
   | Prod of t * t
-  | Warped of Warp_type.t * t
+  | Warped of Warp.Formal.t * t
   | Invertible of invertible
-  | Delay of Warp_type.t * Warp_type.t
+  | Delay of Warp.Formal.t * Warp.Formal.t
 
 val compare_invertible : invertible -> invertible -> int
 
@@ -51,11 +51,11 @@ val arr : t * t -> t
 
 val prod : t * t -> t
 
-val warped : Warp_type.t * t -> t
+val warped : Warp.Formal.t * t -> t
 
 val invertible : invertible -> t
 
-val delay : Warp_type.t * Warp_type.t -> t
+val delay : Warp.Formal.t * Warp.Formal.t -> t
 
 (** {3 Coercion reduction} *)
 

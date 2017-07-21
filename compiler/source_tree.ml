@@ -102,7 +102,7 @@ sig
     | ELet of { block : block; body : exp; }
     | EWhere of { body : exp; block : block; }
     | EConst of Const.const
-    | EBy of { body : exp; dr : Warp_type.t; }
+    | EBy of { body : exp; dr : Warp.Formal.t; }
     | EAnnot of { exp : exp; kind : AnnotKind.t; annot : Type.t; }
     | ESub of { ctx : (Id.t * Coercion.t) list; exp : exp; res : Coercion.t; }
 
@@ -198,7 +198,7 @@ struct
     | ELet of { block : block; body : exp; }
     | EWhere of { body : exp; block : block; }
     | EConst of Const.const
-    | EBy of { body : exp; dr : Warp_type.t; }
+    | EBy of { body : exp; dr : Warp.Formal.t; }
     | EAnnot of { exp : exp; kind : AnnotKind.t; annot : Type.t; }
     | ESub of { ctx : (Id.t * Coercion.t) list; exp : exp; res : Coercion.t; }
 
@@ -304,7 +304,7 @@ struct
     | EBy { body; dr; } ->
       Format.fprintf fmt "@[%a@ by %a@]"
         print_exp_simple body
-        Warp_type.print dr
+        Warp.Formal.print dr
 
     | EAnnot { exp = e; kind = a; annot = ty; } ->
       Format.fprintf fmt "@[%a@ %a %a@]"
@@ -444,7 +444,7 @@ struct
       | EBy { body = e1; dr = p1; },
         EBy { body = e2; dr = p2; } ->
         Warp.Utils.compare_both
-          (Warp_type.compare p1 p2)
+          (Warp.Formal.compare p1 p2)
           (fun () ->
             compare_exp e1 e2)
       | EAnnot { exp = e1; kind = k1; annot = ty1; },

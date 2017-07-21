@@ -45,7 +45,7 @@ type t =
   | Stream of base
   | Prod of t * t
   | Fun of t * t
-  | Warped of Warp_type.t * t
+  | Warped of Warp.Formal.t * t
 
 let priority ty =
   match ty with
@@ -80,7 +80,7 @@ let rec print pri fmt ty =
        print_rec ty2
   | Warped (p, ty) ->
      Format.fprintf fmt "@[%a %a@ %a@]"
-       Warp_type.print p
+       Warp.Formal.print p
        Warp.Print.pp_circledast ()
        print_rec ty
   end;
@@ -91,7 +91,7 @@ let print =
 
 let rec normalize ty =
   let box p ty =
-    if Warp_type.is_unit p then ty else Warped (p, ty)
+    if Warp.Formal.is_unit p then ty else Warped (p, ty)
   in
 
   let rec push p ty =
@@ -103,10 +103,10 @@ let rec normalize ty =
     | Fun (ty1, ty2) ->
       box p (Fun (normalize ty1, normalize ty2))
     | Warped (p', ty) ->
-      push (Warp_type.on p p') ty
+      push (Warp.Formal.on p p') ty
   in
 
-  push Warp_type.unit ty
+  push Warp.Formal.unit ty
 
 let rec compare ty1 ty2 =
   if ty1 == ty2 then 0
@@ -131,7 +131,7 @@ let rec compare ty1 ty2 =
         (fun () -> compare ty2 ty2')
     | Warped (ck, ty), Warped (ck', ty') ->
       Warp.Utils.compare_both
-        (Warp_type.compare ck ck')
+        (Warp.Formal.compare ck ck')
         (fun () -> compare ty ty')
     | (Base _ | Stream _ | Prod _ | Fun _ | Warped _), _ ->
       Warp.Utils.compare_int (tag_to_int ty1) (tag_to_int ty2)
@@ -141,7 +141,7 @@ let equal ty1 ty2 = compare ty1 ty2 = 0
 let equiv ty1 ty2 = equal (normalize ty1) (normalize ty2)
 
 let later ty =
-  Warped (Warp_type.zero_one, ty)
+  Warped (Warp.Formal.zero_one, ty)
 
 let constant ty =
-  Warped (Warp_type.omega, ty)
+  Warped (Warp.Formal.omega, ty)

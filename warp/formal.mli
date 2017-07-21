@@ -12,9 +12,9 @@ val unit : t
 
 val on : t -> t -> t
 
-val make : Warp.Periodic.t -> t
+val make : Periodic.t -> t
 
-val normalize : t -> Warp.Periodic.t
+val normalize : t -> Periodic.t
 
 (** The warp (1). *)
 val one : t

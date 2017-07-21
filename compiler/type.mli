@@ -21,7 +21,7 @@ type t =
   | Stream of base
   | Prod of t * t
   | Fun of t * t
-  | Warped of Warp_type.t * t
+  | Warped of Warp.Formal.t * t
 
 (** Pretty-print a type *)
 val print : Format.formatter -> t -> unit
