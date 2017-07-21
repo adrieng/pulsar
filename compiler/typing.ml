@@ -588,7 +588,7 @@ let serialize =
     file
   in
   Pass.atomic
-    ~pp_in:T.print_file
-    ~pp_out:T.print_file
+    ~pp_in:Warp.Print.pp_nothing
+    ~pp_out:Warp.Print.pp_nothing
     ~name:"typing_serialize"
     typing_serialize_file
