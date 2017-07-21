@@ -19,6 +19,8 @@ let debug_scoping = ref false
 
 let debug_typing = ref false
 
+let display_types = ref false
+
 let debug_table =
   [
     "lexing", debug_lexing;

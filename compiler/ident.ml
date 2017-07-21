@@ -114,6 +114,9 @@ struct
   let of_assoc_list l =
     List.fold_left (fun env (id, x) -> M.add id x env) M.empty l
 
+  let to_assoc_list env =
+    fold (fun k v l -> (k, v) :: l) env []
+
   let union env1 env2 = M.fold (fun k v env2 -> M.add k v env2) env1 env2
 
   let trim env set =

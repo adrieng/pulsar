@@ -24,3 +24,5 @@ exception Typing_error of typing_error
 val print_typing_error : typing_error Warp.Print.printer
 
 val pass : (Scoped_tree.T.file -> Typed_tree.T.file) Pass.t
+
+val serialize : (Typed_tree.T.file -> Typed_tree.T.file) Pass.t

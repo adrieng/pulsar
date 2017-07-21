@@ -57,6 +57,7 @@ module Env :
   sig
     include Map.S with type key = t
     val of_assoc_list : (key * 'a) list -> 'a t
+    val to_assoc_list : 'a t -> (key * 'a) list
     val union : 'a t -> 'a t -> 'a t
     val trim : 'a t -> Set.t -> 'a t
     val print :

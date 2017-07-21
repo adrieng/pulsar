@@ -563,13 +563,13 @@ let type_phrase env phr =
   }
 
 let type_file ctx file =
-  let _, phrases =
+  let env, phrases =
     Warp.Utils.mapfold_left type_phrase E.empty file.S.f_phrases
   in
   {
     T.f_name = file.S.f_name;
     T.f_phrases = phrases;
-    T.f_annot = ();
+    T.f_annot = env;
   }
 
 let pass =
@@ -578,3 +578,17 @@ let pass =
     ~pp_out:T.print_file
     ~name:"typing"
     type_file
+
+let serialize =
+  let typing_serialize_file _ file =
+    if !Options.display_types
+    then
+      Format.printf "%a@."
+        Typed_tree.print_interface file.T.f_annot;
+    file
+  in
+  Pass.atomic
+    ~pp_in:T.print_file
+    ~pp_out:T.print_file
+    ~name:"typing_serialize"
+    typing_serialize_file

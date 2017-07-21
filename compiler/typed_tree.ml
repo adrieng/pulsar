@@ -11,7 +11,12 @@ module T = Source_tree.Make(
     module ExpAnnot = Type
     module EquAnnot = Type
     module PhrAnnot = Warp.Utils.PrintableOrderedUnit
-    module FileAnnot = Warp.Utils.PrintableOrderedUnit
+    module FileAnnot =
+      struct
+        type t = Type.t Ident.Env.t
+        let print = Ident.Env.print Type.print
+        let compare _ _ = 0
+      end
   end
 )
 
@@ -28,3 +33,15 @@ let coerce_with e c ty =
       e_loc = e.e_loc;
       e_ann = ty;
     }
+
+let print_interface fmt file =
+  let print_binding fmt (k, v) =
+    Format.fprintf fmt "@[val %a@ : %a@]"
+      Ident.print_source k
+      Type.print v
+  in
+  Format.fprintf fmt "@[<v>%a@]"
+    (Warp.Print.pp_list
+       ~pp_sep:(fun fmt () -> Format.fprintf fmt "@;@;")
+       print_binding)
+    (Ident.Env.to_assoc_list file)

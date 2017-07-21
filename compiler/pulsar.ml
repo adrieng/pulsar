@@ -20,6 +20,7 @@ let compiler =
   Parse.pass
   >>> Scoping.pass
   >>> Typing.pass
+  >>> Typing.serialize
 
 let process_pulsar_file filename =
   let ctx = Pass.make_default ~filename in
