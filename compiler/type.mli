@@ -37,3 +37,9 @@ val equal : t -> t -> bool
 
 (** Equivalence testing for tpes w.r.t. reversible tpe laws *)
 val equiv : t -> t -> bool
+
+(** Add the warp equivalent of the later modality *)
+val later : t -> t
+
+(** Add the warp equivalent of the constant modality *)
+val constant : t -> t

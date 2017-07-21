@@ -134,14 +134,6 @@ let build_fun_ty tys =
   | ty :: tys ->
      loop ty tys
 
-let later ty =
-  let w_0_1 =
-    let prefix = Warp.Word.singleton 0 in
-    let ppattern = Warp.Word.singleton 1 in
-    Warp.Periodic.make_pattern ~prefix ~ppattern
-  in
-  Type.Warped (Warp_type.make w_0_1, ty)
-
 (* Coercion and subtyping *)
 
 let rec is_simplified ty =
@@ -348,7 +340,7 @@ let rec expect_pat env p ty =
     | S.PCons (p1, p2) ->
        let bty = get_stream p.S.p_loc ty in
        let env, p1 = expect_pat env p1 (Type.Base bty) in
-       let env, p2 = expect_pat env p2 (later @@ Type.Stream bty) in
+       let env, p2 = expect_pat env p2 Type.(later @@ Stream bty) in
        env, T.PCons (p1, p2)
     | S.PAnnot (p, ty') ->
        if not (Type.equal ty ty')
@@ -377,7 +369,7 @@ let rec type_pat env p =
     | S.PCons (p1, p2) ->
        let env, p1 = type_pat env p1 in
        let bty = get_base p.S.p_loc (p_ty p1) in
-       let env, p2 = expect_pat env p2 (later @@ Type.Stream bty) in
+       let env, p2 = expect_pat env p2 Type.(later @@ Stream bty) in
        env, T.PCons (p1, p2), Type.Stream bty
 
     | S.PAnnot (p, ty) ->
@@ -401,7 +393,7 @@ let bind_rec_eq local_env eq =
     Warp.Utils.mapfold_left type_pat E.empty eq.S.eq_params
   in
   let ty =
-    later (build_fun_ty (res_ty :: List.rev_map p_ty params))
+    Type.later @@ build_fun_ty (res_ty :: List.rev_map p_ty params)
   in
   let local_env, _ = expect_pat local_env eq.S.eq_lhs ty in
   local_env
@@ -432,7 +424,7 @@ let rec type_exp env e =
        let e1 = type_exp env e1 in
        let e1, bt = inv_base e1 in
        let e2 = type_exp env e2 in
-       let e2 = coerce e2 (later @@ Type.Stream bt) in
+       let e2 = coerce e2 Type.(later (Stream bt)) in
        Type.Stream bt, T.ECons (e1, e2)
 
     | S.EPair (e1, e2) ->

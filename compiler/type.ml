@@ -139,3 +139,9 @@ let rec compare ty1 ty2 =
 let equal ty1 ty2 = compare ty1 ty2 = 0
 
 let equiv ty1 ty2 = equal (normalize ty1) (normalize ty2)
+
+let later ty =
+  Warped (Warp_type.zero_one, ty)
+
+let constant ty =
+  Warped (Warp_type.omega, ty)

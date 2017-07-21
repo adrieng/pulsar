@@ -48,6 +48,11 @@ let one =
 let omega =
   Warp Warp.Periodic.omega
 
+let zero_one =
+  let prefix = Warp.Word.singleton 0 in
+  let ppattern = Warp.Word.singleton 1 in
+  Warp (Warp.Periodic.make_pattern ~prefix ~ppattern)
+
 let on ck1 ck2 =
   let res = On (ck1, ck2) in
   if equal ck1 one || equal ck1 omega || equal ck2 one || equal ck2 omega

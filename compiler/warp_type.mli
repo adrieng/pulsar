@@ -16,9 +16,14 @@ val make : Warp.Periodic.t -> t
 
 val normalize : t -> Warp.Periodic.t
 
+(** The warp (1). *)
 val one : t
 
+(** The warp (omega). *)
 val omega : t
+
+(** The warp 0(1). *)
+val zero_one : t
 
 val ( <= ) : t -> t -> bool
 

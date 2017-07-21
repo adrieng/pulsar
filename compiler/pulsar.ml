@@ -16,11 +16,14 @@ let handle_internal_errors f x =
   | Typing.Typing_error err ->
     Format.eprintf "%a@." Typing.print_typing_error err
 
-let compiler =
+let frontend =
   Parse.pass
   >>> Scoping.pass
   >>> Typing.pass
   >>> Typing.serialize
+
+let compiler =
+  frontend
 
 let process_pulsar_file filename =
   let ctx = Pass.make_default ~filename in
