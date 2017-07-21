@@ -91,7 +91,7 @@ let print =
 
 let rec normalize ty =
   let box p ty =
-    if Warp.Formal.is_unit p then ty else Warped (p, ty)
+    if Warp.Formal.(equal p one) then ty else Warped (p, ty)
   in
 
   let rec push p ty =
@@ -106,7 +106,7 @@ let rec normalize ty =
       push (Warp.Formal.on p p') ty
   in
 
-  push Warp.Formal.unit ty
+  push Warp.Formal.one ty
 
 let rec compare ty1 ty2 =
   if ty1 == ty2 then 0

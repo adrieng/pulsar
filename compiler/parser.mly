@@ -84,8 +84,8 @@
     (* This is where we distinguish 0 the extremal pattern from 0 the integer.
        This cannot be done cleanly in the lexer. *)
     if Warp.Word.has_null_weight ppattern
-    then Warp.Periodic.(make_extremal ~prefix Zero)
-    else Warp.Periodic.make_pattern ~prefix ~ppattern
+    then Warp.Periodic.(extremal ~prefix Zero)
+    else Warp.Periodic.pattern ~prefix ~ppattern
 
   let make_const start stop c =
     make_exp start stop (Raw_tree.T.EConst c)
@@ -237,12 +237,12 @@ tword:
 
 pword:
 | u = tword v = paren(OMEGA)
-        { Warp.Periodic.make_extremal ~prefix:u Warp.Periodic.Omega }
+        { Warp.Periodic.extremal ~prefix:u Warp.Periodic.Omega }
 | u = tword v = paren(nonempty_tword)
         { make_extremal_or_pattern u v }
 
 warp_ty:
-| TICK p = pword { Warp.Formal.make p }
+| TICK p = pword { Warp.Formal.periodic p }
 
 (* Types *)
 

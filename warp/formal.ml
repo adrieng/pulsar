@@ -30,28 +30,25 @@ let rec normalize ck =
 let compare ck1 ck2 =
   Periodic.compare (normalize ck1) (normalize ck2)
 
-let is_unit ck =
-  Periodic.is_one (normalize ck)
-
 let equal ck1 ck2 =
   Periodic.equal (normalize ck1) (normalize ck2)
 
-let unit =
-  Warp Periodic.one
-
-let make p =
+let periodic p =
   Warp p
 
+let zero =
+  periodic Periodic.zero
+
 let one =
-  Warp Periodic.one
+  periodic Periodic.one
 
 let omega =
-  Warp Periodic.omega
+  periodic Periodic.omega
 
 let zero_one =
   let prefix = Warp.Word.singleton 0 in
   let ppattern = Warp.Word.singleton 1 in
-  Warp (Periodic.make_pattern ~prefix ~ppattern)
+  periodic (Periodic.pattern ~prefix ~ppattern)
 
 let on ck1 ck2 =
   let res = On (ck1, ck2) in

@@ -2,22 +2,22 @@ type extremal =
   | Zero
   | Omega
 
+type period =
+  | Ext of extremal
+  | Pat of Word.t
+
 type t =
   {
     u : Word.t;
-    v : per;
+    v : period;
   }
-
-and per =
-  | Ext of extremal
-  | Pat of Word.t
 
 (** Printing *)
 
 let print_utf8 =
   ref true
 
-let print_per fmt per =
+let print_period fmt per =
   match per with
   | Ext Zero ->
      Format.fprintf fmt "0"
@@ -31,34 +31,34 @@ let print_per fmt per =
 let print fmt p =
   Format.fprintf fmt "`%a(%a)"
     Word.print p.u
-    print_per p.v
+    print_period p.v
 
 (** Construction and destruction *)
 
-let make_extremal ?(prefix = Word.empty) ext =
+let extremal ?(prefix = Word.empty) ext =
   {
     u = prefix;
     v = Ext ext;
   }
 
-let make_pattern ?(prefix = Word.empty) ~ppattern =
+let pattern ?(prefix = Word.empty) ~ppattern =
   if Word.is_empty ppattern
-  then invalid_arg "make_pattern: empty periodic pattern";
+  then invalid_arg "pattern: empty periodic pattern";
   if Word.has_null_weight ppattern
-  then invalid_arg "make_pattern: periodic pattern of null weight";
+  then invalid_arg "pattern: periodic pattern of null weight";
   {
     u = prefix;
     v = Pat ppattern;
   }
 
-let make_singleton ?(prefix = Word.empty) en =
+let singleton ?(prefix = Word.empty) en =
   match en with
   | Enat.Fin 0 ->
-     make_extremal ~prefix Zero
+     extremal ~prefix Zero
   | Enat.Fin n ->
-     make_pattern ~prefix ~ppattern:(Word.singleton 0)
+     pattern ~prefix ~ppattern:(Word.singleton 0)
   | Enat.Inf ->
-     make_extremal ~prefix Omega
+     extremal ~prefix Omega
 
 let at p n =
   assert (n >= 0);
@@ -130,13 +130,16 @@ let ones p ii =
        end
 
 let one =
-  make_pattern (Word.singleton 1)
+  pattern (Word.singleton 1)
 
 let zero =
-  make_extremal Zero
+  extremal Zero
+
+let zero_one =
+  pattern ~prefix:(Word.singleton 0) ~ppattern:(Word.singleton 1)
 
 let omega =
-  make_extremal Omega
+  extremal Omega
 
 let is_finitary p =
   match p.v with
@@ -327,31 +330,31 @@ let div p q =
   | Ext Omega, Ext Omega ->
      let u_n = min (Word.length p.u) (Word.length q.u) in
      let prefix, _ = loop Word.empty 0 0 u_n in
-     make_extremal ~prefix Omega
+     extremal ~prefix Omega
   | Ext Omega, _ ->
      let u_n = Word.length p.u in
      let prefix, _ = loop Word.empty 0 0 u_n in
-     make_extremal ~prefix Omega
+     extremal ~prefix Omega
   | _, Ext Omega ->
      let u_n = Word.length q.u in
      let prefix, sum = loop Word.empty 0 0 u_n in
      let m = Enat.to_int @@ at p (u_n + 1) in
      let prefix = Word.(prefix ^^ singleton (sum + m)) in
-     make_extremal ~prefix Zero
+     extremal ~prefix Zero
   | _, Ext Zero ->
      let u_n = Word.length q.u in
      let prefix, _ = loop Word.empty 0 0 u_n in
-     make_extremal ~prefix Omega
+     extremal ~prefix Omega
   | Ext Zero, Pat v ->
      let u_n = max (Word.length p.u) (Word.length q.u) in
      let prefix, _ = loop Word.empty 0 0 u_n in
-     make_extremal ~prefix Zero
+     extremal ~prefix Zero
   | Pat _, Pat q_v ->
      let u_n = hyper_prefix p q + Word.find_first_non_null_index q_v + 1 in
      let v_n = hyper_period p q in
      let prefix, sum = loop Word.empty 0 0 u_n in
      let ppattern, _ = loop Word.empty sum u_n (u_n + v_n) in
-     make_pattern ~prefix ~ppattern
+     pattern ~prefix ~ppattern
 
 let period_weight p =
   match p.v with

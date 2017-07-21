@@ -2,56 +2,19 @@ type extremal =
   | Zero
   | Omega
 
-type t
+type period =
+  | Ext of extremal
+  | Pat of Word.t
 
-(** Construction and destruction *)
+type t =
+  private
+    {
+      u : Word.t;
+      v : period;
+    }
 
-val make_extremal : ?prefix:Word.t -> extremal -> t
+include Warp_sig.S with type t := t
 
-val make_pattern : ?prefix:Word.t -> ppattern:Word.t -> t
+val extremal : ?prefix:Word.t -> extremal -> t
 
-(** Indexed access and represented clock *)
-
-val at : t -> int -> Enat.t
-
-val ones : t -> Enat.t -> Enat.t
-
-(** Special clocks *)
-
-val one : t
-
-val zero : t
-
-val omega : t
-
-val ladj : t -> t
-
-val radj : t -> t
-
-val div : t -> t -> t
-
-(** Algebra *)
-
-val weight : t -> Enat.t
-
-val is_finitary : t -> bool
-
-val is_stuck : t -> bool
-
-val on : t -> t -> t
-
-(** Equality, comparison, printing *)
-
-val is_one : t -> bool
-
-val equal : t -> t -> bool
-
-val print_utf8 : bool ref
-
-include Utils.PrintableOrderedType with type t := t
-
-val quick_normalize : t -> t
-
-(** Extensional order *)
-
-val ( <= ) : t -> t -> bool
+val pattern : ?prefix:Word.t -> ppattern:Word.t -> t
