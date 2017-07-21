@@ -26,7 +26,6 @@ end
 
 module BlockKind =
 struct
-
   type t =
     | Seq
     | Par
@@ -280,12 +279,12 @@ struct
         print_exp e2
 
     | ELet { body; block; } ->
-      Format.fprintf fmt "@[<hv 2>let %a in@ %a@]"
+      Format.fprintf fmt "@[let %a in@ %a@]"
         print_block block
         print_exp body
 
     | EWhere { body; block; } ->
-      Format.fprintf fmt "@[<v 2>%a@ where %a@]"
+      Format.fprintf fmt "@[%a@ where %a@]"
         print_exp body
         print_block block
 
@@ -351,16 +350,20 @@ struct
         ~pp_left:Warp.Print.pp_breakable_space
         (fun fmt ty -> Format.fprintf fmt ": %a" Type.print ty)
     in
-    Format.fprintf fmt "@[%a%a%a @,= %a@]@]"
+    Format.fprintf fmt "@[%a%a%a @,= %a@]"
       print_pat eq_lhs
       Warp.Print.(pp_list ~pp_left:pp_breakable_space print_pat) eq_params
       print_res_ty eq_ty
       print_exp eq_rhs
 
   and print_block fmt { b_kind; b_body; } =
-    Format.fprintf fmt "%a {@[%a@]}"
+    let pp_sep fmt () = Format.fprintf fmt ";@;@;" in
+    Format.fprintf fmt "@[<v>%a@ {@[<v 2>%a@]@,}@]"
       BlockKind.print b_kind
-      Warp.Print.(pp_list ~pp_sep:pp_semicolon print_eq) b_body
+      Warp.Print.(pp_list
+                    ~pp_left:pp_breakable_space
+                    ~pp_sep
+                    print_eq) b_body
 
   let rec compare_pat (p1 : pat) (p2 : pat) =
     if p1 == p2 then 0
@@ -501,10 +504,9 @@ struct
   let print_phr fmt phr =
     match phr.ph_desc with
     | PDef block ->
-      Format.fprintf fmt "@[let@ %a@]"
-        print_block block
+       print_block fmt block
     | PDecl { id; ty; } ->
-       Format.fprintf fmt "@[val %a@ : %a@]"
+       Format.fprintf fmt "@[extern %a@ : %a@]"
          Id.print id
          Type.print ty
 
