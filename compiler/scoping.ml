@@ -184,6 +184,7 @@ let scope_file ctx file =
   {
     S.f_name = file.R.f_name;
     S.f_phrases = phrases;
+    S.f_annot = ();
   }
 
 let pass =

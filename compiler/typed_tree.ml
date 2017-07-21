@@ -11,6 +11,7 @@ module T = Source_tree.Make(
     module ExpAnnot = Type
     module EquAnnot = Type
     module PhrAnnot = Warp.Utils.PrintableOrderedUnit
+    module FileAnnot = Warp.Utils.PrintableOrderedUnit
   end
 )
 

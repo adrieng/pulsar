@@ -569,6 +569,7 @@ let type_file ctx file =
   {
     T.f_name = file.S.f_name;
     T.f_phrases = phrases;
+    T.f_annot = ();
   }
 
 let pass =

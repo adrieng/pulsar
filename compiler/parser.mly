@@ -5,6 +5,7 @@
     {
       Raw_tree.T.f_name = p.Lexing.pos_fname;
       Raw_tree.T.f_phrases = phrases;
+      Raw_tree.T.f_annot = ();
     }
 
   let make_decl start stop id ty =

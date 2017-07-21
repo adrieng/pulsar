@@ -63,6 +63,7 @@ sig
   module ExpAnnot : Warp.Utils.PrintableOrderedType
   module EquAnnot : Warp.Utils.PrintableOrderedType
   module PhrAnnot : Warp.Utils.PrintableOrderedType
+  module FileAnnot : Warp.Utils.PrintableOrderedType
 end
 
 module type Tree =
@@ -153,6 +154,7 @@ sig
       {
         f_name : string;
         f_phrases : phr list;
+        f_annot : FileAnnot.t;
       }
 
   val print_file : Format.formatter -> file -> unit
@@ -533,6 +535,7 @@ struct
       {
         f_name : string;
         f_phrases : phr list;
+        f_annot : FileAnnot.t;
       }
 
   let print_file fmt { f_name; f_phrases; } =

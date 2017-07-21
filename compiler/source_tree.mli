@@ -27,6 +27,7 @@ sig
   module ExpAnnot : Warp.Utils.PrintableOrderedType
   module EquAnnot : Warp.Utils.PrintableOrderedType
   module PhrAnnot : Warp.Utils.PrintableOrderedType
+  module FileAnnot : Warp.Utils.PrintableOrderedType
 end
 
 module type Tree =
@@ -133,6 +134,7 @@ sig
       {
         f_name : string;
         f_phrases : phr list;
+        f_annot : FileAnnot.t;
       }
 
   (** Pretty-print a file *)
@@ -147,3 +149,4 @@ module Make (I : Info) : Tree with type Id.t = I.Id.t
                                and type ExpAnnot.t = I.ExpAnnot.t
                                and type EquAnnot.t = I.EquAnnot.t
                                and type PhrAnnot.t = I.PhrAnnot.t
+                               and type FileAnnot.t = I.FileAnnot.t
