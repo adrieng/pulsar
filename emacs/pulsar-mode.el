@@ -29,7 +29,6 @@
     (modify-syntax-entry ?× "w" st)
     (modify-syntax-entry ?⇒ "w" st)
     (modify-syntax-entry ?- "w" st)
-    (modify-syntax-entry ?= "w" st)
     (modify-syntax-entry ?> "w" st)
     st)
   "Syntax table for `pulsar-mode'.")
@@ -79,7 +78,7 @@
   (rx
    (any "{" ";") (+ (any whitespace "\n"))
    (group-n 1 (+ word))
-   not-wordchar))
+   ))
 
 (defvar pulsar-font-lock-keywords
   `(
@@ -93,6 +92,37 @@
     )
   "Syntax highlighting specification of `pulsar-mode'.")
 
+(defun pulsar-find-largest-def-end-before-pos (pos)
+  (save-excursion
+    (goto-char pos)
+    (skip-chars-backward "a-zA-Z0-9")
+    (skip-chars-backward " \n")
+    (let ((c (char-before (point))))
+      (cond
+       ((char-equal c ?\{) (- (point) 1))
+       ((char-equal c ?\;) (- (point) 1))
+       (t pos)))))
+
+(defun pulsar-find-smallest-def-end-after-pos (pos)
+  (save-excursion
+    (goto-char pos)
+    (skip-chars-backward " \n")
+    (let ((c (char-before (point))))
+      (cond
+       ((not (or (char-equal c ?\{) (char-equal c ?\;))) pos)
+       (t
+        (skip-chars-forward " \n")
+        (skip-chars-forward "a-zA-Z0-9")
+        (point))))))
+
+(defun pulsar-font-lock-extend-after-change-region-function
+    (beg end old-len)
+  "Extends the region to refontify in `pulsar-mode'."
+  (let ((new-beg (pulsar-find-largest-def-end-before-pos beg))
+        (new-end (pulsar-find-smallest-def-end-after-pos end)))
+    (cons new-beg new-end)
+    ))
+
 (defvar pulsar-mode-map
   (let ((map (make-sparse-keymap)))
     map)
@@ -105,7 +135,13 @@
   :syntax-table pulsar-mode-syntax-table
   (setq-local comment-start "(*")
   (setq-local comment-start "*)")
+
+  ;; Font-lock
   (setq-local font-lock-defaults '(pulsar-font-lock-keywords))
+  (setq-local font-lock-multiline t)
+  (setq-local
+   font-lock-extend-after-change-region-function
+   'pulsar-font-lock-extend-after-change-region-function)
   )
 
 ;;;###autoload
