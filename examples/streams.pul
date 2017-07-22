@@ -1,4 +1,7 @@
+(* Examples from "Time Warps for Guarded Recursion" *)
+
 extern not : `(ω) ⊛ (bool → bool)
+
 extern tail : `(ω) ⊛ (stream bool → `0(1) ⊛ stream bool)
 
 rec
@@ -6,7 +9,7 @@ rec
     const (x : int) : stream int =
           x :: (const x) by `0(1);
 
-    map (f : int -> int) ((x :: xs) : stream int) : stream int =
+    map (f : int → int) ((x :: xs) : stream int) : stream int =
         f x :: (map f xs) by `0(1)
 }
 
