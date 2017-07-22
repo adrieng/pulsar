@@ -52,6 +52,8 @@ let pass_debug s =
 
 let display_types = ref false
 
+let auto_const = ref true
+
 (* Command-line arguments related to global options *)
 
 let global_command_line_arguments =
@@ -68,4 +70,14 @@ let global_command_line_arguments =
       ~opt:"utf8"
       ~msg:"use UTF-8 for pretty-printing"
       Warp.Print.utf8_output;
+
+    let msg fmt () =
+      Format.fprintf fmt
+        "automatically scale top-level definitions by %a"
+        Warp.Print.pp_omega ()
+    in
+    yes_no
+      ~opt:"auto-const"
+      ~msg:(Warp.Print.string_of msg ())
+      auto_const;
   ]

@@ -10,7 +10,9 @@ rec
 {
     zero = const 0;
 
-    one = map (λ (x : int) ⇒ x + 1) zero;
+    incr = map (λ (x : int) ⇒ x + 1);
+
+    one = incr zero;
 }
 
 rec
@@ -36,8 +38,6 @@ rec
         false :: (tail ys) by `0(2)
         where { ys = (h thuemorse) by `0(1) };
 }
-
-extern incr : stream int -> stream int
 
 rec
 {

@@ -3,5 +3,4 @@
 * Allow contravariant subtyping in patterns
 * Implement a rudimentary module system
 * Rework the ugly bits of Warp/{Word,Periodic}
-* Implement auto-scaling of closed terms
 * Fix the pretty-printing of expressions, currently buggy in edge cases

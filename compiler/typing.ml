@@ -109,6 +109,12 @@ let print_typing_error fmt err =
          Type.print clash_ty2;
      Format.fprintf fmt "@]"
 
+(* Debugging *)
+
+let print_env fmt env =
+  Format.fprintf fmt "[@[%a@]]"
+    (E.print ~sep:"," Type.print) env
+
 (* Utilities *)
 
 let e_ty e =
@@ -327,28 +333,28 @@ let inv_base e =
 the following two functions use exact type equality instead of subtyping. This
 restriction should be lifted in a future version. *)
 
-let rec expect_pat env p ty =
-  let env, pd =
+let rec expect_pat p ty out_env =
+  let out_env, pd =
     match p.S.p_desc with
     | S.PVar id ->
-       E.add id ty env, T.PVar id
+       E.add id ty out_env, T.PVar id
     | S.PPair (p1, p2) ->
        let ty1, ty2 = get_prod p.S.p_loc ty in
-       let env, p1 = expect_pat env p1 ty1 in
-       let env, p2 = expect_pat env p2 ty2 in
-       env, T.PPair (p1, p2)
+       let out_env, p1 = expect_pat p1 ty1 out_env in
+       let out_env, p2 = expect_pat p2 ty2 out_env in
+       out_env, T.PPair (p1, p2)
     | S.PCons (p1, p2) ->
        let bty = get_stream p.S.p_loc ty in
-       let env, p1 = expect_pat env p1 (Type.Base bty) in
-       let env, p2 = expect_pat env p2 Type.(later @@ Stream bty) in
-       env, T.PCons (p1, p2)
+       let out_env, p1 = expect_pat p1 (Type.Base bty) out_env in
+       let out_env, p2 = expect_pat p2 Type.(later @@ Stream bty) out_env in
+       out_env, T.PCons (p1, p2)
     | S.PAnnot (p, ty') ->
        if not (Type.equal ty ty')
        then type_clash ~expected:(Exact ty') ~actual:ty ~loc:p.S.p_loc;
-       let env, p = expect_pat env p ty in
-       env, T.PAnnot (p, ty')
+       let out_env, p = expect_pat p ty out_env in
+       out_env, T.PAnnot (p, ty')
   in
-  env,
+  out_env,
   {
     T.p_desc = pd;
     T.p_loc = p.S.p_loc;
@@ -369,12 +375,12 @@ let rec type_pat env p =
     | S.PCons (p1, p2) ->
        let env, p1 = type_pat env p1 in
        let bty = get_base p.S.p_loc (p_ty p1) in
-       let env, p2 = expect_pat env p2 Type.(later @@ Stream bty) in
+       let env, p2 = expect_pat p2 Type.(later @@ Stream bty) env in
        env, T.PCons (p1, p2), Type.Stream bty
 
     | S.PAnnot (p, ty) ->
-       let env, p = expect_pat env p ty in
-       env, T.PAnnot (p, ty), ty
+       let bound_env, p = expect_pat p ty env in
+       E.merge_biased bound_env env, T.PAnnot (p, ty), ty
   in
   env,
   {
@@ -383,7 +389,7 @@ let rec type_pat env p =
     T.p_ann = ty;
   }
 
-let bind_rec_eq local_env eq =
+let bind_rec_eq out_env eq =
   let res_ty =
     match eq.S.eq_ty with
     | None -> cannot_infer ~kind:(Eq eq) ~loc:eq.S.eq_loc
@@ -395,8 +401,7 @@ let bind_rec_eq local_env eq =
   let ty =
     Type.later @@ build_fun_ty (res_ty :: List.rev_map p_ty params)
   in
-  let local_env, _ = expect_pat local_env eq.S.eq_lhs ty in
-  local_env
+  fst @@ expect_pat eq.S.eq_lhs ty out_env
 
 let rec type_exp env e =
   let coerce = coerce ~loc:e.S.e_loc in
@@ -443,13 +448,13 @@ let rec type_exp env e =
        t2, T.ESnd e
 
     | S.ELet { block; body; } ->
-       let env, block = type_block env block in
-       let body = type_exp env body in
+       let bound_env, block = type_block env block in
+       let body = type_exp (E.merge_biased bound_env env) body in
        e_ty body, T.ELet { block; body; }
 
     | S.EWhere { body; block; } ->
-       let env, block = type_block env block in
-       let body = type_exp env body in
+       let bound_env, block = type_block env block in
+       let body = type_exp (E.merge_biased bound_env env) body in
        e_ty body, T.EWhere { body; block; }
 
     | S.EConst c ->
@@ -496,7 +501,10 @@ let rec type_exp env e =
     T.e_ann = ty;
   }
 
-and type_eq local_env external_env eq =
+and type_eq
+      local_env                 (* env binding free vars of eq *)
+      out_env                   (* env enriched with bound vars of eq *)
+      eq =
   let local_env, params =
     Warp.Utils.mapfold_left type_pat local_env eq.S.eq_params
   in
@@ -507,8 +515,8 @@ and type_eq local_env external_env eq =
     | Some ty -> coerce eq.S.eq_loc rhs ty
   in
   let ty = build_fun_ty (e_ty rhs :: List.rev_map p_ty params) in
-  let external_env, lhs = expect_pat external_env eq.S.eq_lhs ty in
-  external_env,
+  let out_env, lhs = expect_pat eq.S.eq_lhs ty out_env in
+  out_env,
   {
     T.eq_lhs = lhs;
     T.eq_params = params;
@@ -519,19 +527,23 @@ and type_eq local_env external_env eq =
   }
 
 and type_block env { S.b_kind; S.b_body; S.b_loc; } =
-  let env, b_body =
+  let bound_env, b_body =
     match b_kind with
     | Seq ->
-       let type_eq external_env eq = type_eq external_env external_env eq in
-       Warp.Utils.mapfold_left type_eq env b_body
+       let type_eq bound_env eq =
+         type_eq (E.merge_biased bound_env env) bound_env eq
+       in
+       Warp.Utils.mapfold_left type_eq E.empty b_body
     | Par ->
-       let type_eq external_env eq = type_eq env external_env eq in
-       Warp.Utils.mapfold_left type_eq env b_body
+       let type_eq bound_env eq =
+         type_eq (E.merge_biased bound_env env) bound_env eq
+       in
+       Warp.Utils.mapfold_left type_eq E.empty b_body
     | Rec ->
-       let local_env = List.fold_left bind_rec_eq env b_body in
-       Warp.Utils.mapfold_left (type_eq local_env) env b_body
+       let rec_env = List.fold_left bind_rec_eq env b_body in
+       Warp.Utils.mapfold_left (type_eq rec_env) E.empty b_body
   in
-  env,
+  bound_env,
   {
     T.b_kind;
     T.b_body;
@@ -542,8 +554,13 @@ let type_phrase env phr =
   let env, pd =
     match phr.S.ph_desc with
     | S.PDef block ->
-       let env, block = type_block env block in
-       env, T.PDef block
+       let bound_env, block = type_block env block in
+       let bound_env =
+         E.map
+           (fun ty -> if !Options.auto_const then Type.constant ty else ty)
+           bound_env
+       in
+       E.merge_biased bound_env env, T.PDef block
     | S.PDecl { id; ty; } ->
        E.add id ty env, T.PDecl { id; ty; }
   in
