@@ -6,44 +6,44 @@ extern tail : `(ω) ⊛ (stream bool → `0(1) ⊛ stream bool)
 
 rec
 {
-    const (x : int) : stream int =
-        x :: (const x) by `0(1);
+  const (x : int) : stream int =
+    x :: (const x) by `0(1);
 
-    map (f : int → int) ((x :: xs) : stream int) : stream int =
-        f x :: (map f xs) by `0(1)
+  map (f : int → int) ((x :: xs) : stream int) : stream int =
+    f x :: (map f xs) by `0(1)
 }
 
 {
-    zero = const 0;
+  zero = const 0;
 
-    incr = map (λ (x : int) ⇒ x + 1);
+  incr = map (λ (x : int) ⇒ x + 1);
 
-    one = incr zero;
-}
-
-rec
-{
-    nat : stream int =
-        0 :: (map (λ (x : int) ⇒ x + 1) nat) by `0(1);
+  one = incr zero;
 }
 
 rec
 {
-    h ((x :: xs) : stream bool) : `(2) ⊛ stream bool =
-      let { ys = (h xs) by `0(1) } in
+  nat : stream int =
+    0 :: (map (λ (x : int) ⇒ x + 1) nat) by `0(1);
+}
+
+rec
+{
+  h ((x :: xs) : stream bool) : `(2) ⊛ stream bool =
+    let { ys = (h xs) by `0(1) } in
       (x :: (not x :: ys) by `0(1)) by `(2);
 }
 
 rec
 {
-    thuemorse : stream bool =
-        let { ys = (h thuemorse) by `0(1) } in
-        false :: (tail ys) by `0(2);
+  thuemorse : stream bool =
+    let { ys = (h thuemorse) by `0(1) } in
+      false :: (tail ys) by `0(2);
 }
 
 rec
 {
-    nat : `(1 0) ⊛ stream int = (0 :: pos) by `(1 0);
+  nat : `(1 0) ⊛ stream int = (0 :: pos) by `(1 0);
 
-    pos : `(0 1) ⊛ stream int = (incr nat) by `(0 1);
+  pos : `(0 1) ⊛ stream int = (incr nat) by `(0 1);
 }

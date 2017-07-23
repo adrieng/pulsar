@@ -16,6 +16,9 @@
 ;; General Public License version 3.
 
 (require 'rx)
+(require 'smie)
+
+;; Syntax table
 
 (defvar pulsar-mode-syntax-table
   (let ((st (make-syntax-table)))
@@ -32,6 +35,8 @@
     (modify-syntax-entry ?> "w" st)
     st)
   "Syntax table for `pulsar-mode'.")
+
+;; Syntax coloring
 
 (defconst pulsar-keywords-regex
   (rx
@@ -96,7 +101,7 @@
   (save-excursion
     (goto-char pos)
     (skip-chars-backward "a-zA-Z0-9")
-    (skip-chars-backward " \n")
+    (skip-chars-backward " \t\n")
     (let ((c (char-before (point))))
       (cond
        ((char-equal c ?\{) (- (point) 1))
@@ -106,7 +111,7 @@
 (defun pulsar-find-smallest-def-end-after-pos (pos)
   (save-excursion
     (goto-char pos)
-    (skip-chars-backward " \n")
+    (skip-chars-backward " \t\n")
     (let ((c (char-before (point))))
       (cond
        ((not (or (char-equal c ?\{) (char-equal c ?\;))) pos)
@@ -123,12 +128,96 @@
     (cons new-beg new-end)
     ))
 
+;; Indentation
+
+(defvar pulsar-indent-level
+  2
+  "Basic indentation level for `pulsar-mode'.")
+
+(defvar pulsar-indent-arg
+  2
+  "Indentation level of arguments list for `pulsar-mode'.")
+
+;; (defun pulsar-indent-function ()
+;;   "Indentation function for `pulsar-mode'."
+;;    (let ((savep (> (current-column) (current-indentation)))
+;;          (indent (condition-case nil (max (pulsar-calculate-indentation) 0)
+;;                    (error 0))))
+;;      (message "indent = %d" indent)
+;;      (if savep
+;;          (save-excursion (indent-line-to indent))
+;;        (indent-line-to indent))))
+
+;; (defun pulsar-calculate-indentation ()
+;;   (save-excursion
+;;     (move-to-column 0)
+;;     (skip-chars-backward " \t\n")
+;;     (let ((c (char-before (point)))
+;;           (i (current-indentation)))
+;;       (message "char-before: %c" c)
+;;       (cond
+;;        ((eq c ?\;) (+ i pulsar-indent-basic))
+;;        ((eq c ?\{) (+ i pulsar-indent-basic))
+;;        (t i)))))
+
+(defconst pulsar-smie-grammar
+  (smie-prec2->grammar
+   (smie-bnf->prec2
+    '(
+      (id)
+      (exp ("let" block "in" exp)
+           (exp "where" block)
+           ("λ" tyann "⇒" exp)
+           (exp "::" exp)
+           (siexp))
+      (siexp (id)
+             ("(" exps ")"))
+      (exps (exps "," exps)
+            (exp))
+      (tyann (siexp ":" type))
+      (type (type "×" type)
+            (type "→" type))
+      (block ("rec" block_eqs)
+             ("seq" block_eqs)
+             ("par" block_eqs)
+             (block_eqs))
+      (block_eqs ("{" eqs "}"))
+      (eqs (eqs ";" eqs)
+           (eq))
+      (eq (tyann "=" exp))
+      (decl ("extern" tyann))
+      )
+    '((assoc "::" "⇒" ",")
+      (assoc "×")
+      (assoc "→")
+      (assoc "in")
+      (assoc "where")
+      (assoc ";"))
+    )))
+
+(defun pulsar-smie-rules (kind cond)
+  (pcase (cons kind cond)
+    (`(:elem . basic) pulsar-indent-level)
+    (`(:after ":") pulsar-indent-level)
+    (`(:after "in") (smie-rule-parent 0))
+    (`(:before . ":") pulsar-indent-level)
+    (`(:before . "extern") '(column . 0))
+    (`(:before . "rec") (when (smie-rule-bolp) '(column . 0)))
+    (`(:before . "{")
+     (when (smie-rule-parent-p "rec" "seq" "par") (smie-rule-parent 0)))
+    (`(:after . "=") pulsar-indent-level)
+    ))
+
+;; Key map
+
 (defvar pulsar-mode-map
   (let ((map (make-sparse-keymap)))
     map)
   "Keymap for `pulsar-mode'.")
 
- ;;;###autoload
+;; Main entry point
+
+;;;###autoload
 (define-derived-mode pulsar-mode prog-mode "Pulsar"
   "A major mode for editing Pulsar files.
 \\{pulsar-mode-map}"
@@ -142,6 +231,9 @@
   (setq-local
    font-lock-extend-after-change-region-function
    'pulsar-font-lock-extend-after-change-region-function)
+
+  ;; Indentation
+  (smie-setup pulsar-smie-grammar 'pulsar-smie-rules)
   )
 
 ;;;###autoload
