@@ -269,26 +269,13 @@ let lexeme_ascii ctx =
 
 (* Errors *)
 
-type lexing_error =
-  | Bad_token of Loc.loc
-  | Unterminated_comment of Loc.loc
-
-let print_lexing_error fmt err =
-  match err with
-  | Bad_token loc ->
-    Format.fprintf fmt "%a: syntax error (lexing)"
-      Loc.print_loc_sameline loc
-  | Unterminated_comment loc ->
-    Format.fprintf fmt "%a: unterminated comment"
-      Loc.print_loc_sameline loc
-
-exception Lexing_error of lexing_error
-
 let bad_token ctx =
-  raise (Lexing_error (Bad_token (loc_of_last_lexeme ctx)))
+  let text = "syntax error (lexing)" in
+  Compiler.Message.error ~loc:(loc_of_last_lexeme ctx) ~text ()
 
 let unterminated_comment ctx =
-  raise (Lexing_error (Unterminated_comment (loc_of_last_lexeme ctx)))
+  let text = "unterminated comment" in
+  Compiler.Message.error ~loc:(loc_of_last_lexeme ctx) ~text ()
 
 (* Lexing itself *)
 

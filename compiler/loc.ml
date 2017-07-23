@@ -65,11 +65,16 @@ let loc_of_lexing_pos_pair ~start ~stop =
   let stop = pos_of_lexing_pos stop in
   make_loc ~fn ~start ~stop
 
-let print_loc fmt { fn; start; stop; }  =
-  Format.fprintf fmt "%s %a-%a"
-    fn
-    print_pos start
-    print_pos stop
+let nowhere =
+  { fn = ""; start = dummy_pos; stop = dummy_pos; }
+
+let print_loc fmt ({ fn; start; stop; } as loc) =
+  if loc <> nowhere
+  then
+    Format.fprintf fmt "%s %a-%a"
+      fn
+      print_pos start
+      print_pos stop
 
 let print_loc_sameline fmt { fn; start; stop; }  =
   if start.lnum <> stop.lnum then invalid_arg "print_loc_sameline";
@@ -78,9 +83,6 @@ let print_loc_sameline fmt { fn; start; stop; }  =
     start.lnum
     start.cnum
     stop.cnum
-
-let nowhere =
-  { fn = ""; start = dummy_pos; stop = dummy_pos; }
 
 let join l1 l2 =
   if l1.fn <> l2.fn then invalid_arg "join";

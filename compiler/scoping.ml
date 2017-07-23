@@ -17,29 +17,13 @@ module S = Scoped_tree.T
 
 (* Error handling *)
 
-type scoping_error =
-  | Unbound_identifier of string * Loc.loc
-  | Duplicate_identifier of string * Loc.loc
-
-exception Scoping_error of scoping_error
-
 let unbound_identifier id loc =
-  raise (Scoping_error (Unbound_identifier (id, loc)))
+  let text = "unbound identifier " ^ id in
+  Compiler.Message.error ~loc ~text ()
 
 let duplicate_identifier id loc =
-  raise (Scoping_error (Duplicate_identifier (id, loc)))
-
-let print_scoping_error fmt err =
-  match err with
-  | Unbound_identifier (id, loc) ->
-     Format.fprintf fmt "%a: scoping error, unbound identifier %s"
-       Loc.print_loc loc
-       id
-  | Duplicate_identifier (id, loc) ->
-     Format.fprintf fmt
-       "%a: scoping error, the identifier %s is bound multiple times in block"
-       Loc.print_loc loc
-       id
+  let text = "the identifier " ^ id ^ " is bound multiple times in block" in
+  Compiler.Message.error ~loc ~text ()
 
 (* Debugging *)
 

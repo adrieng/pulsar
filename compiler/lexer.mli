@@ -76,15 +76,6 @@ type token =
 (** Pretty-print a token; for debugging purposes *)
 val print_token : Format.formatter -> token -> unit
 
-(** Possible lexing errors *)
-type lexing_error
-
-(** Pretty-print a lexing error *)
-val print_lexing_error : Format.formatter -> lexing_error -> unit
-
-(** Lexing exceptions *)
-exception Lexing_error of lexing_error
-
 (** Lexing contexts *)
 type ctx
 

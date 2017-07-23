@@ -25,36 +25,6 @@ type expectation =
   | Fun
   | Sub of expectation
 
-type infer_kind =
-  | Eq of Scoped_tree.T.eq
-  | Pat of Scoped_tree.T.pat
-
-type typing_error =
-  | Type_clash of { expected : expectation; actual : Type.t; loc : Loc.loc; }
-  | Cannot_infer of { kind : infer_kind; loc : Loc.loc; }
-  | Cannot_coerce of { ty : Type.t; coe : Coercion.t; loc : Loc.loc; }
-  | Ill_typed_pat of { pat : Scoped_tree.T.pat; expected : Type.t; }
-  | Not_a_subtype of { ty1 : Type.t; ty2 : Type.t;
-                       clash_ty1 : Type.t; clash_ty2 : Type.t;
-                       loc : Loc.loc; }
-
-exception Typing_error of typing_error
-
-let type_clash ~expected ~actual ~loc =
-  raise (Typing_error (Type_clash { expected; actual; loc; }))
-
-let cannot_infer ~kind ~loc =
-  raise (Typing_error (Cannot_infer { kind; loc; }))
-
-let cannot_coerce ~ty ~coe ~loc =
-  raise (Typing_error (Cannot_coerce { ty; coe; loc; }))
-
-let ill_typed_pat ~pat ~expected =
-  raise (Typing_error (Ill_typed_pat { pat; expected; }))
-
-let not_a_subtype ~ty1 ~ty2 ~clash_ty1 ~clash_ty2 loc =
-  raise (Typing_error (Not_a_subtype { ty1; ty2; clash_ty1; clash_ty2; loc; }))
-
 let rec print_expectation fmt e =
   match e with
   | Exact ty ->
@@ -74,6 +44,10 @@ let rec print_expectation fmt e =
      Format.fprintf fmt "coercible to %a"
        print_expectation e
 
+type infer_kind =
+  | Eq of Scoped_tree.T.eq
+  | Pat of Scoped_tree.T.pat
+
 let print_infer_kind fmt k =
   match k with
   | Eq eq ->
@@ -83,44 +57,52 @@ let print_infer_kind fmt k =
      Format.fprintf fmt "pattern %a"
        Scoped_tree.T.print_pat p
 
-let print_typing_error fmt err =
-  match err with
-  | Type_clash { expected; actual; loc; } ->
+let type_clash ~expected ~actual ~loc =
+  let msg fmt () =
+    Format.fprintf fmt "@[<h>expected %a but got %a@]"
+      print_expectation expected
+      Type.print actual
+  in
+  Compiler.Message.error ~loc ~text:(Warp.Print.string_of msg ()) ()
+
+let cannot_infer ~kind ~loc =
+  let msg fmt () =
+    Format.fprintf fmt "@[<h>cannot guess the type of %a@]"
+      print_infer_kind kind
+  in
+  Compiler.Message.error ~loc ~text:(Warp.Print.string_of msg ()) ()
+
+let cannot_coerce ~ty ~coe ~loc =
+  let msg fmt () =
+    Format.fprintf fmt "@[<h>cannot apply coercion %a to %a@]"
+      Coercion.print coe
+      Type.print ty
+  in
+  Compiler.Message.error ~loc ~text:(Warp.Print.string_of msg ()) ()
+
+let ill_typed_pat ~pat ~expected =
+  let msg fmt () =
+    Format.fprintf fmt "@[<h>cannot type pattern %a with %a@]"
+      S.print_pat pat
+      Type.print expected
+  in
+  Compiler.Message.error ~loc:pat.S.p_loc ~text:(Warp.Print.string_of msg ()) ()
+
+let not_a_subtype ~ty1 ~ty2 ~clash_ty1 ~clash_ty2 loc =
+  let msg fmt () =
      Format.fprintf fmt
-       "@[<hv 2>%a: type error,@;expected a type %a but got %a@]"
-       Loc.print_loc loc
-       print_expectation expected
-       Type.print actual
-  | Cannot_infer { kind; loc; } ->
-     Format.fprintf fmt
-       "@[<hv 2>%a: type error,@;cannot guess the type of %a@]"
-       Loc.print_loc loc
-       print_infer_kind kind
-  | Cannot_coerce { ty; coe; loc; } ->
-     Format.fprintf fmt
-       "@[<hv 2>%a: type error,@;cannot apply coercion %a to @[%a@]@]"
-       Loc.print_loc loc
-       Coercion.print coe
-       Type.print ty
-  | Ill_typed_pat { pat; expected; } ->
-     Format.fprintf fmt
-       "@[<hv 2>%a: type error,@;cannot type pattern %a with %a@]"
-       Loc.print_loc pat.S.p_loc
-       S.print_pat pat
-       Type.print expected
-  | Not_a_subtype { ty1; ty2; clash_ty1; clash_ty2; loc; } ->
-     Format.fprintf fmt
-       "@[<hv 2>%a: type error,@;@[<hv>%a@;is not a subtype of@;%a@]"
-       Loc.print_loc loc
+       "@[<v>%a is not a subtype of %a"
        Type.print ty1
        Type.print ty2;
      if ty1 <> clash_ty1 || ty2 <> clash_ty2
      then
        Format.fprintf fmt
-         "@;since@;@[<hv>%a@;is not a subtype of@;%a@]"
+         " since %a is not a subtype of %a"
          Type.print clash_ty1
          Type.print clash_ty2;
      Format.fprintf fmt "@]"
+  in
+  Compiler.Message.error ~loc ~text:(Warp.Print.string_of msg ()) ()
 
 (* Debugging *)
 

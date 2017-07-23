@@ -11,37 +11,6 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
-module Message =
-struct
-  type kind =
-    | Error
-    | Warning
-    | Info
-
-  type t =
-    {
-      m_loc : Loc.loc;
-      m_kind : kind;
-      m_text : string;
-    }
-
-  let make ?(loc = Loc.nowhere) ~kind ~text =
-    {
-      m_loc = loc;
-      m_kind = kind;
-      m_text = text;
-    }
-
-  let error =
-    make ~kind:Error
-
-  let warning =
-    make ~kind:Warning
-
-  let info =
-    make ~kind:Warning
-end
-
 module Prop =
 struct
   type _ t =
@@ -60,6 +29,58 @@ struct
 
   let set_file fn =
     file := fn
+end
+
+module Message =
+struct
+  type kind =
+    | Error
+    | Warning
+    | Info
+
+  type t =
+    {
+      m_loc : Loc.loc;
+      m_pass : string;
+      m_kind : kind;
+      m_text : string;
+    }
+
+  let print_kind fmt k =
+    match k with
+    | Error ->
+       Format.fprintf fmt "error"
+    | Warning ->
+       Format.fprintf fmt "warning"
+    | Info ->
+       Format.fprintf fmt "info"
+
+  let print fmt { m_loc; m_pass; m_kind; m_text; } =
+    Format.fprintf fmt "@[<h>%a%s[%a] %s:@ %s@]"
+      Loc.print_loc m_loc
+      (if m_loc <> Loc.nowhere then " " else "")
+      print_kind m_kind
+      m_pass
+      m_text
+
+  let make ~loc ~kind ~text =
+    {
+      m_loc = loc;
+      m_pass = !Prop.pass;
+      m_kind = kind;
+      m_text = text;
+    }
+
+  exception Error of t
+
+  let error ?(loc = Loc.nowhere) ~text () =
+    raise (Error (make ~loc ~kind:Error ~text))
+
+  let warning ?(loc = Loc.nowhere) ~text () =
+    Format.eprintf "%a@." print (make ~loc ~kind:Warning ~text)
+
+  let info ?(loc = Loc.nowhere) ~text () =
+    Format.printf "%a@." print (make ~loc ~kind:Info ~text)
 end
 
 module Pass =
@@ -95,14 +116,19 @@ struct
   let run_atomic at x =
     if !Options.debug || Options.pass_debug at.name
     then Format.eprintf "(* Running pass %s *)@." at.name;
-    let y = at.body x in
-    if !Options.debug || Options.pass_debug at.name
-    then
-      begin
-        Format.eprintf "(* Finished running %s *)@." at.name;
-        Format.eprintf "%a@." at.pp_out y;
-      end;
-    y
+    Prop.pass := at.name;
+    try
+      let y = at.body x in
+      if !Options.debug || Options.pass_debug at.name
+      then
+        begin
+          Format.eprintf "(* Finished running %s *)@." at.name;
+          Format.eprintf "%a@." at.pp_out y;
+        end;
+      y
+    with Message.Error err ->
+         Format.eprintf "%a@."Message.print err;
+         exit 1
 
   let run p x =
     let rec loop : type a b. (a -> b) t -> a -> b =

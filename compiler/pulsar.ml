@@ -15,20 +15,6 @@ open Parse
 open Parser
 open Compiler
 
-let handle_internal_errors f x =
-  try f x
-  with
-  | Lexer.Lexing_error err ->
-    if !Options.debug_lexing then Format.eprintf "@\n";
-    Format.eprintf "%a@." Lexer.print_lexing_error err
-  | Parser_error.Parsing_error err ->
-    if !Options.debug_lexing then Format.eprintf "@\n";
-    Format.eprintf "%a@." Parser_error.print_parsing_error err
-  | Scoping.Scoping_error err ->
-    Format.eprintf "%a@." Scoping.print_scoping_error err
-  | Typing.Typing_error err ->
-    Format.eprintf "%a@." Typing.print_typing_error err
-
 let frontend =
   let open Pass in
   Parse.pass
@@ -38,11 +24,6 @@ let frontend =
 
 let compiler =
   frontend
-
-let process_pulsar_file filename =
-  Prop.set_file filename;
-  let ic = open_in filename in
-  ignore @@ Pass.run compiler ic
 
 let args =
   Options.global_command_line_arguments
@@ -55,7 +36,7 @@ let files = ref []
 let process filename =
   match Warp.Utils.file_extension filename with
   | ".pul" ->
-    handle_internal_errors process_pulsar_file filename
+     ignore @@ Pass.run compiler filename
   | _ ->
     Printf.eprintf "%s: don't know what to do with %s\n"
       Sys.argv.(0)

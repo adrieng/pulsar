@@ -11,29 +11,6 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
-module Message :
-sig
-  type kind =
-    | Error
-    | Warning
-    | Info
-
-  type t =
-    {
-      m_loc : Loc.loc;
-      m_kind : kind;
-      m_text : string;
-    }
-
-  val make : ?loc:Loc.loc -> kind:kind -> text:string -> t
-
-  val error : ?loc:Loc.loc -> text:string -> t
-
-  val warning : ?loc:Loc.loc -> text:string -> t
-
-  val info : ?loc:Loc.loc -> text:string -> t
-end
-
 module Prop :
 sig
   type _ t =
@@ -45,9 +22,28 @@ sig
   val set_file : string -> unit
 end
 
+module Message :
+sig
+  type t
+
+  val print : Format.formatter -> t -> unit
+
+  (** The following functions can be called by passes to communicate messages to
+      the user. The [error] function never returns. *)
+
+  val error : ?loc:Loc.loc -> text:string -> unit -> 'a
+
+  val warning : ?loc:Loc.loc -> text:string -> unit -> unit
+
+  val info : ?loc:Loc.loc -> text:string -> unit -> unit
+end
+
 module Pass :
 sig
+  (** The type of passes. *)
   type 'a t
+
+  (** {3 Pass combinators} *)
 
   val atomic :
     ?pp_in : 'a Warp.Print.printer ->
@@ -58,7 +54,13 @@ sig
 
   val ( >>> ) : ('a -> 'b) t -> ('b -> 'c) t -> ('a -> 'c) t
 
+  (** {3 Executing passes} *)
+
   val run : ('a -> 'b) t -> 'a -> 'b
 
+  (** {3 Misc} *)
+
+  (** [command_line p] computes the command-line options for the pass [p] in the
+      format understood by the Arg module. *)
   val command_line : 'a t -> (string * Arg.spec * string) list
 end
