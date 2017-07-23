@@ -11,8 +11,8 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
-let parse_pulsar_file ctx ic =
-  let filename = Pass.current_file ctx in
+let parse_pulsar_file ic =
+  let filename = Compiler.Prop.(get File) in
   let lex = Lexer.ctx_from_utf8_channel ~filename ic in
   let supplier () =
     let tok, start, stop = Lexer.next_token_pos lex in
@@ -31,7 +31,7 @@ let parse_pulsar_file ctx ic =
   file
 
 let pass =
-  Pass.atomic
+  Compiler.Pass.atomic
     ~pp_out:Raw_tree.T.print_file
     ~name:"parsing"
     parse_pulsar_file

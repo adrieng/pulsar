@@ -13,7 +13,7 @@
 
 open Parse
 open Parser
-open Pass
+open Compiler
 
 let handle_internal_errors f x =
   try f x
@@ -30,6 +30,7 @@ let handle_internal_errors f x =
     Format.eprintf "%a@." Typing.print_typing_error err
 
 let frontend =
+  let open Pass in
   Parse.pass
   >>> Scoping.pass
   >>> Typing.pass
@@ -39,13 +40,13 @@ let compiler =
   frontend
 
 let process_pulsar_file filename =
-  let ctx = Pass.make_default ~filename in
+  Prop.set_file filename;
   let ic = open_in filename in
-  ignore @@ Pass.run ~ctx compiler ic
+  ignore @@ Pass.run compiler ic
 
 let args =
   Options.global_command_line_arguments
-  @ Pass.command_line_arguments compiler
+  @ Pass.command_line compiler
 
 let usage = "pulsar <options> <files>"
 

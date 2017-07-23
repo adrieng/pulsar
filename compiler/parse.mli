@@ -11,4 +11,4 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
-val pass : (in_channel -> Raw_tree.T.file) Pass.t
+val pass : (in_channel -> Raw_tree.T.file) Compiler.Pass.t

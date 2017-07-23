@@ -189,7 +189,7 @@ let scope_phrase env phr =
     S.ph_ann = ();
   }
 
-let scope_file ctx file =
+let scope_file file =
   Ident.reset_ctx ();
   let _, phrases =
     Warp.Utils.mapfold_left scope_phrase E.empty file.R.f_phrases
@@ -201,7 +201,7 @@ let scope_file ctx file =
   }
 
 let pass =
-  Pass.atomic
+  Compiler.Pass.atomic
     ~pp_in:Raw_tree.T.print_file
     ~pp_out:Scoped_tree.T.print_file
     ~name:"scoping"
