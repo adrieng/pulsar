@@ -10,7 +10,17 @@ rec
     x :: (const x) by `0(1);
 
   map (f : int → int) ((x :: xs) : stream int) : stream int =
-    f x :: (map f xs) by `0(1)
+    f x :: (map f xs) by `0(1);
+
+  zipWith
+    (f : int → int → int)
+    ((x :: xs) : stream int)
+    ((y :: ys) : stream int) : stream int =
+    (f x y) :: (zipWith f xs ys) by `0(1);
+}
+
+{
+  plus (x : int) (y : int) : int = x + y;
 }
 
 {
@@ -46,4 +56,13 @@ rec
   nat : `(1 0) ⊛ stream int = (0 :: pos) by `(1 0);
 
   pos : `(0 1) ⊛ stream int = (incr nat) by `(0 1);
+}
+
+extern tail : `(ω) ⊛ (stream int → `0(1) ⊛ stream int)
+
+rec
+{
+  fib : stream int =
+    let { ys = (tail fib) by `0(1) } in
+    0 :: (1 :: (zipWith plus fib ys) by `0(1)) by `0(1);
 }
