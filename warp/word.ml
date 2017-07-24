@@ -237,6 +237,6 @@ let find_first_non_null_index w =
   let r = ref 0 in
   if w.weight = 0 then invalid_arg "find_first_non_null_index";
   try
-    to_seq w (fun i -> if i > 0 then raise Found);
+    to_seq w (fun i -> (if i > 0 then raise Found); incr r);
     assert false;
   with Found -> !r
