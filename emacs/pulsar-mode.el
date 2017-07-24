@@ -15,8 +15,24 @@
 ;; You can redistribute this program and/or modify it under the terms of the GNU
 ;; General Public License version 3.
 
+;;; Code:
+
 (require 'rx)
 (require 'smie)
+
+;; Customization
+
+(defgroup pulsar nil
+  "Pulsar temporal functional language"
+  :prefix 'pulsar
+  :group 'languages)
+
+(defcustom pulsar-command "pulsar"
+  "The command to be run for Pulsar."
+  :group 'pulsar
+  :type 'string
+  :tag "Command for Pulsar"
+  :options '("pulsar"))
 
 ;; Syntax table
 
@@ -222,6 +238,8 @@
   "A major mode for editing Pulsar files.
 \\{pulsar-mode-map}"
   :syntax-table pulsar-mode-syntax-table
+  :group 'pulsar
+
   (setq-local comment-start "(*")
   (setq-local comment-start "*)")
 
@@ -234,6 +252,23 @@
 
   ;; Indentation
   (smie-setup pulsar-smie-grammar 'pulsar-smie-rules)
+
+  ;; Flycheck
+  (eval-after-load 'flycheck
+    '(progn
+       (flycheck-define-checker
+        pulsar
+        "A Pulsar program checker."
+        :command ("pulsar" source)
+        :error-patterns
+        ((error line-start
+                (file-name) whitespace
+                line ":" column "-" (+ num) ":" (+ num)
+                whitespace "[error]" whitespace (+ word)
+                ": " (message) line-end))
+        :modes pulsar-mode)
+
+       (add-to-list 'flycheck-checkers 'pulsar)))
   )
 
 ;;;###autoload
@@ -241,3 +276,4 @@
 
 ;;;###autoload
 (provide 'pulsar-mode)
+;;; pulsar-mode.el ends here
