@@ -19,6 +19,7 @@
 
 (require 'rx)
 (require 'smie)
+(require 'compile)
 
 ;; Customization
 
@@ -154,28 +155,6 @@
   2
   "Indentation level of arguments list for `pulsar-mode'.")
 
-;; (defun pulsar-indent-function ()
-;;   "Indentation function for `pulsar-mode'."
-;;    (let ((savep (> (current-column) (current-indentation)))
-;;          (indent (condition-case nil (max (pulsar-calculate-indentation) 0)
-;;                    (error 0))))
-;;      (message "indent = %d" indent)
-;;      (if savep
-;;          (save-excursion (indent-line-to indent))
-;;        (indent-line-to indent))))
-
-;; (defun pulsar-calculate-indentation ()
-;;   (save-excursion
-;;     (move-to-column 0)
-;;     (skip-chars-backward " \t\n")
-;;     (let ((c (char-before (point)))
-;;           (i (current-indentation)))
-;;       (message "char-before: %c" c)
-;;       (cond
-;;        ((eq c ?\;) (+ i pulsar-indent-basic))
-;;        ((eq c ?\{) (+ i pulsar-indent-basic))
-;;        (t i)))))
-
 (defconst pulsar-smie-grammar
   (smie-prec2->grammar
    (smie-bnf->prec2
@@ -224,10 +203,58 @@
     (`(:after . "=") pulsar-indent-level)
     ))
 
+;; Compilation
+
+(defconst pulsar--compilation-buffer-name
+  "*Pulsar*"
+  "The name to use for Pulsar compilation buffers.")
+
+(defun pulsar--compilation-buffer-name-function (_mode)
+  "Compute a buffer name for the `pulsar-mode' compilation buffer."
+  pulsar--compilation-buffer-name)
+
+(defun pulsar-compile-buffer ()
+  "Compile the current file with Pulsar."
+  (interactive)
+  (let ((filename (buffer-file-name)))
+    (if filename
+        (progn
+          (when (buffer-modified-p) (save-buffer))
+          (let* ((dir (file-name-directory filename))
+                 (file (file-name-nondirectory filename))
+                 (command (concat pulsar-command " " file))
+
+                 ;; Emacs compile config stuff - these are special vars
+                 (compilation-buffer-name-function
+                  'pulsar--compilation-buffer-name-function)
+                 (default-directory dir))
+            (compile command)))
+      (error "Buffer has no file name"))))
+
+(defconst pulsar--compilation-error-regex
+  (rx
+   line-start
+   (group (+ (any word "," "." "_"))) whitespace
+   (group (+ num)) ":" (group (+ num))
+   "-" (group (+ num)) ":" (group (+ num))
+   whitespace "[" (or (group "error") (group "warning") (group "info")) "]")
+  "Regex matching the compiler errors")
+
+(defun pulsar--install-compilation-error-regex ()
+  (interactive)
+  (add-to-list 'compilation-error-regexp-alist
+               `(,pulsar--compilation-error-regex
+                 1 (2 . 4) (3 . 5) nil nil
+                 (6 compilation-error-face)
+                 (7 compilation-error-face)
+                 (8 compilation-error-face)
+                 )))
+
 ;; Key map
 
 (defvar pulsar-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-c") 'pulsar-compile-buffer)
     map)
   "Keymap for `pulsar-mode'.")
 
@@ -269,6 +296,10 @@
         :modes pulsar-mode)
 
        (add-to-list 'flycheck-checkers 'pulsar)))
+
+  ;; Compile
+  ;; (eval-after-load 'compile 'pulsar--install-compilation-error-regex)
+  (pulsar--install-compilation-error-regex)
   )
 
 ;;;###autoload
