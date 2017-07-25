@@ -22,7 +22,7 @@ let rec print fmt ck =
   | On (ck1, ck2) ->
     Format.fprintf fmt "@[%a@ %a %a@]"
       print ck1
-      Warp.Print.pp_circledast ()
+      Print.pp_circledast ()
       print ck2
 
 let print fmt ck =
@@ -59,8 +59,8 @@ let omega =
   periodic Periodic.omega
 
 let zero_one =
-  let prefix = Warp.Word.singleton 0 in
-  let ppattern = Warp.Word.singleton 1 in
+  let prefix = Word.singleton 0 in
+  let ppattern = Word.singleton 1 in
   periodic (Periodic.pattern ~prefix ~ppattern)
 
 let on ck1 ck2 =
