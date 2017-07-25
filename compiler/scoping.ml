@@ -22,7 +22,9 @@ let unbound_identifier id loc =
   Compiler.Message.error ~loc ~text ()
 
 let duplicate_identifier id loc =
-  let text = "the identifier " ^ id ^ " is bound multiple times in block" in
+  let text =
+    "the identifier " ^ id ^ " is bound multiple times in this block"
+  in
   Compiler.Message.error ~loc ~text ()
 
 (* Debugging *)
