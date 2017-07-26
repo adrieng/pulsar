@@ -25,8 +25,8 @@ type expectation =
   | Fun
   | Sub of expectation
 
-let rec print_expectation fmt e =
-  match e with
+let rec print_expectation fmt ex =
+  match ex with
   | Exact ty ->
      Format.fprintf fmt "type %a"
        Type.print ty
@@ -40,9 +40,9 @@ let rec print_expectation fmt e =
   | Fun ->
      Format.fprintf fmt "(_ %a _)"
        Warp.Print.pp_arrow ()
-  | Sub e ->
-     Format.fprintf fmt "coercible to %a"
-       print_expectation e
+  | Sub ex ->
+     Format.fprintf fmt "a type coercible to %a"
+       print_expectation ex
 
 type infer_kind =
   | Eq of Scoped_tree.T.eq

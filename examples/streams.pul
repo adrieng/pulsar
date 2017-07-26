@@ -48,7 +48,7 @@ rec
 {
   thuemorse : stream bool =
     let { ys = (h thuemorse) by `0(1) } in
-      false :: (tail ys) by `0(2);
+    false :: (tail ys) by `0(2);
 }
 
 rec
