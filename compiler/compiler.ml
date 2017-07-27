@@ -118,11 +118,13 @@ struct
     then Format.eprintf "(* Running pass %s *)@." at.name;
     Prop.pass := at.name;
     try
-      let y = at.body x in
+      let time, y = Warp.Utils.time_call at.body x in
       if !Options.debug || Options.pass_debug at.name
       then
         begin
-          Format.eprintf "(* Finished running %s *)@." at.name;
+          Format.eprintf "(* Finished running %s in %f seconds *)@."
+            at.name
+            time;
           Format.eprintf "%a@." at.pp_out y;
         end;
       y
