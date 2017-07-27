@@ -238,8 +238,8 @@ let subty_coe ~loc ty1 ty2 =
   Coercion.(seq (seq (c1, c3), c2'))
 
 let coerce ~loc exp ty =
-  let res = subty_coe ~loc (e_ty exp) ty in
-  Typed_tree.coerce_with exp res ty
+  let res' = subty_coe ~loc (e_ty exp) ty in
+  Typed_tree.coerce_with ~res' exp ty
 
 let div_ctx env p =
   let rec div_ty ty =
@@ -463,7 +463,7 @@ let rec type_exp env e =
     | S.EBy { body; dr; } ->
        (* Weaken the environment to remove variables not free in body. *)
        let env = E.trim env @@ Scoped_tree.V.free_vars_exp body in
-       let env, ctx = div_ctx env dr in
+       let env, ctx' = div_ctx env dr in
        let body = type_exp env body in
        let ty = Type.Warped (dr, e_ty body) in
        let exp =
@@ -473,7 +473,8 @@ let rec type_exp env e =
            T.e_ann = ty;
          }
        in
-       ty, T.ESub { ctx; exp; res = Coercion.Id; }
+       let exp = Typed_tree.coerce_with ~ctx' exp ty in
+       ty, exp.T.e_desc
 
     | S.EAnnot { exp; kind; annot; } ->
        let exp = type_exp env exp in

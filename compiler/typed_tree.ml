@@ -33,16 +33,32 @@ module T = Source_tree.Make(
   end
 )
 
-let coerce_with e c ty =
+let seq_ctx ctx ctx' =
+  let add ctx (id, coe) =
+    let coe' = try List.assoc id ctx' with Not_found -> Coercion.Id in
+    let coe = Coercion.seq (coe, coe') in
+    if coe = Coercion.Id then ctx else (id, coe) :: ctx
+  in
+  List.fold_left add [] ctx
+
+let simplify_ctx ctx =
+  seq_ctx ctx []
+
+let coerce_with ?(ctx' = []) ?(res' = Coercion.Id) e ty =
   let open T in
-  match c, e.e_desc with
-  | Coercion.Id, _ ->
+  let ctx' = simplify_ctx ctx' in
+  match ctx', res', e.e_desc with
+  | [], Coercion.Id, _ ->
      e
-  | _, ESub { ctx; exp; res; } ->
-     { e with e_desc = ESub { ctx; exp; res = Coercion.seq (res, c); }; }
+  | _, _, ESub { ctx; exp; res; } ->
+     let ctx = seq_ctx ctx ctx' in
+     let res = Coercion.seq (res, res') in
+     if ctx <> [] || res <> Coercion.Id
+     then { e with e_desc = ESub { ctx; exp; res; }; }
+     else exp
   | _ ->
     {
-      e_desc = T.ESub { ctx = []; exp = e; res = c; };
+      e_desc = T.ESub { ctx = ctx'; exp = e; res = res'; };
       e_loc = e.e_loc;
       e_ann = ty;
     }
