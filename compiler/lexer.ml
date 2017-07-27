@@ -81,6 +81,7 @@ type token =
   | DIST | FACT
   | INFL | DEFL
   | DELAY
+  | PIPE
   (* End-of-file, last token *)
   | EOF
 
@@ -207,6 +208,8 @@ let print_token fmt tok =
      Format.fprintf fmt "DEFL"
   | DELAY ->
      Format.fprintf fmt "DELAY"
+  | PIPE ->
+     Format.fprintf fmt "PIPE"
   | EOF ->
     Format.fprintf fmt "EOF"
 
@@ -443,6 +446,7 @@ let rec next_token ctx =
   | "*" | 0x00D7 -> TIMES
   | "/" -> DIV
   | "`" -> TICK
+  | "|" -> PIPE
 
   | id -> keyword_or_ident (lexeme_ascii ctx)
   | modn -> MODN (lexeme_ascii ctx)

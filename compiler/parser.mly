@@ -141,6 +141,7 @@
 %token LPAREN
 %token RPAREN
 %token COMMA
+%token PIPE
 %token WHERE
 %token REC
 %token PAR
@@ -256,6 +257,8 @@ pword:
 
 warp_ty:
 | TICK p = pword { Warp.Formal.periodic p }
+| p = warp_ty MOD q = warp_ty { Warp.Formal.on p q }
+| p = paren(warp_ty) { p }
 
 (* Types *)
 
@@ -349,7 +352,7 @@ ident_coercion:
 | id = IDENT LLANGLE c = coercion { (id, c) }
 
 coercion_ctx:
-| l = separated_list(COMMA, paren(ident_coercion)) { l }
+| l = separated_list(PIPE, ident_coercion) { l }
 
 (* Patterns *)
 
@@ -386,6 +389,12 @@ simple_exp:
     { make_external $startpos $endpos ln }
 | l = lit
     { make_const_lit $startpos $endpos l }
+| LBRACEIMARK
+    ctx_c = coercion_ctx
+    RRANGLE e = exp
+    RRANGLE c = coercion
+  RBRACEIMARK
+    { make_subty $startpos $endpos ctx_c e c }
 | e = paren(exp)
     { e }
 
@@ -417,12 +426,6 @@ exp:
     { c }
 | e = simple_exp BY dr = warp_ty
     { make_by $startpos $endpos e dr }
-| LBRACEIMARK
-    ctx_c = coercion_ctx
-    RRANGLE e = exp
-    RRANGLE c = coercion
-  RBRACEIMARK
-    { make_subty $startpos $endpos ctx_c e c }
 | e = exp kind = annot_kind ty = ty %prec SUBTY
     { make_annot $startpos $endpos e kind ty }
 

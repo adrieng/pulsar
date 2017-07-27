@@ -71,6 +71,7 @@ type token =
   | INFL
   | DEFL
   | DELAY
+  | PIPE
   | EOF
 
 (** Pretty-print a token; for debugging purposes *)
