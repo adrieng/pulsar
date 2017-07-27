@@ -513,9 +513,11 @@ let compare_per p1 p2 =
      Utils.compare_int (tag_to_int p1) (tag_to_int p2)
 
 let compare p q =
-  Utils.compare_both
-    (Word.compare p.u q.u)
-    (fun () -> compare_per p.v q.v)
+  if equal p q then 0
+  else
+    Utils.compare_both
+      (Word.compare p.u q.u)
+      (fun () -> compare_per p.v q.v)
 
 let ( <= ) p q =
   let rec loop sum_p sum_q i max =

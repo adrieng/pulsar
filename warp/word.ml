@@ -196,8 +196,17 @@ let rec all_equal m w =
     | Power (w, _) ->
        all_equal m w
 
+let equal w1 w2 =
+  let n = length w1 in
+
+  let rec loop i =
+    (i >= n) || (at w1 i = at w2 i && loop (i + 1))
+  in
+  length w1 = length w2 && loop 0
+
 let compare w1 w2 =
   if w1 == w2 then 0
+  else if equal w1 w2 then 0
   else
     let rec compare_desc i =
       assert (i >= 0 && i <= w1.length);
@@ -213,9 +222,6 @@ let compare w1 w2 =
                compare_both
                  (compare_int w1.weight w2.weight)
                  (fun () -> compare_desc 0)))
-
-let equal w1 w2 =
-  compare w1 w2 = 0
 
 let to_seq w k =
   let rec iter w =
