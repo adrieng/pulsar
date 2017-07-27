@@ -24,21 +24,21 @@
   let make_decl start stop id ty =
     {
       Raw_tree.T.ph_desc = Raw_tree.T.PDecl { id; ty; };
-      Raw_tree.T.ph_loc = Loc.loc_of_lexing_pos_pair ~start ~stop;
+      Raw_tree.T.ph_loc = Loc.of_lexing_pos_pair ~start ~stop;
       Raw_tree.T.ph_ann = ();
     }
 
   let make_def start stop block =
     {
       Raw_tree.T.ph_desc = Raw_tree.T.PDef block;
-      Raw_tree.T.ph_loc = Loc.loc_of_lexing_pos_pair ~start ~stop;
+      Raw_tree.T.ph_loc = Loc.of_lexing_pos_pair ~start ~stop;
       Raw_tree.T.ph_ann = ();
     }
 
   let make_pat start stop desc : Raw_tree.T.pat =
     {
       Raw_tree.T.p_desc = desc;
-      Raw_tree.T.p_loc = Loc.loc_of_lexing_pos_pair ~start ~stop;
+      Raw_tree.T.p_loc = Loc.of_lexing_pos_pair ~start ~stop;
       Raw_tree.T.p_ann = ();
     }
 
@@ -48,14 +48,14 @@
       Raw_tree.T.eq_params = params;
       Raw_tree.T.eq_ty = res_ty;
       Raw_tree.T.eq_rhs = e;
-      Raw_tree.T.eq_loc = Loc.loc_of_lexing_pos_pair ~start ~stop;
+      Raw_tree.T.eq_loc = Loc.of_lexing_pos_pair ~start ~stop;
       Raw_tree.T.eq_ann = ();
     }
 
   let make_exp start stop desc =
     {
       Raw_tree.T.e_desc = desc;
-      Raw_tree.T.e_loc = Loc.loc_of_lexing_pos_pair ~start ~stop;
+      Raw_tree.T.e_loc = Loc.of_lexing_pos_pair ~start ~stop;
       Raw_tree.T.e_ann = ();
     }
 
@@ -84,7 +84,7 @@
     {
       Raw_tree.T.b_kind;
       Raw_tree.T.b_body;
-      Raw_tree.T.b_loc = Loc.loc_of_lexing_pos_pair start stop;
+      Raw_tree.T.b_loc = Loc.of_lexing_pos_pair start stop;
     }
 
   let make_where start stop body block =

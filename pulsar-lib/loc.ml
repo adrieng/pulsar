@@ -45,30 +45,30 @@ let dummy_pos = { lnum = -1 ; cnum = -1; }
 let pos_of_lexing_pos { Lexing.pos_lnum; Lexing.pos_bol; Lexing.pos_cnum; } =
   { lnum = pos_lnum + 1; cnum = pos_cnum - pos_bol; }
 
-type loc =
+type t =
   {
     fn : filename;
     start : pos;
     stop : pos;
   }
 
-let make_loc ~fn ~start ~stop =
+let make ~fn ~start ~stop =
   if fn = "" then invalid_arg "make_loc: empty file name"
   else if not (start <= stop) then invalid_arg "make_loc: stop < start"
   else { fn; start; stop; }
 
-let loc_of_lexing_pos_pair ~start ~stop =
+let of_lexing_pos_pair ~start ~stop =
   let fn = start.Lexing.pos_fname in
   if fn <> stop.Lexing.pos_fname
   then invalid_arg "loc_of_lexing_pos_pair";
   let start = pos_of_lexing_pos start in
   let stop = pos_of_lexing_pos stop in
-  make_loc ~fn ~start ~stop
+  make ~fn ~start ~stop
 
 let nowhere =
   { fn = ""; start = dummy_pos; stop = dummy_pos; }
 
-let print_loc fmt ({ fn; start; stop; } as loc) =
+let print fmt ({ fn; start; stop; } as loc) =
   if loc <> nowhere
   then
     Format.fprintf fmt "%s %a-%a"
@@ -76,7 +76,7 @@ let print_loc fmt ({ fn; start; stop; } as loc) =
       print_pos start
       print_pos stop
 
-let print_loc_sameline fmt { fn; start; stop; }  =
+let print_sameline fmt { fn; start; stop; }  =
   if start.lnum <> stop.lnum then invalid_arg "print_loc_sameline";
   Format.fprintf fmt "\"%s\", line %d, characters %d-%d"
     fn
@@ -95,10 +95,10 @@ let join l1 l2 =
 type 'a located =
   {
     contents : 'a;
-    loc : loc;
+    loc : t;
   }
 
 let print_located print_contents ?(disp_loc = false) fmt { contents; loc; } =
   if disp_loc
-  then Format.fprintf fmt "@[%a:@ %a@]" print_loc loc print_contents contents
+  then Format.fprintf fmt "@[%a:@ %a@]" print loc print_contents contents
   else print_contents fmt contents

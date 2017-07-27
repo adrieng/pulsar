@@ -86,7 +86,7 @@ sig
   type pat =
     {
       p_desc : pat_desc;
-      p_loc : Loc.loc;
+      p_loc : Loc.t;
       p_ann : PatAnnot.t;
     }
 
@@ -99,7 +99,7 @@ sig
   type exp =
       {
         e_desc : exp_desc;
-        e_loc : Loc.loc;
+        e_loc : Loc.t;
         e_ann : ExpAnnot.t;
       }
 
@@ -125,7 +125,7 @@ sig
         eq_params : pat list;
         eq_ty : Type.t option;
         eq_rhs : exp;
-        eq_loc : Loc.loc;
+        eq_loc : Loc.t;
         eq_ann : EquAnnot.t;
       }
 
@@ -133,7 +133,7 @@ sig
     {
       b_kind : BlockKind.t;
       b_body : eq list;
-      b_loc : Loc.loc;
+      b_loc : Loc.t;
     }
 
   val print_pat : Format.formatter -> pat -> unit
@@ -151,7 +151,7 @@ sig
   type phr =
     {
       ph_desc : phr_desc;
-      ph_loc : Loc.loc;
+      ph_loc : Loc.t;
       ph_ann : PhrAnnot.t;
     }
 
@@ -182,7 +182,7 @@ struct
   type pat =
     {
       p_desc : pat_desc;
-      p_loc : Loc.loc;
+      p_loc : Loc.t;
       p_ann : PatAnnot.t;
     }
 
@@ -195,7 +195,7 @@ struct
   type exp =
       {
         e_desc : exp_desc;
-        e_loc : Loc.loc;
+        e_loc : Loc.t;
         e_ann : ExpAnnot.t;
       }
 
@@ -221,7 +221,7 @@ struct
         eq_params : pat list;
         eq_ty : Type.t option;
         eq_rhs : exp;
-        eq_loc : Loc.loc;
+        eq_loc : Loc.t;
         eq_ann : EquAnnot.t;
       }
 
@@ -229,7 +229,7 @@ struct
     {
       b_kind : BlockKind.t;
       b_body : eq list;
-      b_loc : Loc.loc;
+      b_loc : Loc.t;
     }
 
   let rec print_pat fmt p =
@@ -508,7 +508,7 @@ struct
   type phr =
     {
       ph_desc : phr_desc;
-      ph_loc : Loc.loc;
+      ph_loc : Loc.t;
       ph_ann : PhrAnnot.t;
     }
 

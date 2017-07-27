@@ -40,7 +40,7 @@ struct
 
   type t =
     {
-      m_loc : Loc.loc;
+      m_loc : Loc.t;
       m_pass : string;
       m_kind : kind;
       m_body : unit Warp.Print.printer;
@@ -57,7 +57,7 @@ struct
 
   let print fmt { m_loc; m_pass; m_kind; m_body; } =
     Format.fprintf fmt "@[%a%s[%a] %s:@ %a@]"
-      Loc.print_loc m_loc
+      Loc.print m_loc
       (if m_loc <> Loc.nowhere then " " else "")
       print_kind m_kind
       m_pass

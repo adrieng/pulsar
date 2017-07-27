@@ -39,35 +39,31 @@ val cnum : pos -> int
 val pos_of_lexing_pos : Lexing.position -> pos
 
 (** A source location, that is a range between two position *)
-type loc
+type t
 
 (** Create a location in a source file; raises Invalid_arg if [fn] is empty *)
-val make_loc : fn:string -> start:pos -> stop:pos -> loc
+val make : fn:string -> start:pos -> stop:pos -> t
 
 (** Create a location from a pair of Lexing.position; raises Invalid_arg if the
     positions are not in the same file *)
-val loc_of_lexing_pos_pair :
-  start:Lexing.position -> stop:Lexing.position -> loc
+val of_lexing_pos_pair :
+  start:Lexing.position -> stop:Lexing.position -> t
 
 (** Pretty-print a location *)
-val print_loc : Format.formatter -> loc -> unit
-
-(** Pretty-print a location, assuming both start and end are on the same line;
-    raise Invalid_arg otherwise *)
-val print_loc_sameline : Format.formatter -> loc -> unit
+val print : Format.formatter -> t -> unit
 
 (** The fictional location *)
-val nowhere : loc
+val nowhere : t
 
 (** computes the smallest location [l] s.t. [l1] and [l2] are both included in
     [l]; raises Invalid_arg if [l1] and [l2] belong to distinct files *)
-val join : loc -> loc -> loc
+val join : t -> t -> t
 
 (** A thing together with its location *)
 type 'a located =
   {
     contents : 'a;
-    loc : loc;
+    loc : t;
   }
 
 (** Pretty-print a thing using the provided pretty-printing function. Display

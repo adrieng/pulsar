@@ -252,7 +252,7 @@ let current_token_end { filename; lexbuf; lnum; loffset; } =
 let loc_of_last_lexeme ctx =
   let start = Loc.pos_of_lexing_pos (current_token_start ctx) in
   let stop = Loc.pos_of_lexing_pos (current_token_end ctx) in
-  Loc.make_loc ~fn:ctx.filename ~start ~stop
+  Loc.make ~fn:ctx.filename ~start ~stop
 
 let ctx_from_utf8_channel ~filename ic =
   ctx_of_lexbuf filename (Sedlexing.Utf8.from_channel ic)
