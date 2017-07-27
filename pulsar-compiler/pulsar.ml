@@ -11,32 +11,16 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
-open Parse
-open Parser
-open Compiler
-
-let frontend =
-  let open Pass in
-  Parse.pass
-  >>> Scoping.pass
-  >>> Typing.pass
-  >>> Typing.serialize
-
-let compiler =
-  frontend
-
-let args =
-  Options.global_command_line_arguments
-  @ Pass.command_line compiler
-
 let usage = "pulsar <options> <files>"
 
 let files = ref []
 
+let args = Flow.common_args
+
 let process filename =
   match Warp.Utils.file_extension filename with
   | ".pul" ->
-     ignore @@ Pass.run compiler filename
+     ignore @@ Compiler.Pass.run Flow.compiler filename
   | _ ->
     Printf.eprintf "%s: don't know what to do with %s\n"
       Sys.argv.(0)

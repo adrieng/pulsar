@@ -1,9 +1,9 @@
 (jbuild_version 1)
 
-(executable
+(library
  (
   (name pulsar)
-  (public_name pulsar)
+  (wrapped false)
   (libraries (warp unix str sedlex menhirLib))
   (preprocess (per_module ((pps (sedlex.ppx)) (lexer))))
   ))
