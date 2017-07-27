@@ -556,6 +556,7 @@ struct
     Warp.Print.pp_list
       ~pp_left:(fun fmt () -> Format.fprintf fmt "@\n")
       ~pp_sep:(fun fmt () -> Format.fprintf fmt "@\n@\n")
+      ~pp_right:(fun fmt () -> Format.fprintf fmt "@\n")
       print_phr
       fmt
       f_phrases;

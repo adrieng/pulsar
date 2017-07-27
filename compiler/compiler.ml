@@ -144,7 +144,7 @@ struct
           Format.eprintf "(* Finished running %s in %f seconds *)@."
             at.name
             time;
-          Format.eprintf "%a@." at.pp_out y;
+          Format.eprintf "%a@?" at.pp_out y;
         end;
       if Options.pass_serialize at.name then serialize at y;
       if Options.pass_stop_after at.name then exit 0;
