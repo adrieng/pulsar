@@ -123,10 +123,12 @@ struct
     let oc = open_out output_file in
     let fmt = Format.formatter_of_out_channel oc in
     let tm = Unix.(localtime @@ time ()) in
-    Format.fprintf fmt "(* %s generated %d/%d/%d %.2d:%.2d:%.2d *)@\n"
+    Format.fprintf fmt "(* %s generated %.2d:%.2d:%.2d %.2d/%.2d/%d *)@\n"
       output_file
-      tm.tm_mon tm.tm_mday tm.tm_year
-      tm.tm_hour tm.tm_min tm.tm_sec;
+      tm.tm_hour tm.tm_min tm.tm_sec
+      tm.tm_mon tm.tm_mday (1900 + tm.tm_year);
+    Format.fprintf fmt "(* command-line: %a *)@\n"
+      Warp.Print.(pp_array ~pp_sep:pp_space pp_string) Sys.argv;
     Format.fprintf fmt "%a@?" at.pp_out y;
     close_out oc
   ;;

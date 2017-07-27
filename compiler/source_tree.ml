@@ -552,7 +552,6 @@ struct
       }
 
   let print_file fmt { f_name; f_phrases; } =
-    Format.fprintf fmt "(* File \"%s\" *)@\n" f_name;
     Warp.Print.pp_list
       ~pp_left:(fun fmt () -> Format.fprintf fmt "@\n")
       ~pp_sep:(fun fmt () -> Format.fprintf fmt "@\n@\n")
