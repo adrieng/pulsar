@@ -34,12 +34,15 @@ module T = Source_tree.Make(
 )
 
 let seq_ctx ctx ctx' =
-  let add ctx (id, coe) =
-    let coe' = try List.assoc id ctx' with Not_found -> Coercion.Id in
-    let coe = Coercion.seq (coe, coe') in
-    if coe = Coercion.Id then ctx else (id, coe) :: ctx
+  let ctx = Ident.Env.of_list ctx in
+  let ctx' = Ident.Env.of_list ctx' in
+  let seq id c c' =
+    match c, c' with
+    | None, None -> None
+    | Some c, None | None, Some c -> Some c
+    | Some c, Some c' -> Some (Coercion.seq (c, c'))
   in
-  List.fold_left add [] ctx
+  Ident.Env.to_list @@ Ident.Env.merge seq ctx ctx'
 
 let simplify_ctx ctx =
   seq_ctx ctx []
