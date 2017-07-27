@@ -113,10 +113,29 @@ struct
   let ( >>> ) p1 p2 =
     Seq (p1, p2)
 
+  let serialize at y =
+    let input_file = Prop.(get File) in
+    let output_file =
+      Printf.sprintf "%s.%s.pul"
+        (Filename.chop_extension input_file)
+        at.name
+    in
+    let oc = open_out output_file in
+    let fmt = Format.formatter_of_out_channel oc in
+    let tm = Unix.(localtime @@ time ()) in
+    Format.fprintf fmt "(* %s generated %d/%d/%d %.2d:%.2d:%.2d *)@\n"
+      output_file
+      tm.tm_mon tm.tm_mday tm.tm_year
+      tm.tm_hour tm.tm_min tm.tm_sec;
+    Format.fprintf fmt "%a@?" at.pp_out y;
+    close_out oc
+  ;;
+
   let run_atomic at x =
+    Prop.pass := at.name;
+    if Options.pass_stop_before at.name then exit 0;
     if !Options.debug || Options.pass_debug at.name
     then Format.eprintf "(* Running pass %s *)@." at.name;
-    Prop.pass := at.name;
     try
       let time, y = Warp.Utils.time_call at.body x in
       if !Options.debug || Options.pass_debug at.name
@@ -127,6 +146,8 @@ struct
             time;
           Format.eprintf "%a@." at.pp_out y;
         end;
+      if Options.pass_serialize at.name then serialize at y;
+      if Options.pass_stop_after at.name then exit 0;
       y
     with Message.Error err ->
          Format.eprintf "%a@."Message.print err;
@@ -157,5 +178,14 @@ struct
       "-debug-pass",
       Arg.Symbol (pass_names p, Options.set_debug),
       " display debugging information for pass";
+      "-serialize",
+      Arg.Symbol (pass_names p, Options.set_serialize),
+      " serialize the output of pass to file.pass.ext";
+      "-stop-before",
+      Arg.Symbol (pass_names p, Options.set_stop_before),
+      " stop before running pass";
+      "-stop-after",
+      Arg.Symbol (pass_names p, Options.set_stop_after),
+      " stop after running pass";
     ]
 end

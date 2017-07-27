@@ -31,35 +31,54 @@ let yes_no ~opt ~msg r =
 
 let debug = ref false
 
-let debug_lexing = ref false
+type pass_info =
+  {
+    mutable debug : bool;
+    mutable serialize : bool;
+    mutable stop_after : bool;
+    mutable stop_before : bool;
+  }
 
-let debug_parsing = ref false
+let pass_table : (string, pass_info) Hashtbl.t =
+  Hashtbl.create 25
 
-let debug_scoping = ref false
-
-let debug_typing = ref false
-
-let debug_table =
-  [
-    "lexing", debug_lexing;
-    "parsing", debug_parsing;
-    "scoping", debug_scoping;
-    "typing", debug_typing;
-  ]
+let find_pass s =
+  try Hashtbl.find pass_table s
+  with Not_found ->
+    let pi =
+      {
+        debug = false;
+        serialize = false;
+        stop_after = false;
+        stop_before = false;
+      }
+    in
+    Hashtbl.add pass_table s pi;
+    pi
 
 let set_debug s =
-  try
-    let r = List.assoc s debug_table in
-    r := true
-  with Not_found ->
-    invalid_arg ("set_debug: " ^ s)
+  (find_pass s).debug <- true
 
 let pass_debug s =
-  try
-    let r = List.assoc s debug_table in
-    !r
-  with Not_found ->
-    false
+  (find_pass s).debug
+
+let set_serialize s =
+  (find_pass s).serialize <- true
+
+let pass_serialize s =
+  (find_pass s).serialize
+
+let set_stop_before s =
+  (find_pass s).stop_before <- true
+
+let pass_stop_before s =
+  (find_pass s).stop_before
+
+let set_stop_after s =
+  (find_pass s).stop_after <- true
+
+let pass_stop_after s =
+  (find_pass s).stop_after
 
 (* Misc global options *)
 

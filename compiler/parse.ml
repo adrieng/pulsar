@@ -24,7 +24,7 @@ let parse_pulsar_file filename =
   let lex = Lexer.ctx_from_utf8_channel ~filename ic in
   let supplier () =
     let tok, start, stop = Lexer.next_token_pos lex in
-    if !Options.debug_lexing
+    if !Options.debug
     then Format.eprintf "%a @?" Lexer.print_token tok;
     tok, start, stop
   in
