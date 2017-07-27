@@ -16,8 +16,10 @@ let parse_pulsar_file filename =
   let ic =
     try open_in filename
     with Sys_error msg ->
-      let text = Printf.sprintf "Could not open file %s\n%s" filename msg in
-      Compiler.Message.error ~text ()
+      let body fmt () =
+        Format.fprintf fmt "Could not open file %s\n%s" filename msg
+      in
+      Compiler.Message.error ~body ()
   in
   let lex = Lexer.ctx_from_utf8_channel ~filename ic in
   let supplier () =

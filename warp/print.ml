@@ -158,3 +158,6 @@ let pp_array
       loop 1;
       pp_right fmt ()
     end
+
+let pp_thunk fmt thunk =
+  Format.fprintf fmt "%a" thunk ()

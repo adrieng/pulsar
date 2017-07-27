@@ -11,8 +11,11 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
+(** The global variable [utf8_output] controls whether UTF-8 characters should
+    be emitted by some of the functions below. *)
 val utf8_output : bool ref
 
+(** The type of pretty-printers. *)
 type 'a printer = Format.formatter -> 'a -> unit
 
 val string_of : 'a printer -> 'a -> string
@@ -74,3 +77,6 @@ val pp_array :
   ?pp_sep:unit printer ->
   'a printer ->
   'a array printer
+
+val pp_thunk :
+  unit printer printer

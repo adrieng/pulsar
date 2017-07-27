@@ -58,51 +58,51 @@ let print_infer_kind fmt k =
        Scoped_tree.T.print_pat p
 
 let type_clash ~expected ~actual ~loc =
-  let msg fmt () =
-    Format.fprintf fmt "@[<h>expected %a but got %a@]"
+  let body fmt () =
+    Format.fprintf fmt "expected %a@ but got %a"
       print_expectation expected
       Type.print actual
   in
-  Compiler.Message.error ~loc ~text:(Warp.Print.string_of msg ()) ()
+  Compiler.Message.error ~loc ~body ()
 
 let cannot_infer ~kind ~loc =
-  let msg fmt () =
-    Format.fprintf fmt "@[<h>cannot guess the type of %a@]"
+  let body fmt () =
+    Format.fprintf fmt "cannot guess the type of %a"
       print_infer_kind kind
   in
-  Compiler.Message.error ~loc ~text:(Warp.Print.string_of msg ()) ()
+  Compiler.Message.error ~loc ~body ()
 
 let cannot_coerce ~ty ~coe ~loc =
-  let msg fmt () =
-    Format.fprintf fmt "@[<h>cannot apply coercion %a to %a@]"
+  let body fmt () =
+    Format.fprintf fmt "cannot apply coerci@[<v>on @[%a@]@ to @[%a@]@]"
       Coercion.print coe
       Type.print ty
   in
-  Compiler.Message.error ~loc ~text:(Warp.Print.string_of msg ()) ()
+  Compiler.Message.error ~loc ~body ()
 
 let ill_typed_pat ~pat ~expected =
-  let msg fmt () =
-    Format.fprintf fmt "@[<h>cannot type pattern %a with %a@]"
+  let body fmt () =
+    Format.fprintf fmt "cannot type pat@[<v>tern @[%a@]@ with @[%a@]@]"
       S.print_pat pat
       Type.print expected
   in
-  Compiler.Message.error ~loc:pat.S.p_loc ~text:(Warp.Print.string_of msg ()) ()
+  Compiler.Message.error ~loc:pat.S.p_loc ~body ()
 
 let not_a_subtype ~ty1 ~ty2 ~clash_ty1 ~clash_ty2 loc =
-  let msg fmt () =
-     Format.fprintf fmt
-       "@[<v>%a is not a subtype of %a"
-       Type.print ty1
-       Type.print ty2;
-     if ty1 <> clash_ty1 || ty2 <> clash_ty2
-     then
-       Format.fprintf fmt
-         " since %a is not a subtype of %a"
-         Type.print clash_ty1
-         Type.print clash_ty2;
-     Format.fprintf fmt "@]"
+  let body fmt () =
+    Format.fprintf fmt
+      "%a is not a subtype of %a"
+      Type.print ty1
+      Type.print ty2;
+    if ty1 <> clash_ty1 || ty2 <> clash_ty2
+    then
+      Format.fprintf fmt
+        " since %a is not a subtype of %a"
+        Type.print clash_ty1
+        Type.print clash_ty2;
+    Format.fprintf fmt "@]"
   in
-  Compiler.Message.error ~loc ~text:(Warp.Print.string_of msg ()) ()
+  Compiler.Message.error ~loc ~body ()
 
 (* Debugging *)
 

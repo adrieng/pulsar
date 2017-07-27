@@ -31,11 +31,11 @@ sig
   (** The following functions can be called by passes to communicate messages to
       the user. The [error] function never returns. *)
 
-  val error : ?loc:Loc.loc -> text:string -> unit -> 'a
+  val error : ?loc:Loc.loc -> body:unit Warp.Print.printer -> unit -> 'a
 
-  val warning : ?loc:Loc.loc -> text:string -> unit -> unit
+  val warning : ?loc:Loc.loc -> body:unit Warp.Print.printer -> unit -> unit
 
-  val info : ?loc:Loc.loc -> text:string -> unit -> unit
+  val info : ?loc:Loc.loc -> body:unit Warp.Print.printer -> unit -> unit
 end
 
 module Pass :

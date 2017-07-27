@@ -18,14 +18,15 @@ module S = Scoped_tree.T
 (* Error handling *)
 
 let unbound_identifier id loc =
-  let text = "unbound identifier " ^ id in
-  Compiler.Message.error ~loc ~text ()
+  let body fmt () = Format.fprintf fmt "unbound identifier %s" id in
+  Compiler.Message.error ~loc ~body ()
 
 let duplicate_identifier id loc =
-  let text =
-    "the identifier " ^ id ^ " is bound multiple times in this block"
+  let body fmt () =
+    Format.fprintf fmt "the identifier %s is bound multiple times in this block"
+      id
   in
-  Compiler.Message.error ~loc ~text ()
+  Compiler.Message.error ~loc ~body ()
 
 (* Debugging *)
 

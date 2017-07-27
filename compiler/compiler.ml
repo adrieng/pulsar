@@ -43,7 +43,7 @@ struct
       m_loc : Loc.loc;
       m_pass : string;
       m_kind : kind;
-      m_text : string;
+      m_body : unit Warp.Print.printer;
     }
 
   let print_kind fmt k =
@@ -55,32 +55,32 @@ struct
     | Info ->
        Format.fprintf fmt "info"
 
-  let print fmt { m_loc; m_pass; m_kind; m_text; } =
-    Format.fprintf fmt "@[<h>%a%s[%a] %s:@ %s@]"
+  let print fmt { m_loc; m_pass; m_kind; m_body; } =
+    Format.fprintf fmt "@[%a%s[%a] %s:@ %a@]"
       Loc.print_loc m_loc
       (if m_loc <> Loc.nowhere then " " else "")
       print_kind m_kind
       m_pass
-      m_text
+      Warp.Print.pp_thunk m_body
 
-  let make ~loc ~kind ~text =
+  let make ~loc ~kind ~body =
     {
       m_loc = loc;
       m_pass = !Prop.pass;
       m_kind = kind;
-      m_text = text;
+      m_body = body;
     }
 
   exception Error of t
 
-  let error ?(loc = Loc.nowhere) ~text () =
-    raise (Error (make ~loc ~kind:Error ~text))
+  let error ?(loc = Loc.nowhere) ~body () =
+    raise (Error (make ~loc ~kind:Error ~body))
 
-  let warning ?(loc = Loc.nowhere) ~text () =
-    Format.eprintf "%a@." print (make ~loc ~kind:Warning ~text)
+  let warning ?(loc = Loc.nowhere) ~body () =
+    Format.eprintf "%a@." print (make ~loc ~kind:Warning ~body)
 
-  let info ?(loc = Loc.nowhere) ~text () =
-    Format.printf "%a@." print (make ~loc ~kind:Info ~text)
+  let info ?(loc = Loc.nowhere) ~body () =
+    Format.printf "%a@." print (make ~loc ~kind:Info ~body)
 end
 
 module Pass =
