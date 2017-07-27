@@ -491,7 +491,7 @@ let rec type_exp env e =
          E.add id (output_type ~id coe ty) env
        in
        let env = List.fold_left apply_coe_env env ctx in
-       let exp = type_exp env e in
+       let exp = type_exp env exp in
        let ty = output_type res (e_ty exp) in
        ty, T.ESub { ctx; exp; res; }
   in
