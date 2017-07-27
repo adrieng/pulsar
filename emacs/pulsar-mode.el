@@ -50,6 +50,10 @@
     (modify-syntax-entry ?⇒ "w" st)
     (modify-syntax-entry ?- "w" st)
     (modify-syntax-entry ?> "w" st)
+    (modify-syntax-entry ?< "w" st)
+    (modify-syntax-entry ?{ "w" st)
+    (modify-syntax-entry ?} "w" st)
+    (modify-syntax-entry ?! "w" st)
     st)
   "Syntax table for `pulsar-mode'.")
 
@@ -59,7 +63,7 @@
   (rx
    word-boundary
    (group-n 1 (or "where" "rec" "seq" "par" "when" "merge" "by" "let" "in"
-                  "extern" "λ" "=>" "⇒"))
+                  "extern" "λ" "=>" "⇒" ">>" "<<" "{!" "!}"))
    word-boundary
    ))
 
