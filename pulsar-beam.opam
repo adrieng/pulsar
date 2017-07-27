@@ -1,0 +1,21 @@
+opam-version: "1.2"
+name: "pulsar-beam"
+version: "0.0"
+maintainer: "Adrien Guatto <adrien@guatto.org>"
+authors: "Adrien Guatto <adrien@guatto.org>"
+homepage: "https://github.com/adrieng/pulsar"
+bug-reports: "https://github.com/adrieng/pulsar/issues"
+license: "GPL-3"
+dev-repo: "https://github.com/adrieng/pulsar"
+build: [
+  ["jbuilder" "build" "--only-packages" name
+   "--root" "." "-j" jobs "@install"]
+]
+depends: [
+  "base-unix"
+  "jbuilder" {build}
+  "ocamlfind" {build}
+  "pulsar-lib"
+  "yojson" >= "1.4.0"
+]
+available: ocaml-version >= "4.03.0"

@@ -1,0 +1,9 @@
+(jbuild_version 1)
+
+(executable
+ (
+  (name beam)
+  (public_name pulsar-beam)
+  (package pulsar-beam)
+  (libraries (pulsar))
+  ))
