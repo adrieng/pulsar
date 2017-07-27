@@ -57,7 +57,7 @@ let print_infer_kind fmt k =
      Format.fprintf fmt "pattern %a"
        Scoped_tree.T.print_pat p
 
-let type_clash ~expected ~actual ~loc =
+let type_clash ~expected ~actual ~loc () =
   let body fmt () =
     Format.fprintf fmt "expected %a@ but got %a"
       print_expectation expected
@@ -65,22 +65,27 @@ let type_clash ~expected ~actual ~loc =
   in
   Compiler.Message.error ~loc ~body ()
 
-let cannot_infer ~kind ~loc =
+let cannot_infer ~kind ~loc () =
   let body fmt () =
     Format.fprintf fmt "cannot guess the type of %a"
       print_infer_kind kind
   in
   Compiler.Message.error ~loc ~body ()
 
-let cannot_coerce ~ty ~coe ~loc =
+let cannot_coerce ?id ~ty ~coe ~loc () =
   let body fmt () =
-    Format.fprintf fmt "cannot apply coerci@[<v>on @[%a@]@ to @[%a@]@]"
+    Format.fprintf fmt "cannot apply coerci@[<v>on @[%a@]@ to @[%a@]"
       Coercion.print coe
-      Type.print ty
+      Type.print ty;
+    begin match id with
+    | None -> ()
+    | Some id -> Format.fprintf fmt "@ applied on %a" Ident.print id
+    end;
+    Format.fprintf fmt "@]"
   in
   Compiler.Message.error ~loc ~body ()
 
-let ill_typed_pat ~pat ~expected =
+let ill_typed_pat ~pat ~expected () =
   let body fmt () =
     Format.fprintf fmt "cannot type pat@[<v>tern @[%a@]@ with @[%a@]@]"
       S.print_pat pat
@@ -276,21 +281,21 @@ let get_base loc actual =
   | Type.Base bty ->
      bty
   | _ ->
-     type_clash ~expected:Base ~actual ~loc
+     type_clash ~expected:Base ~actual ~loc ()
 
 let get_stream loc actual =
   match actual with
   | Type.Stream bty ->
      bty
   | _ ->
-     type_clash ~expected:Stream ~actual ~loc
+     type_clash ~expected:Stream ~actual ~loc ()
 
 let get_prod loc actual =
   match actual with
   | Type.Prod (ty1, ty2) ->
      ty1, ty2
   | _ ->
-     type_clash ~expected:Prod ~actual ~loc
+     type_clash ~expected:Prod ~actual ~loc ()
 
 (** [inv_XXX] functions solve inequations *)
 
@@ -302,7 +307,7 @@ let inv_fun e =
      fail if the warped type is not greater than (1). *)
      coerce ~loc:e.T.e_loc e (Type.Fun (ty1, ty2)), ty1, ty2
   | _ ->
-     type_clash ~expected:(Sub Fun) ~actual:e.T.e_ann ~loc:e.T.e_loc
+     type_clash ~expected:(Sub Fun) ~actual:e.T.e_ann ~loc:e.T.e_loc ()
 
 let inv_prod e =
   let ty, c1, _ = simplify_ty e.T.e_ann in
@@ -311,7 +316,7 @@ let inv_prod e =
      (* Same as above, but coerce never fails. *)
      coerce ~loc:e.T.e_loc e ty, ty1, ty2
   | _ ->
-     type_clash ~expected:(Sub Prod) ~actual:e.T.e_ann ~loc:e.T.e_loc
+     type_clash ~expected:(Sub Prod) ~actual:e.T.e_ann ~loc:e.T.e_loc ()
 
 let inv_base e =
   let ty, c1, _ = simplify_ty e.T.e_ann in
@@ -320,7 +325,7 @@ let inv_base e =
      (* Same as above, coerce may fail as in [inv_fun]. *)
      coerce ~loc:e.T.e_loc e (Type.Base bty), bty
   | _ ->
-     type_clash ~expected:(Sub Base) ~actual:e.T.e_ann ~loc:e.T.e_loc
+     type_clash ~expected:(Sub Base) ~actual:e.T.e_ann ~loc:e.T.e_loc ()
 
 (* Main code *)
 
@@ -345,7 +350,7 @@ let rec expect_pat p ty out_env =
        out_env, T.PCons (p1, p2)
     | S.PAnnot (p, ty') ->
        if not (Type.equal ty ty')
-       then type_clash ~expected:(Exact ty') ~actual:ty ~loc:p.S.p_loc;
+       then type_clash ~expected:(Exact ty') ~actual:ty ~loc:p.S.p_loc ();
        let out_env, p = expect_pat p ty out_env in
        out_env, T.PAnnot (p, ty')
   in
@@ -360,7 +365,7 @@ let rec type_pat env p =
   let env, pd, ty =
     match p.S.p_desc with
     | S.PVar id ->
-       cannot_infer ~kind:(Pat p) ~loc:p.S.p_loc
+       cannot_infer ~kind:(Pat p) ~loc:p.S.p_loc ()
 
     | S.PPair (p1, p2) ->
        let env, p1 = type_pat env p1 in
@@ -387,7 +392,7 @@ let rec type_pat env p =
 let bind_rec_eq out_env eq =
   let res_ty =
     match eq.S.eq_ty with
-    | None -> cannot_infer ~kind:(Eq eq) ~loc:eq.S.eq_loc
+    | None -> cannot_infer ~kind:(Eq eq) ~loc:eq.S.eq_loc ()
     | Some res_ty -> res_ty
   in
   let _, params =
@@ -476,14 +481,14 @@ let rec type_exp env e =
        annot, T.EAnnot { exp; kind; annot; }
 
     | S.ESub { ctx; exp; res; } ->
-       let output_type coe ty =
+       let output_type ?id coe ty =
          try Coercion.output_type coe ty
          with Coercion.Ill_typed ->
-           cannot_coerce ~ty ~coe ~loc:e.S.e_loc
+           cannot_coerce ?id ~ty ~coe ~loc:e.S.e_loc ()
        in
        let apply_coe_env env (id, coe) =
          let ty = E.find id env in
-         E.add id (output_type coe ty) env
+         E.add id (output_type ~id coe ty) env
        in
        let env = List.fold_left apply_coe_env env ctx in
        let exp = type_exp env e in

@@ -104,9 +104,6 @@ let ones p ii =
 
   (* /!\ zero-indexed /!\ *)
   let ones_word w i =
-    (* Format.eprintf "ones_word [@[%a@]] %d@." *)
-    (*   Word.print w *)
-    (*   i; *)
     let w1, _ = split_at i w in
     weight w1
   in
