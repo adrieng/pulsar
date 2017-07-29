@@ -5,5 +5,5 @@
   (name beam)
   (public_name pulsar-beam)
   (package pulsar-beam)
-  (libraries (pulsar))
+  (libraries (warp pulsar yojson))
   ))

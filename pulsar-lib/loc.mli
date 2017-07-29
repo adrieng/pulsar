@@ -44,6 +44,12 @@ type t
 (** Create a location in a source file; raises Invalid_arg if [fn] is empty *)
 val make : fn:string -> start:pos -> stop:pos -> t
 
+(** [file loc] returns the file described by [loc]. *)
+val file : t -> string
+
+(** [range loc] returns the range spanned by [loc]. *)
+val range : t -> pos * pos
+
 (** Create a location from a pair of Lexing.position; raises Invalid_arg if the
     positions are not in the same file *)
 val of_lexing_pos_pair :

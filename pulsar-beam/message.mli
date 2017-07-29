@@ -11,15 +11,33 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
-open Flow
-open Message
+type decoding_error = { reason : string; json : Yojson.json; }
 
-let test =
-  let pos = Loc.make_pos ~lnum:0 ~cnum:0 in
-  let loc = Loc.(make ~fn:"test.pul" ~start:pos ~stop:pos) in
-  Request.(Show { loc; kind = `Type; })
+exception Could_not_decode of decoding_error
 
-let _ =
-  Yojson.to_channel stdout (Request.to_json test);
-  print_newline ();
-  ()
+module Request :
+sig
+  type t =
+    | Show of { loc : Loc.t; kind : [`Type]; }
+
+  val of_json : Yojson.json -> t
+
+  val to_json : t -> Yojson.json
+end
+
+module Response :
+sig
+  type ok =
+    | Show of { loc : Loc.t; content : string; }
+
+  type ko =
+    | Decoding of { reason : string; }
+
+  type t =
+    | Ok of ok
+    | Ko of ko
+
+  val of_json : Yojson.json -> t
+
+  val to_json : t -> Yojson.json
+end

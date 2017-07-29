@@ -17,6 +17,13 @@ let uncurry f (x, y) = f x y
 
 type ('a, 'b) sum = Left of 'a | Right of 'b
 
+module Zero =
+  ((struct type t = unit end) : (sig type t end))
+
+type zero = Zero.t
+
+let zero_elim (_ : zero) = assert false
+
 type cmp = LT | GT | EQ
 
 let comp x y = if x < y then LT else if x > y then GT else EQ

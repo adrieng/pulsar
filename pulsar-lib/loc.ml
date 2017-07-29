@@ -57,6 +57,12 @@ let make ~fn ~start ~stop =
   else if not (start <= stop) then invalid_arg "make_loc: stop < start"
   else { fn; start; stop; }
 
+let file { fn; _ } =
+  fn
+
+let range { start; stop; _ } =
+  start, stop
+
 let of_lexing_pos_pair ~start ~stop =
   let fn = start.Lexing.pos_fname in
   if fn <> stop.Lexing.pos_fname
