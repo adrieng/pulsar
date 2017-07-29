@@ -11,7 +11,9 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
-type decoding_error = { reason : string; json : Yojson.json; }
+type json = Yojson.Basic.json
+
+type decoding_error = { reason : string; json : json; }
 
 exception Could_not_decode of decoding_error
 
@@ -20,9 +22,9 @@ sig
   type t =
     | Show of { loc : Loc.t; kind : [`Type]; }
 
-  val of_json : Yojson.json -> t
+  val of_json : json -> t
 
-  val to_json : t -> Yojson.json
+  val to_json : t -> json
 end
 
 module Response :
@@ -37,7 +39,7 @@ sig
     | Ok of ok
     | Ko of ko
 
-  val of_json : Yojson.json -> t
+  val of_json : json -> t
 
-  val to_json : t -> Yojson.json
+  val to_json : t -> json
 end

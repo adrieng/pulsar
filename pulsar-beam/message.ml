@@ -13,7 +13,9 @@
 
 module U = Warp.Utils
 
-type decoding_error = { reason : string; json : Yojson.json; }
+type json = Yojson.Basic.json
+
+type decoding_error = { reason : string; json : json; }
 
 exception Could_not_decode of decoding_error
 
