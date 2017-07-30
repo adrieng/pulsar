@@ -85,13 +85,11 @@ struct
 
   let warning ?(loc = Loc.nowhere) ~body () =
     let diag = make ~loc ~kind:Warning ~body in
-    !rcb diag;
-    Format.eprintf "%a@." print diag
+    !rcb diag
 
   let info ?(loc = Loc.nowhere) ~body () =
     let diag = make ~loc ~kind:Info ~body in
-    !rcb diag;
-    Format.eprintf "%a@." print diag
+    !rcb diag
 end
 
 module Pass =
@@ -144,6 +142,10 @@ struct
     close_out oc
   ;;
 
+  type 'a result =
+    | Correct of 'a
+    | Error of Diagnostic.t
+
   let run_atomic at x =
     Prop.pass := at.name;
     if Options.pass_stop_before at.name then exit 0;
@@ -161,20 +163,23 @@ struct
         end;
       if Options.pass_serialize at.name then serialize at y;
       if Options.pass_stop_after at.name then exit 0;
-      y
+      Correct y
     with Diagnostic.Error err ->
-         Format.eprintf "%a@." Diagnostic.print err;
-         exit 1
+      Error err
 
   let run p x =
-    let rec loop : type a b. (a -> b) t -> a -> b =
+    let rec loop : type a b. (a -> b) t -> a -> b result =
       fun p x ->
       match p with
       | Atomic at ->
          run_atomic at x
       | Seq (p1, p2) ->
-         let y = loop p1 x in
-         loop p2 y
+         begin match loop p1 x with
+         | Error diag ->
+            Error diag
+         | Correct y ->
+            loop p2 y
+         end
     in
     loop p x
 

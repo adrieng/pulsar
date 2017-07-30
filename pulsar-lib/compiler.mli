@@ -69,7 +69,11 @@ sig
 
   (** {3 Executing passes} *)
 
-  val run : ('a -> 'b) t -> 'a -> 'b
+  type 'a result =
+    | Correct of 'a
+    | Error of Diagnostic.t
+
+  val run : ('a -> 'b) t -> 'a -> 'b result
 
   (** {3 Misc} *)
 

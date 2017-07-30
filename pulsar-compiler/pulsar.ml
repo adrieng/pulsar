@@ -15,12 +15,22 @@ let usage = "pulsar <options> <files>"
 
 let files = ref []
 
+let diagnostic_callback diag =
+  Format.eprintf "%a@?" Compiler.Diagnostic.print diag
+
 let args = Flow.common_args
 
 let process filename =
   match Warp.Utils.file_extension filename with
   | ".pul" ->
-     ignore @@ Compiler.Pass.run Flow.compiler filename
+     let open Compiler.Pass in
+     let res = run Flow.compiler filename in
+     begin match res with
+     | Correct _ ->
+        ()
+     | Error _ ->
+        exit 1
+     end
   | _ ->
     Printf.eprintf "%s: don't know what to do with %s\n"
       Sys.argv.(0)
@@ -29,5 +39,6 @@ let process filename =
     exit 1
 
 let _ =
+  Compiler.Diagnostic.on_diagnostic diagnostic_callback;
   Arg.parse args (fun s -> files := s :: !files) usage;
   List.iter process (List.rev !files)
