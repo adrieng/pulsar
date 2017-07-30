@@ -20,6 +20,7 @@
 (require 'rx)
 (require 'smie)
 (require 'compile)
+(require 'json)
 
 ;; Customization
 
@@ -34,6 +35,80 @@
   :type 'string
   :tag "Command for Pulsar"
   :options '("pulsar"))
+
+(defcustom pulsar-beam-command "pulsar-beam"
+  "The command to be run for Pulsar."
+  :group 'pulsar
+  :type 'string
+  :tag "Command for Pulsar Beam"
+  :options '("pulsar-beam"))
+
+;; Interactive stuff
+
+(defun pulsar--beam-request (req)
+  (let ((command (format "%s \'%s\'" pulsar-beam-command req)))
+    (shell-command-to-string command)))
+
+(defun pulsar--column-number-at-pos (pos)
+  (save-excursion
+    (goto-char pos)
+    (current-column)))
+
+(defun pulsar--pair-of-pos (pos)
+  (let ((lnum (line-number-at-pos pos))
+        (cnum (pulsar--column-number-at-pos pos)))
+    `(,lnum ,cnum)))
+
+(defun pulsar--json-show-type (file pos)
+  (json-encode
+   `(:tag "show"
+     :value (:file ,file :pos ,(pulsar--pair-of-pos pos) :kind "Type"))))
+
+(defun pulsar--pos-of-array (arr)
+  (let ((lnum (aref arr 0))
+        (cnum (aref arr 1)))
+    (save-excursion
+      (goto-line lnum)
+      (move-to-column cnum)
+      (point))))
+
+(defun pulsar--unpack-loc (loc)
+  (pcase loc
+    (`(:file ,file :start ,start :stop ,stop)
+     `(,file ,(pulsar--pos-of-array start) ,(pulsar--pos-of-array stop)))
+    (_ (error "not a loc %S" loc))))
+
+(defvar pulsar--show-overlay
+  nil)
+
+(defun pulsar--clear-show-overlay ()
+  (message "LOL?")
+  (move-overlay pulsar--show-overlay 1 1))
+
+(defun pulsar--highlight-range (loc message)
+  (pcase (pulsar--unpack-loc loc)
+    (`(,file ,start ,end)
+     (move-overlay pulsar--show-overlay start end)
+     (message "%s" message))))
+
+(defun pulsar--process-response (out)
+  (let* ((json-object-type 'plist)
+         (resp (json-read-from-string out)))
+    (message "%S\n" resp)
+    (pcase resp
+      (`(:tag "ok" :value ,ok)
+       (pcase ok
+         (`(:tag "silent" :value nil) ())
+         (`(:tag "show" :value (:loc ,loc :content ,content))
+          (pulsar--highlight-range loc content))
+         (_ (message "unknown answer %S" resp))))
+      (_ ())
+      )))
+
+(defun pulsar-show-type-at-point ()
+  (interactive)
+  (let ((req (pulsar--json-show-type (buffer-file-name) (point))))
+    (pulsar--process-response (pulsar--beam-request req))))
 
 ;; Syntax table
 
@@ -259,6 +334,7 @@
 (defvar pulsar-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-c") 'pulsar-compile-buffer)
+    (define-key map (kbd "C-c C-t") 'pulsar-show-type-at-point)
     map)
   "Keymap for `pulsar-mode'.")
 
@@ -273,6 +349,12 @@
 
   (setq-local comment-start "(*")
   (setq-local comment-start "*)")
+
+  ;; Interactive stuff
+  (make-local-variable 'pulsar--show-overlay)
+  (setq pulsar--show-overlay (make-overlay 1 1))
+  (overlay-put pulsar--show-overlay 'face '(:inverse-video t))
+  (add-hook 'echo-area-clear-hook 'pulsar--clear-show-overlay nil t)
 
   ;; Font-lock
   (setq-local font-lock-defaults '(pulsar-font-lock-keywords))
@@ -302,7 +384,6 @@
        (add-to-list 'flycheck-checkers 'pulsar)))
 
   ;; Compile
-  ;; (eval-after-load 'compile 'pulsar--install-compilation-error-regex)
   (pulsar--install-compilation-error-regex)
   )
 
