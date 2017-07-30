@@ -76,3 +76,44 @@ module Vars(T : Source_tree.Tree with type Id.t = Ident.t) =
          let bound_vars = bound_vars_block () in
          bound_vars, S.diff (free_vars_eqs b_body) bound_vars
   end
+
+module Sub(T : Source_tree.Tree) =
+struct
+  open T
+
+  let rec sub_pat p =
+    match p.p_desc with
+    | PVar _ ->
+       []
+    | PPair (p1, p2) | PCons (p1, p2) ->
+       [ `Pat p1; `Pat p2; ]
+    | PAnnot (p, _) ->
+       [ `Pat p ]
+
+  let sub_exp e =
+    match e.e_desc with
+    | EVar _ | EExternal _ | EConst _ ->
+       []
+    | ELam (p, e) ->
+       [ `Pat p; `Exp e; ]
+    | EApp (e1, e2) | ECons (e1, e2) | EPair (e1, e2) ->
+       [ `Exp e1; `Exp e2; ]
+    | EFst e | ESnd e | EAnnot { exp = e; _ } | EBy { body = e; } ->
+       [ `Exp e; ]
+    | ELet { block; body; } | EWhere { body; block; } ->
+       [ `Exp body; `Block block; ]
+    | ESub { ctx; exp; res; } ->
+       List.map (fun (_, coe) -> `Coe coe) ctx
+       @ [ `Exp exp; `Coe res; ]
+
+  let sub_eq eq =
+    `Pat eq.eq_lhs
+    :: List.map (fun p -> `Pat p) eq.eq_params
+    @ [ `Exp eq.eq_rhs; ]
+
+  let sub_block block =
+    List.map (fun eq -> `Eq eq) block.b_body
+
+  let sub_phrases file =
+    List.map (fun phr -> `Phr phr) file.f_phrases
+end
