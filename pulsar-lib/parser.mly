@@ -66,6 +66,14 @@
       Raw_tree.T.e_ann = ();
     }
 
+  let widen_exp start stop e =
+    let open Raw_tree.T in
+    {
+      e_desc = e.e_desc;
+      e_loc = Loc.(join e.e_loc @@ of_lexing_pos_pair ~start ~stop);
+      e_ann = ();
+    }
+
   let make_var start stop x =
     make_exp start stop (Raw_tree.T.EVar x)
 
@@ -406,7 +414,7 @@ simple_exp:
   RBRACEIMARK
     { make_subty $startpos $endpos ctx_c e c }
 | e = paren(exp)
-    { e }
+    { widen_exp $startpos $endpos e }
 
 exp:
 | e = simple_exp
