@@ -91,12 +91,15 @@ let print_sameline fmt { fn; start; stop; }  =
     stop.cnum
 
 let join l1 l2 =
-  if l1.fn <> l2.fn then invalid_arg "join";
-  {
-    fn = l1.fn;
-    start = min l1.start l2.start;
-    stop = max l1.stop l2.stop;
-  }
+  if l1 = nowhere then l2
+  else if l2 = nowhere then l1
+  else if l1.fn <> l2.fn then invalid_arg "join"
+  else
+    {
+      fn = l1.fn;
+      start = min l1.start l2.start;
+      stop = max l1.stop l2.stop;
+    }
 
 type 'a located =
   {
