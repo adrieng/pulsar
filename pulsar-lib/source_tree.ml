@@ -73,6 +73,7 @@ sig
   module Id : Warp.Utils.PrintableOrderedType
 
   module PatAnnot : Warp.Utils.PrintableOrderedType
+  module CoeAnnot : Warp.Utils.PrintableOrderedType
   module ExpAnnot : Warp.Utils.PrintableOrderedType
   module EquAnnot : Warp.Utils.PrintableOrderedType
   module PhrAnnot : Warp.Utils.PrintableOrderedType
@@ -96,6 +97,13 @@ sig
     | PCons of pat * pat
     | PAnnot of pat * Type.t
 
+  type coe =
+    {
+      c_desc : Coercion.t;
+      c_loc : Loc.t;
+      c_ann : CoeAnnot.t;
+    }
+
   type exp =
       {
         e_desc : exp_desc;
@@ -117,7 +125,7 @@ sig
     | EConst of Const.const
     | EBy of { body : exp; dr : Warp.Formal.t; }
     | EAnnot of { exp : exp; kind : AnnotKind.t; annot : Type.t; }
-    | ESub of { ctx : (Id.t * Coercion.t) list; exp : exp; res : Coercion.t; }
+    | ESub of { ctx : (Id.t * coe) list; exp : exp; res : coe; }
 
   and eq =
       {
@@ -192,6 +200,13 @@ struct
     | PCons of pat * pat
     | PAnnot of pat * Type.t
 
+  type coe =
+    {
+      c_desc : Coercion.t;
+      c_loc : Loc.t;
+      c_ann : CoeAnnot.t;
+    }
+
   type exp =
       {
         e_desc : exp_desc;
@@ -213,7 +228,7 @@ struct
     | EConst of Const.const
     | EBy of { body : exp; dr : Warp.Formal.t; }
     | EAnnot of { exp : exp; kind : AnnotKind.t; annot : Type.t; }
-    | ESub of { ctx : (Id.t * Coercion.t) list; exp : exp; res : Coercion.t; }
+    | ESub of { ctx : (Id.t * coe) list; exp : exp; res : coe; }
 
   and eq =
       {
@@ -248,6 +263,9 @@ struct
        Format.fprintf fmt "(@[%a :@;%a@])"
          print_pat p
          Type.print ty
+
+  let print_coe fmt coe =
+    Coercion.print fmt coe.c_desc
 
   let rec print_exp_prio prio fmt e =
     let open Warp.Print in
@@ -326,18 +344,18 @@ struct
         Type.print ty
 
     | ESub { ctx; exp; res; } ->
-       let print_ident_coercion fmt (id, c) =
+       let print_var_coercion fmt (id, c) =
          Format.fprintf fmt "@[<hov 2>%a <<@ %a@]"
            Id.print id
-           Coercion.print c
+           print_coe c
        in
        Format.fprintf fmt "@[<hv 1>{!%a@ >> %a@ >> @[%a@] !}@]"
          (pp_list
             ~pp_left:pp_space
             ~pp_sep:(fun fmt () -> Format.fprintf fmt "@;| ")
-            print_ident_coercion) ctx
+            print_var_coercion) ctx
          print_exp exp
-         Coercion.print res
+         print_coe res
 
   and print_exp_simple fmt e =
     match e.e_desc with
@@ -404,6 +422,11 @@ struct
            (fun () -> Type.compare ty1 ty2)
       | (PVar _ | PPair _ | PCons _ | PAnnot _), _ ->
          Warp.Utils.compare_int (tag_to_int p1.p_desc) (tag_to_int p2.p_desc)
+
+  let compare_coe c1 c2 =
+    Warp.Utils.compare_both
+      (Coercion.compare c1.c_desc c2.c_desc)
+      (fun () -> CoeAnnot.compare c1.c_ann c2.c_ann)
 
   let rec compare_exp e1 e2 =
     if e1 == e2 then 0 else compare_exp_desc e1.e_desc e2.e_desc
@@ -474,13 +497,13 @@ struct
          let compare_ident_coercion (v1, c1) (v2, c2) =
            Warp.Utils.compare_both
              (Id.compare v1 v2)
-             (fun () -> Coercion.compare c1 c2)
+             (fun () -> compare_coe c1 c2)
          in
          Warp.Utils.compare_both
            (compare_exp exp1 exp2)
            (fun () ->
              Warp.Utils.compare_both
-               (Coercion.compare res1 res2)
+               (compare_coe res1 res2)
                (fun () ->
                  Warp.Utils.compare_list compare_ident_coercion ctx1 ctx2))
       | (EVar _ | EExternal _ | ELam _ | EApp _ | ECons _ | EPair _

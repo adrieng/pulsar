@@ -61,6 +61,13 @@ let rec scope_pat env p =
     S.p_ann = ();
   }
 
+let scope_coe _ coe =
+  {
+    S.c_desc = coe.R.c_desc;
+    S.c_loc = coe.R.c_loc;
+    S.c_ann = ();
+  }
+
 let rec scope_exp env e =
   let ed =
     match e.R.e_desc with
@@ -97,11 +104,16 @@ let rec scope_exp env e =
     | R.EAnnot { exp; kind; annot; } ->
        S.EAnnot { exp = scope_exp env exp; kind; annot; }
     | R.ESub { ctx; exp; res; } ->
-       let scope_coe (id, coe) =
-         try E.find id env, coe
-         with Not_found -> unbound_identifier id e.R.e_loc
+       let ctx =
+         let scope_var_coe (id, coe) =
+           try E.find id env, scope_coe env coe
+           with Not_found -> unbound_identifier id e.R.e_loc
+         in
+         List.map scope_var_coe ctx
        in
-       S.ESub { ctx = List.map scope_coe ctx; exp = scope_exp env exp; res; }
+       let exp = scope_exp env exp in
+       let res = scope_coe env res in
+       S.ESub { ctx; exp; res; }
   in
   {
     S.e_desc = ed;

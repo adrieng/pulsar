@@ -42,6 +42,13 @@
       Raw_tree.T.p_ann = ();
     }
 
+  let make_coe start stop desc =
+    {
+      Raw_tree.T.c_desc = desc;
+      Raw_tree.T.c_loc = Loc.of_lexing_pos_pair ~start ~stop;
+      Raw_tree.T.c_ann = ();
+    }
+
   let make_eq start stop p params res_ty e =
     {
       Raw_tree.T.eq_lhs = p;
@@ -338,21 +345,24 @@ invertible:
 | INFL { Coercion.Infl }
 | DEFL { Coercion.Defl }
 
-coercion:
+coercion_desc:
 | ID { Coercion.Id }
-| c1 = coercion SEMICOLON c2 = coercion { Coercion.Seq (c1, c2) }
-| c1 = coercion ARR c2 = coercion { Coercion.Arr (c1, c2) }
-| c1 = coercion TIMES c2 = coercion { Coercion.Prod (c1, c2) }
-| p = warp_ty MOD c = coercion { Coercion.Warped (p, c) }
+| c1 = coercion_desc SEMICOLON c2 = coercion_desc { Coercion.Seq (c1, c2) }
+| c1 = coercion_desc ARR c2 = coercion_desc { Coercion.Arr (c1, c2) }
+| c1 = coercion_desc TIMES c2 = coercion_desc { Coercion.Prod (c1, c2) }
+| p = warp_ty MOD c = coercion_desc { Coercion.Warped (p, c) }
 | i = invertible { Coercion.Invertible i }
 | DELAY p = warp_ty q = warp_ty { Coercion.Delay (p, q) }
-| c = paren(coercion) { c }
+| c = paren(coercion_desc) { c }
 
-ident_coercion:
+coercion:
+| desc = coercion_desc { make_coe $startpos $endpos desc }
+
+var_coercion:
 | id = IDENT LLANGLE c = coercion { (id, c) }
 
 coercion_ctx:
-| l = separated_list(PIPE, ident_coercion) { l }
+| l = separated_list(PIPE, var_coercion) { l }
 
 (* Patterns *)
 

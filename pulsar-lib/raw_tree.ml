@@ -16,6 +16,7 @@ module T = Source_tree.Make(
     module Id = Warp.Utils.PrintableOrderedString
 
     module PatAnnot = Warp.Utils.PrintableOrderedUnit
+    module CoeAnnot = Warp.Utils.PrintableOrderedUnit
     module ExpAnnot = Warp.Utils.PrintableOrderedUnit
     module EquAnnot = Warp.Utils.PrintableOrderedUnit
     module PhrAnnot = Warp.Utils.PrintableOrderedUnit

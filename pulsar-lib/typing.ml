@@ -152,56 +152,70 @@ let rec is_simplified ty =
   | _ ->
      false
 
-let rec simplify_ty ty =
+let simplify_ty ty =
   let open Coercion in
   let open Type in
 
-  if is_simplified ty
-  then ty, Id, Id
-  else
-    match ty with
-    | Base _ ->
-       Warped (Warp.Formal.omega, ty),
-       invertible Infl,
-       invertible Defl
+  let rec loop ty =
+    if is_simplified ty
+    then ty, Id, Id
+    else
+      match ty with
+      | Base _ ->
+         Warped (Warp.Formal.omega, ty),
+         invertible Infl,
+         invertible Defl
 
-    | Stream _ ->
-       Warped (Warp.Formal.one, ty),
-       invertible Wrap,
-       invertible Unwrap
+      | Stream _ ->
+         Warped (Warp.Formal.one, ty),
+         invertible Wrap,
+         invertible Unwrap
 
-    | Prod (ty1, ty2) ->
-       let ty1, c11, c12 = simplify_ty ty1 in
-       let ty2, c21, c22 = simplify_ty ty2 in
-       Prod (ty1, ty2),
-       Coercion.prod (c11, c21),
-       Coercion.prod (c21, c22)
+      | Prod (ty1, ty2) ->
+         let ty1, c11, c12 = loop ty1 in
+         let ty2, c21, c22 = loop ty2 in
+         Prod (ty1, ty2),
+         Coercion.prod (c11, c21),
+         Coercion.prod (c21, c22)
 
-    | Fun (ty1, ty2) ->
-       let ty1, c11, c12 = simplify_ty ty1 in
-       let ty2, c21, c22 = simplify_ty ty2 in
-       Warped (Warp.Formal.one, Fun (ty1, ty2)),
-       Coercion.(seq (arr (c12, c21), invertible Wrap)),
-       Coercion.(seq (invertible Unwrap, arr (c11, c22)))
+      | Fun (ty1, ty2) ->
+         let ty1, c11, c12 = loop ty1 in
+         let ty2, c21, c22 = loop ty2 in
+         Warped (Warp.Formal.one, Fun (ty1, ty2)),
+         Coercion.(seq (arr (c12, c21), invertible Wrap)),
+         Coercion.(seq (invertible Unwrap, arr (c11, c22)))
 
-    | Warped (p, Prod (ty1, ty2)) ->
-       let ty, c1, c2 = simplify_ty (Prod (Warped (p, ty1), Warped (p, ty2))) in
-       ty,
-       Coercion.(seq (invertible Dist, c1)),
-       Coercion.(seq (c2, invertible Fact))
+      | Warped (p, Prod (ty1, ty2)) ->
+         let ty, c1, c2 = loop (Prod (Warped (p, ty1), Warped (p, ty2))) in
+         ty,
+         Coercion.(seq (invertible Dist, c1)),
+         Coercion.(seq (c2, invertible Fact))
 
-    | Warped (p, ty) ->
-       let q, ty, c1, c2 =
-         let ty, c1, c2 = simplify_ty ty in
-         match ty with
-         | Warped (q, ty) ->
-            q, ty, c1, c2
-         | _ ->
-            assert false
-       in
-       Warped (Warp.Formal.on p q, ty),
-       Coercion.(seq (warped (p, c1), invertible (Concat (p, q)))),
-       Coercion.(seq (invertible (Decat (p, q)), warped (p, c2)))
+      | Warped (p, ty) ->
+         let q, ty, c1, c2 =
+           let ty, c1, c2 = loop ty in
+           match ty with
+           | Warped (q, ty) ->
+              q, ty, c1, c2
+           | _ ->
+              assert false
+         in
+         Warped (Warp.Formal.on p q, ty),
+         Coercion.(seq (warped (p, c1), invertible (Concat (p, q)))),
+         Coercion.(seq (invertible (Decat (p, q)), warped (p, c2)))
+  in
+  let ty', coe1, coe2 = loop ty in
+  ty',
+  {
+    T.c_desc = coe1;
+    T.c_loc = Loc.nowhere;
+    T.c_ann = { src = ty; dst = ty'; };
+  },
+  {
+    T.c_desc = coe2;
+    T.c_loc = Loc.nowhere;
+    T.c_ann = { src = ty'; dst = ty; };
+  }
 
 let precedes_coe ~loc ~orig_ty1 ~orig_ty2 ty ty' =
   let not_a_subtype clash_ty1 clash_ty2 =
@@ -210,20 +224,20 @@ let precedes_coe ~loc ~orig_ty1 ~orig_ty2 ty ty' =
   let rec loop ty ty' =
     let open Type in
     if Type.equal ty ty'
-    then Coercion.Id
+    then Typed_tree.id ty
     else
       match ty, ty' with
       | Prod (ty1, ty2), Prod (ty1', ty2') ->
          let c1 = loop ty1 ty1' in
          let c2 = loop ty2 ty2' in
-         Coercion.prod (c1, c2)
+         Typed_tree.prod (c1, c2)
       | Fun (ty1, ty2), Fun (ty1', ty2') ->
          let c1 = loop ty1' ty1 in
          let c2 = loop ty2 ty2' in
-         Coercion.arr (c1, c2)
+         Typed_tree.arr (c1, c2)
       | Warped (p, ty), Warped (q, ty') when Warp.Formal.(q <= p) ->
          let c = loop ty ty' in
-         Coercion.(seq (warped (p, c), delay (p, q)))
+         Typed_tree.(seq (warped (p, c), delay ty' (p, q)))
       | _ ->
          not_a_subtype ty ty'
   in
@@ -235,39 +249,48 @@ let subty_coe ~loc ty1 ty2 =
   assert (is_simplified ty1');
   assert (is_simplified ty2');
   let c3 = precedes_coe ~loc ~orig_ty1:ty1 ~orig_ty2:ty2 ty1' ty2' in
-  Coercion.(seq (seq (c1, c3), c2'))
+  Typed_tree.(seq (seq (c1, c3), c2'))
 
 let coerce ~loc exp ty =
   let res' = subty_coe ~loc (e_ty exp) ty in
-  Typed_tree.coerce_with ~res' exp ty
+  Typed_tree.sub ~res' exp ty
 
 let div_ctx env p =
   let rec div_ty ty =
     let open Type in
-    match ty with
-    | Warped (q, ty) ->
-       let q_div_p = Warp.Formal.div q p in
-       Warped (q_div_p, ty),
-       Coercion.(
-         seqs
-           [
-             delay (q, Warp.Formal.on p q_div_p);
-             invertible (Decat (p, q_div_p))
-           ]
-       )
-    | Prod (ty1, ty2) ->
-       let ty1, c1 = div_ty ty1 in
-       let ty2, c2 = div_ty ty2 in
-       Prod (ty1, ty2), Coercion.prod (c1, c2)
-    | _ ->
-       assert false             (* not simplified? *)
+    let rec loop ty =
+      match ty with
+      | Warped (q, ty) ->
+         let q_div_p = Warp.Formal.div q p in
+         Warped (q_div_p, ty),
+         Coercion.(
+           seqs
+             [
+               delay (q, Warp.Formal.on p q_div_p);
+               invertible (Decat (p, q_div_p))
+             ]
+         )
+      | Prod (ty1, ty2) ->
+         let ty1, c1 = loop ty1 in
+         let ty2, c2 = loop ty2 in
+         Prod (ty1, ty2), Coercion.prod (c1, c2)
+      | _ ->
+         assert false             (* not simplified? *)
+    in
+    let ty', desc = loop ty in
+    ty',
+    {
+      T.c_desc = desc;
+      T.c_loc = Loc.nowhere;
+      T.c_ann = { src = ty; dst = Warped (p, ty'); };
+    }
   in
 
   let div_binding id ty (env, coes) =
     let ty, c1, _ = simplify_ty ty in
     let ty, c2 = div_ty ty in
     Ident.Env.add id ty env,
-    (id, Coercion.seq (c1, c2)) :: coes
+    (id, Typed_tree.seq (c1, c2)) :: coes
   in
 
   let env, coes = E.fold div_binding env (E.empty, []) in
@@ -389,6 +412,14 @@ let rec type_pat env p =
     T.p_ann = ty;
   }
 
+let type_coe src coe =
+  let dst = Coercion.output_type coe.S.c_desc src in
+  {
+    T.c_desc = coe.S.c_desc;
+    T.c_loc = coe.S.c_loc;
+    T.c_ann = { src; dst; };
+  }
+
 let bind_rec_eq out_env eq =
   let res_ty =
     match eq.S.eq_ty with
@@ -473,7 +504,7 @@ let rec type_exp env e =
            T.e_ann = ty;
          }
        in
-       let exp = Typed_tree.coerce_with ~ctx' exp ty in
+       let exp = Typed_tree.sub ~ctx' exp ty in
        ty, exp.T.e_desc
 
     | S.EAnnot { exp; kind; annot; } ->
@@ -482,19 +513,16 @@ let rec type_exp env e =
        annot, T.EAnnot { exp; kind; annot; }
 
     | S.ESub { ctx; exp; res; } ->
-       let output_type ?id coe ty =
-         try Coercion.output_type coe ty
-         with Coercion.Ill_typed ->
-           cannot_coerce ?id ~ty ~coe ~loc:e.S.e_loc ()
-       in
-       let apply_coe_env env (id, coe) =
+       let apply_coe_env (env, ctx) (id, coe) =
          let ty = E.find id env in
-         E.add id (output_type ~id coe ty) env
+         let coe = type_coe ty coe in
+         E.add id coe.T.c_ann.dst env,
+         (id, coe) :: ctx
        in
-       let env = List.fold_left apply_coe_env env ctx in
+       let env, ctx = List.fold_left apply_coe_env (env, []) ctx in
        let exp = type_exp env exp in
-       let ty = output_type res (e_ty exp) in
-       ty, T.ESub { ctx; exp; res; }
+       let res = type_coe exp.T.e_ann res in
+       res.T.c_ann.dst, T.ESub { ctx; exp; res; }
   in
   {
     T.e_desc = ed;

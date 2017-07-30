@@ -37,6 +37,7 @@ sig
   module Id : Warp.Utils.PrintableOrderedType
 
   module PatAnnot : Warp.Utils.PrintableOrderedType
+  module CoeAnnot : Warp.Utils.PrintableOrderedType
   module ExpAnnot : Warp.Utils.PrintableOrderedType
   module EquAnnot : Warp.Utils.PrintableOrderedType
   module PhrAnnot : Warp.Utils.PrintableOrderedType
@@ -62,6 +63,15 @@ sig
     | PCons of pat * pat
     | PAnnot of pat * Type.t
 
+  (** Coercions *)
+
+  type coe =
+    {
+      c_desc : Coercion.t;
+      c_loc : Loc.t;
+      c_ann : CoeAnnot.t;
+    }
+
   (** Expressions, the main syntactic category *)
   type exp =
       {
@@ -85,7 +95,7 @@ sig
     | EConst of Const.const
     | EBy of { body : exp; dr : Warp.Formal.t; }
     | EAnnot of { exp : exp; kind : AnnotKind.t; annot : Type.t; }
-    | ESub of { ctx : (Id.t * Coercion.t) list; exp : exp; res : Coercion.t; }
+    | ESub of { ctx : (Id.t * coe) list; exp : exp; res : coe; }
 
   (** Equations "lhs (: ty) = rhs" *)
   and eq =
@@ -159,6 +169,7 @@ end
 
 module Make (I : Info) : Tree with type Id.t = I.Id.t
                                and type PatAnnot.t = I.PatAnnot.t
+                               and type CoeAnnot.t = I.CoeAnnot.t
                                and type ExpAnnot.t = I.ExpAnnot.t
                                and type EquAnnot.t = I.EquAnnot.t
                                and type PhrAnnot.t = I.PhrAnnot.t
