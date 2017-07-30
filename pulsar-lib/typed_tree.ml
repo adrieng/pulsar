@@ -16,7 +16,7 @@ struct
   type t = { src : Type.t; dst : Type.t; }
 
   let print fmt { src; dst; } =
-    Format.fprintf fmt "%a <: %a"
+    Format.fprintf fmt "%a@ <: %a"
       Type.print src
       Type.print dst
 
