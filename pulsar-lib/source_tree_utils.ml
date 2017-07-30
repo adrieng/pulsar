@@ -174,7 +174,8 @@ struct
           raise Not_found
        end
     | thing :: things ->
-       try find_in_thing pos thing with Not_found -> find_in_things pos things
+       try find_in_thing pos thing
+       with Not_found -> find_in_things ?default pos things
 
   and find_in_thing pos thing =
     if not (Loc.is_in (loc thing) pos) then raise Not_found;
