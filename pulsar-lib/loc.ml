@@ -19,8 +19,8 @@ type pos =
     cnum : int;
   }
 
-let (<=) p1 p2 =
-  p1.lnum <= p2.lnum || (p1.lnum = p2.lnum && p1.cnum <= p2.cnum)
+let ( <= ) p1 p2 =
+  p1.lnum < p2.lnum || (p1.lnum = p2.lnum && p1.cnum <= p2.cnum)
 
 let min p1 p2 =
   if p1 <= p2 then p1 else p2
@@ -102,14 +102,7 @@ let join l1 l2 =
     }
 
 let is_in loc pos =
-  let open Pervasives in
-  let between i l h = l <= i && i <= h in
-  let { lnum = lstart; cnum = cstart; }, { lnum = lstop; cnum = cstop; } =
-    range loc
-  in
-  between pos.lnum (lstart + 1) (lstop - 1)
-  || (pos.lnum = lstart && pos.cnum >= cstart)
-  || (pos.lnum = lstop && pos.cnum <= cstop)
+  loc.start <= pos && pos <= loc.stop
 
 type 'a located =
   {
