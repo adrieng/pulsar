@@ -65,6 +65,9 @@ val nowhere : t
     [l]; raises Invalid_arg if [l1] and [l2] belong to distinct files *)
 val join : t -> t -> t
 
+(** [is_in loc pos] returns true iff [pos] belongs to the range of [loc]. *)
+val is_in : t -> pos -> bool
+
 (** A thing together with its location *)
 type 'a located =
   {

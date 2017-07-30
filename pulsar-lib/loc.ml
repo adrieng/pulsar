@@ -101,6 +101,16 @@ let join l1 l2 =
       stop = max l1.stop l2.stop;
     }
 
+let is_in loc pos =
+  let open Pervasives in
+  let between i l h = l <= i && i <= h in
+  let { lnum = lstart; cnum = cstart; }, { lnum = lstop; cnum = cstop; } =
+    range loc
+  in
+  between pos.lnum (lstart + 1) (lstop - 1)
+  || (pos.lnum = lstart && pos.cnum >= cstart)
+  || (pos.lnum = lstop && pos.cnum <= cstop)
+
 type 'a located =
   {
     contents : 'a;
