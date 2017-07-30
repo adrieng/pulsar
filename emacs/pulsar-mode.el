@@ -82,7 +82,6 @@
   nil)
 
 (defun pulsar--clear-show-overlay ()
-  (message "LOL?")
   (move-overlay pulsar--show-overlay 1 1))
 
 (defun pulsar--highlight-range (loc message)
@@ -94,7 +93,6 @@
 (defun pulsar--process-response (out)
   (let* ((json-object-type 'plist)
          (resp (json-read-from-string out)))
-    (message "%S\n" resp)
     (pcase resp
       (`(:tag "ok" :value ,ok)
        (pcase ok
