@@ -31,7 +31,7 @@ struct
     file := fn
 end
 
-module Message =
+module Diagnostic =
 struct
   type kind =
     | Error
@@ -40,10 +40,10 @@ struct
 
   type t =
     {
-      m_loc : Loc.t;
-      m_pass : string;
-      m_kind : kind;
-      m_body : unit Warp.Print.printer;
+      loc : Loc.t;
+      pass : string;
+      kind : kind;
+      body : unit Warp.Print.printer;
     }
 
   let print_kind fmt k =
@@ -55,32 +55,43 @@ struct
     | Info ->
        Format.fprintf fmt "info"
 
-  let print fmt { m_loc; m_pass; m_kind; m_body; } =
+  let print fmt { loc; pass; kind; body; } =
     Format.fprintf fmt "@[%a%s[%a] %s:@ %a@]"
-      Loc.print m_loc
-      (if m_loc <> Loc.nowhere then " " else "")
-      print_kind m_kind
-      m_pass
-      Warp.Print.pp_thunk m_body
+      Loc.print loc
+      (if loc <> Loc.nowhere then " " else "")
+      print_kind kind
+      pass
+      Warp.Print.pp_thunk body
 
   let make ~loc ~kind ~body =
     {
-      m_loc = loc;
-      m_pass = !Prop.pass;
-      m_kind = kind;
-      m_body = body;
+      loc = loc;
+      pass = !Prop.pass;
+      kind = kind;
+      body = body;
     }
+
+  let rcb = ref (fun _ -> ())
+
+  let on_diagnostic cb =
+    rcb := cb
 
   exception Error of t
 
   let error ?(loc = Loc.nowhere) ~body () =
-    raise (Error (make ~loc ~kind:Error ~body))
+    let diag = make ~loc ~kind:Error ~body in
+    !rcb diag;
+    raise (Error diag)
 
   let warning ?(loc = Loc.nowhere) ~body () =
-    Format.eprintf "%a@." print (make ~loc ~kind:Warning ~body)
+    let diag = make ~loc ~kind:Warning ~body in
+    !rcb diag;
+    Format.eprintf "%a@." print diag
 
   let info ?(loc = Loc.nowhere) ~body () =
-    Format.printf "%a@." print (make ~loc ~kind:Info ~body)
+    let diag = make ~loc ~kind:Info ~body in
+    !rcb diag;
+    Format.eprintf "%a@." print diag
 end
 
 module Pass =
@@ -151,8 +162,8 @@ struct
       if Options.pass_serialize at.name then serialize at y;
       if Options.pass_stop_after at.name then exit 0;
       y
-    with Message.Error err ->
-         Format.eprintf "%a@."Message.print err;
+    with Diagnostic.Error err ->
+         Format.eprintf "%a@." Diagnostic.print err;
          exit 1
 
   let run p x =

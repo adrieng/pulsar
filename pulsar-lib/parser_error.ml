@@ -14,4 +14,4 @@
 let parsing_error start stop =
   let loc = Loc.of_lexing_pos_pair start stop in
   let body fmt () = Format.fprintf fmt "syntax error" in
-  Compiler.Message.error ~loc ~body ()
+  Compiler.Diagnostic.error ~loc ~body ()

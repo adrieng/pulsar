@@ -92,6 +92,7 @@ struct
   type ok =
     | Silent
     | Show of { loc : Loc.t; content : string; }
+    | Diagnostics of Compiler.Diagnostic.t list
 
   type ko =
     | Decoding of { reason : string; }
@@ -100,25 +101,73 @@ struct
     | Ok of ok
     | Ko of ko
 
+  let diagnostic_of_json json =
+    match json with
+    | `Assoc [ "loc", loc;
+               "pass", `String pass;
+               "kind", `String kind;
+               "body", `String body; ] ->
+       let open Compiler.Diagnostic in
+       let kind =
+         match kind with
+         | "Error" ->
+            Error
+         | "Warning" ->
+            Warning
+         | "Info" ->
+            Info
+         | _ ->
+            could_not_decode ~json ~reason:"ill-formed json" ()
+       in
+       let body fmt () = Format.fprintf fmt "%s" body in
+       { loc = loc_of_json loc; pass; kind; body; }
+    | _ ->
+       could_not_decode ~json ~reason:"ill-formed diagnostic" ()
+
+  let json_of_diagnostic =
+    let open Compiler.Diagnostic in
+    fun { loc; pass; kind; body; } ->
+    let kind =
+      match kind with
+      | Error -> "Error"
+      | Warning -> "Warning"
+      | Info -> "Info"
+    in
+    let body = Warp.Print.string_of body () in
+    `Assoc [ "loc", loc_to_json loc;
+             "pass", `String pass;
+             "kind", `String kind;
+             "body", `String body; ]
+
   let ok_of_json json =
     match decode_variant json with
     | "silent", `Assoc [] ->
        Silent
-    | "show", `Assoc [ "loc", loc; "content", `String content; ] ->
+
+    | "show", `Assoc [ "loc", loc;
+                       "content", `String content; ] ->
        Show { loc = loc_of_json loc; content; }
+
+    | "diagnostics", `List jsons ->
+       Diagnostics (List.map diagnostic_of_json jsons)
+
     | _, json ->
        could_not_decode ~json ~reason:"ill-formed ok" ()
 
-  let ok_to_json ok =
-    let tag, value =
+  let ok_to_json ok : json =
+    let tag, (value : json) =
       match ok with
       | Silent ->
          "silent",
          `Assoc []
+
       | Show { loc; content; } ->
          "show",
          `Assoc [ "loc", loc_to_json loc;
                   "content", `String content; ]
+
+      | Diagnostics diags ->
+         "diagnostics", `List (List.map json_of_diagnostic diags)
     in
     encode_variant tag value
 

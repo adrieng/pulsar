@@ -32,6 +32,7 @@ sig
   type ok =
     | Silent
     | Show of { loc : Loc.t; content : string; }
+    | Diagnostics of Compiler.Diagnostic.t list
 
   type ko =
     | Decoding of { reason : string; }

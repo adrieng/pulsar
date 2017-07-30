@@ -274,11 +274,11 @@ let lexeme_ascii ctx =
 
 let bad_token ctx =
   let body fmt () = Format.fprintf fmt "syntax error (lexing)" in
-  Compiler.Message.error ~loc:(loc_of_last_lexeme ctx) ~body ()
+  Compiler.Diagnostic.error ~loc:(loc_of_last_lexeme ctx) ~body ()
 
 let unterminated_comment ctx =
   let body fmt () = Format.fprintf fmt "unterminated comment" in
-  Compiler.Message.error ~loc:(loc_of_last_lexeme ctx) ~body ()
+  Compiler.Diagnostic.error ~loc:(loc_of_last_lexeme ctx) ~body ()
 
 (* Lexing itself *)
 

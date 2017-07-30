@@ -22,11 +22,24 @@ sig
   val set_file : string -> unit
 end
 
-module Message :
+module Diagnostic :
 sig
-  type t
+  type kind =
+    | Error
+    | Warning
+    | Info
+
+  type t =
+    {
+      loc : Loc.t;
+      pass : string;
+      kind : kind;
+      body : unit Warp.Print.printer;
+    }
 
   val print : Format.formatter -> t -> unit
+
+  val on_diagnostic : (t -> unit) -> unit
 
   (** The following functions can be called by passes to communicate messages to
       the user. The [error] function never returns. *)

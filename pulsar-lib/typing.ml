@@ -63,14 +63,14 @@ let type_clash ~expected ~actual ~loc () =
       print_expectation expected
       Type.print actual
   in
-  Compiler.Message.error ~loc ~body ()
+  Compiler.Diagnostic.error ~loc ~body ()
 
 let cannot_infer ~kind ~loc () =
   let body fmt () =
     Format.fprintf fmt "cannot guess the type of %a"
       print_infer_kind kind
   in
-  Compiler.Message.error ~loc ~body ()
+  Compiler.Diagnostic.error ~loc ~body ()
 
 let cannot_coerce ?id ~ty ~coe ~loc () =
   let body fmt () =
@@ -83,7 +83,7 @@ let cannot_coerce ?id ~ty ~coe ~loc () =
     end;
     Format.fprintf fmt "@]"
   in
-  Compiler.Message.error ~loc ~body ()
+  Compiler.Diagnostic.error ~loc ~body ()
 
 let ill_typed_pat ~pat ~expected () =
   let body fmt () =
@@ -91,7 +91,7 @@ let ill_typed_pat ~pat ~expected () =
       S.print_pat pat
       Type.print expected
   in
-  Compiler.Message.error ~loc:pat.S.p_loc ~body ()
+  Compiler.Diagnostic.error ~loc:pat.S.p_loc ~body ()
 
 let not_a_subtype ~ty1 ~ty2 ~clash_ty1 ~clash_ty2 loc =
   let body fmt () =
@@ -107,7 +107,7 @@ let not_a_subtype ~ty1 ~ty2 ~clash_ty1 ~clash_ty2 loc =
         Type.print clash_ty2;
     Format.fprintf fmt "@]"
   in
-  Compiler.Message.error ~loc ~body ()
+  Compiler.Diagnostic.error ~loc ~body ()
 
 (* Debugging *)
 
