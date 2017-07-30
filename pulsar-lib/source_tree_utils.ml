@@ -121,6 +121,15 @@ struct
     | PDecl _ ->
        []
 
+  let sub thing =
+    match thing with
+    | `Pat p -> sub_pat p
+    | `Coe c -> []
+    | `Exp e -> sub_exp e
+    | `Block b -> sub_block b
+    | `Eq eq -> sub_eq eq
+    | `Phr ph -> sub_phrase ph
+
   let sub_file file =
     List.map (fun phr -> `Phr phr) file.f_phrases
 end
@@ -136,6 +145,7 @@ struct
     | `Pat p -> p.p_loc
     | `Coe c -> c.c_loc
     | `Exp e -> e.e_loc
+    | `Block b -> b.b_loc
     | `Eq eq -> eq.eq_loc
     | `Phr ph -> ph.ph_loc
 
@@ -152,43 +162,8 @@ struct
        try find_in_thing pos thing with Not_found -> find_in_things pos things
 
   and find_in_thing pos thing =
-    match thing with
-    | `Pat p ->
-       find_in_pat pos p
-    | `Coe c ->
-       find_in_coe pos c
-    | `Exp e ->
-       find_in_exp pos e
-    | `Block b ->
-       find_in_block pos b
-    | `Eq eq ->
-       find_in_eq pos eq
-    | `Phr ph ->
-       find_in_phrase pos ph
-
-  and find_in_pat pos p =
-    if not (Loc.is_in p.p_loc pos) then raise Not_found;
-    find_in_things ~default:(`Pat p) pos @@ S.sub_pat p
-
-  and find_in_coe pos c =
-    if not (Loc.is_in c.c_loc pos) then raise Not_found;
-    `Coe c
-
-  and find_in_exp pos e =
-    if not (Loc.is_in e.e_loc pos) then raise Not_found;
-    find_in_things ~default:(`Exp e) pos @@ S.sub_exp e
-
-  and find_in_block pos b =
-    if not (Loc.is_in b.b_loc pos) then raise Not_found;
-    find_in_things ~default:(`Block b) pos @@ S.sub_block b
-
-  and find_in_eq pos eq =
-    if not (Loc.is_in eq.eq_loc pos) then raise Not_found;
-    find_in_things ~default:(`Eq eq) pos @@ S.sub_eq eq
-
-  and find_in_phrase pos ph =
-    if not (Loc.is_in ph.ph_loc pos) then raise Not_found;
-    find_in_things ~default:(`Phr ph) pos @@ S.sub_phrase ph
+    if not (Loc.is_in (loc thing) pos) then raise Not_found;
+    find_in_things ~default:thing pos @@ S.sub thing
 
   let find_in_file pos file =
     find_in_things pos @@ S.sub_file file
