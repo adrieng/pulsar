@@ -17,11 +17,6 @@ open Message
 module U = Warp.Utils
 module J = Yojson.Basic
 
-let process req =
-  match req with
-  | Request.Show { loc; kind = `Type; } ->
-     Response.(Ko (Decoding { reason = ""; }))
-
 let decode line =
   try U.Left (Request.of_json @@ J.from_string line)
   with Yojson.Json_error reason ->
@@ -39,7 +34,7 @@ let rec read_loop () =
     let resp =
       match decode line with
       | U.Left req ->
-         process req
+         Process.process req
       | U.Right ko ->
          Ko ko
     in

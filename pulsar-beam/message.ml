@@ -62,25 +62,27 @@ let decode_variant json =
 module Request =
 struct
   type t =
-    | Show of { loc : Loc.t; kind : [`Type]; }
+    | Show of { file : string; pos : Loc.pos; kind : [`Type]; }
 
   let of_json json =
     match decode_variant json with
-    | "show", `Assoc [ "loc", loc; "kind", `String "Type"; ] ->
-       Show { loc = loc_of_json loc; kind = `Type; }
+    | "show", `Assoc [ "file", `String file;
+                       "pos", pos;
+                       "kind", `String "Type"; ] ->
+       Show { file; pos = pos_of_json pos; kind = `Type; }
     | _, json ->
        could_not_decode ~json ~reason:"ill-formed request" ()
 
   let to_json req =
     let tag, value =
       match req with
-      | Show { loc; kind; } ->
+      | Show { pos; kind; } ->
          let kind =
            match kind with
            | `Type ->
               "Type"
          in
-         "show", `Assoc [ "loc", loc_to_json loc; "kind", `String kind; ]
+         "show", `Assoc [ "pos", pos_to_json pos; "kind", `String kind; ]
     in
     encode_variant tag value
 end
@@ -88,6 +90,7 @@ end
 module Response =
 struct
   type ok =
+    | Silent
     | Show of { loc : Loc.t; content : string; }
 
   type ko =
@@ -99,6 +102,8 @@ struct
 
   let ok_of_json json =
     match decode_variant json with
+    | "silent", `Assoc [] ->
+       Silent
     | "show", `Assoc [ "loc", loc; "content", `String content; ] ->
        Show { loc = loc_of_json loc; content; }
     | _, json ->
@@ -107,6 +112,9 @@ struct
   let ok_to_json ok =
     let tag, value =
       match ok with
+      | Silent ->
+         "silent",
+         `Assoc []
       | Show { loc; content; } ->
          "show",
          `Assoc [ "loc", loc_to_json loc;

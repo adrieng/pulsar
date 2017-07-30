@@ -20,7 +20,7 @@ exception Could_not_decode of decoding_error
 module Request :
 sig
   type t =
-    | Show of { loc : Loc.t; kind : [`Type]; }
+    | Show of { file : string; pos : Loc.pos; kind : [`Type]; }
 
   val of_json : json -> t
 
@@ -30,6 +30,7 @@ end
 module Response :
 sig
   type ok =
+    | Silent
     | Show of { loc : Loc.t; content : string; }
 
   type ko =
