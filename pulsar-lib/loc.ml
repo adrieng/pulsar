@@ -77,10 +77,10 @@ let nowhere =
 let print fmt ({ fn; start; stop; } as loc) =
   if loc <> nowhere
   then
-    Format.fprintf fmt "%s %a-%a"
+    Format.fprintf fmt "%s %d:%d-%d:%d"
       fn
-      print_pos start
-      print_pos stop
+      start.lnum (start.cnum + 1)
+      stop.lnum stop.cnum
 
 let print_sameline fmt { fn; start; stop; }  =
   if start.lnum <> stop.lnum then invalid_arg "print_loc_sameline";

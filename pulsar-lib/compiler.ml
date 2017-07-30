@@ -56,7 +56,7 @@ struct
        Format.fprintf fmt "info"
 
   let print fmt { loc; pass; kind; body; } =
-    Format.fprintf fmt "@[%a%s[%a] %s:@ %a@]"
+    Format.fprintf fmt "@[<2>%a%s[%a] %s:@ %a@]@\n"
       Loc.print loc
       (if loc <> Loc.nowhere then " " else "")
       print_kind kind

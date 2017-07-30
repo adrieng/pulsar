@@ -96,13 +96,13 @@ let ill_typed_pat ~pat ~expected () =
 let not_a_subtype ~ty1 ~ty2 ~clash_ty1 ~clash_ty2 loc =
   let body fmt () =
     Format.fprintf fmt
-      "%a is not a subtype of %a"
+      "@[<hv>%a is not a subtype of %a"
       Type.print ty1
       Type.print ty2;
     if ty1 <> clash_ty1 || ty2 <> clash_ty2
     then
       Format.fprintf fmt
-        " since %a is not a subtype of %a"
+        "@ since@ %a is not a subtype of %a"
         Type.print clash_ty1
         Type.print clash_ty2;
     Format.fprintf fmt "@]"
