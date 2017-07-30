@@ -119,6 +119,9 @@ sig
   (** Pretty-print a pattern *)
   val print_pat : Format.formatter -> pat -> unit
 
+  (** Pretty-print a coercion *)
+  val print_coe : Format.formatter -> coe -> unit
+
   (** Pretty-print an expression *)
   val print_exp : Format.formatter -> exp -> unit
 

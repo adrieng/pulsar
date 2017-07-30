@@ -146,6 +146,8 @@ sig
 
   val print_pat : Format.formatter -> pat -> unit
 
+  val print_coe : Format.formatter -> coe -> unit
+
   val print_exp : Format.formatter -> exp -> unit
 
   val print_eq : Format.formatter -> eq -> unit

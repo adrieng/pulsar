@@ -140,6 +140,21 @@ struct
 
   open T
 
+  let print_thing fmt thing =
+    match thing with
+    | `Pat p ->
+       print_pat fmt p
+    | `Coe c ->
+       print_coe fmt c
+    | `Exp e ->
+       print_exp fmt e
+    | `Block b ->
+       print_block fmt b
+    | `Eq eq ->
+       print_eq fmt eq
+    | `Phr ph ->
+       print_phr fmt ph
+
   let loc thing =
     match thing with
     | `Pat p -> p.p_loc
