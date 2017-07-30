@@ -202,6 +202,25 @@ let invert i =
   | Defl ->
      Infl
 
+let rec try_invert c =
+  match c with
+  | Id ->
+     Id
+  | Seq (c1, c2) ->
+     Seq (try_invert c2, try_invert c1)
+  | Prod (c1, c2) ->
+     Prod (try_invert c1, try_invert c2)
+  | Arr (c1, c2) ->
+     Arr (try_invert c1, try_invert c2)
+  | Warped (p, c) ->
+     Warped (p, try_invert c)
+  | Invertible i ->
+     Invertible (invert i)
+  | Delay (p, q) ->
+     if Warp.Formal.equal p q
+     then c
+     else raise (Invalid_argument "non-invertible delay coercion")
+
 exception Ill_typed
 
 let get_base ty =

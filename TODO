@@ -5,3 +5,4 @@
 * Rework the ugly bits of Warp/{Word,Periodic}
 * Fix the pretty-printing of expressions, currently buggy in edge cases
 * Implement Word using ropes
+* Scoping: check for duplicate var coercions in ESub

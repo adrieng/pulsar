@@ -44,6 +44,10 @@ val print : Format.formatter -> t -> unit
 
 val invert : invertible -> invertible
 
+(** [try_invert coe] tries to invert the coercion coe. It raises
+    invalid_argument if this is not possible. *)
+val try_invert : t -> t
+
 (** {2 Typing} *)
 
 exception Ill_typed
