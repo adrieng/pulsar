@@ -32,7 +32,7 @@ let encode resp =
 
 let flush_diags () =
   let open Response in
-  print_endline @@ encode @@ Ok (Diagnostics !diags);
+  print_string @@ encode @@ Ok (Diagnostics !diags);
   diags := [];
   ()
 
@@ -42,21 +42,19 @@ let diag_callback diag =
   if diag.kind = Error then flush_diags ();
   ()
 
-let rec read_loop () =
-  try
-    let line = read_line () in
-    let resp =
-      match decode line with
-      | U.Left req ->
-         Process.process req
-      | U.Right ko ->
-         Ko ko
-    in
-    print_endline @@ encode resp;
-    read_loop ()
-  with End_of_file ->
-    ()
+let rec do_req req_str =
+  let resp =
+    match decode req_str with
+    | U.Left req ->
+       Process.process req
+    | U.Right ko ->
+       Ko ko
+  in
+  print_string @@ encode resp;
+  ()
 
 let _ =
   Compiler.Diagnostic.on_diagnostic diag_callback;
-  read_loop ()
+  for i = 1 to Array.length Sys.argv - 1 do
+    do_req Sys.argv.(i)
+  done
