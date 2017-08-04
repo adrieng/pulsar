@@ -43,9 +43,10 @@
   :tag "Command for Pulsar Beam"
   :options '("pulsar-beam"))
 
-;; Interactive stuff
+;; Interactive features
 
 (defun pulsar--beam-request (req)
+  (when (buffer-modified-p) (save-buffer))
   (let ((command (format "%s \'%s\'" pulsar-beam-command req)))
     (shell-command-to-string command)))
 
@@ -65,12 +66,12 @@
      :value (:file ,file :pos ,(pulsar--pair-of-pos pos) :kind "Type"))))
 
 (defun pulsar--pos-of-array (arr)
-  (let ((lnum (aref arr 0))
-        (cnum (aref arr 1)))
-    (save-excursion
-      (goto-line lnum)
-      (move-to-column cnum)
-      (point))))
+  (pcase arr
+    (`(,lnum ,cnum)
+     (save-excursion
+       (goto-line lnum)
+       (move-to-column cnum)
+       (point)))))
 
 (defun pulsar--unpack-loc (loc)
   (pcase loc
@@ -81,8 +82,16 @@
 (defvar pulsar--show-overlay
   nil)
 
-(defun pulsar--clear-show-overlay ()
+(defvar pulsar--diagnosis-overlays
+  '())
+
+(defun pulsar--clear-show-overlay-look ()
   (move-overlay pulsar--show-overlay 1 1))
+
+(defun pulsar--after-changes-hook (beg end old-len)
+  (interactive)
+  (dolist (diag-ov pulsar--diagnosis-overlays) (delete-overlay diag-ov))
+  (setq pulsar--diagnosis-overlays '()))
 
 (defun pulsar--highlight-range (loc message)
   (pcase (pulsar--unpack-loc loc)
@@ -90,8 +99,25 @@
      (move-overlay pulsar--show-overlay start end)
      (message "%s" message))))
 
+(defun pulsar--highlight-diagnosis (diag)
+  (pcase diag
+    (`(:loc ,loc :pass ,pass :kind ,kind :body ,message)
+     (pcase (pulsar--unpack-loc loc)
+       (`(,file ,start ,end)
+        (let ((ov (make-overlay start end))
+              (color (pcase kind
+                       ("Error" "red")
+                       ("Warning" "yellow")
+                       ("Info" "green")
+                       (_ (error "unknown diagnosis kind %s" kind)))))
+          (overlay-put ov 'face `(:underline (:color ,color :style wave)))
+          (overlay-put ov 'help-echo message)
+          (add-to-list 'pulsar--diagnosis-overlays ov)))))
+    ))
+
 (defun pulsar--process-response (out)
   (let* ((json-object-type 'plist)
+         (json-array-type 'list)
          (resp (json-read-from-string out)))
     (pcase resp
       (`(:tag "ok" :value ,ok)
@@ -99,6 +125,8 @@
          (`(:tag "silent" :value nil) ())
          (`(:tag "show" :value (:loc ,loc :content ,content))
           (pulsar--highlight-range loc content))
+         (`(:tag "diagnostics" :value ,diags)
+          (dolist (diag diags) (pulsar--highlight-diagnosis diag)))
          (_ (message "unknown answer %S" resp))))
       (_ ())
       )))
@@ -348,11 +376,14 @@
   (setq-local comment-start "(*")
   (setq-local comment-start "*)")
 
-  ;; Interactive stuff
+  ;; Interactive features
   (make-local-variable 'pulsar--show-overlay)
+  (make-local-variable 'pulsar--diagnosis-overlays)
   (setq pulsar--show-overlay (make-overlay 1 1))
   (overlay-put pulsar--show-overlay 'face '(:inverse-video t))
-  (add-hook 'echo-area-clear-hook 'pulsar--clear-show-overlay nil t)
+  (add-hook 'echo-area-clear-hook 'pulsar--clear-show-overlay-look nil t)
+  (add-hook 'after-change-functions 'pulsar--after-changes-hook)
+  (setq inhibit-modification-hooks nil)
 
   ;; Font-lock
   (setq-local font-lock-defaults '(pulsar-font-lock-keywords))
