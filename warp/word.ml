@@ -164,7 +164,7 @@ let rec at w i =
   | Concat w_l ->
      at_l w_l i
   | Power (w, j) ->
-     at w (i mod w.length * j)
+     at w (i mod w.length)
 
 and at_l w_l i =
   (* assert (i >= 0 && i < List.length w_l); *)
