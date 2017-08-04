@@ -87,16 +87,15 @@
 (defvar pulsar--show-overlay
   nil)
 
-(defvar pulsar--diagnosis-overlays
-  '())
+(defun pulsar-clear-diagnosis-overlays ()
+  (interactive)
+  (remove-overlays nil nil "pulsar-diagnosis"))
 
 (defun pulsar--clear-show-overlay-look ()
   (move-overlay pulsar--show-overlay 1 1))
 
 (defun pulsar--after-changes-hook (beg end old-len)
-  (interactive)
-  (dolist (diag-ov pulsar--diagnosis-overlays) (delete-overlay diag-ov))
-  (setq pulsar--diagnosis-overlays '()))
+  (pulsar-clear-diagnosis-overlays))
 
 (defun pulsar--highlight-range (loc message)
   (pcase (pulsar--unpack-loc loc)
@@ -115,9 +114,9 @@
                        ("Warning" "yellow")
                        ("Info" "green")
                        (_ (error "unknown diagnosis kind %s" kind)))))
+          (overlay-put ov 'name "pulsar-diagnosis")
           (overlay-put ov 'face `(:underline (:color ,color :style wave)))
-          (overlay-put ov 'help-echo message)
-          (add-to-list 'pulsar--diagnosis-overlays ov)))))
+          (overlay-put ov 'help-echo message)))))
     ))
 
 (defun pulsar--process-response (out)
@@ -389,7 +388,6 @@
 
   ;; Interactive features
   (make-local-variable 'pulsar--show-overlay)
-  (make-local-variable 'pulsar--diagnosis-overlays)
   (setq pulsar--show-overlay (make-overlay 1 1))
   (overlay-put pulsar--show-overlay 'face '(:inverse-video t))
   (add-hook 'echo-area-clear-hook 'pulsar--clear-show-overlay-look nil t)
