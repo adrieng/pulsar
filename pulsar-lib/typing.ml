@@ -412,13 +412,16 @@ let rec type_pat env p =
     T.p_ann = ty;
   }
 
-let type_coe src coe =
-  let dst = Coercion.output_type coe.S.c_desc src in
-  {
-    T.c_desc = coe.S.c_desc;
-    T.c_loc = coe.S.c_loc;
-    T.c_ann = { src; dst; };
-  }
+let type_coe ?id src coe =
+  try
+    let dst = Coercion.output_type coe.S.c_desc src in
+    {
+      T.c_desc = coe.S.c_desc;
+      T.c_loc = coe.S.c_loc;
+      T.c_ann = { src; dst; };
+    }
+  with Coercion.Ill_typed ->
+    cannot_coerce ?id ~ty:src ~coe:coe.S.c_desc ~loc:coe.S.c_loc ()
 
 let bind_rec_eq out_env eq =
   let res_ty =
@@ -515,7 +518,7 @@ let rec type_exp env e =
     | S.ESub { ctx; exp; res; } ->
        let apply_coe_env (env, ctx) (id, coe) =
          let ty = E.find id env in
-         let coe = type_coe ty coe in
+         let coe = type_coe ~id ty coe in
          E.add id coe.T.c_ann.dst env,
          (id, coe) :: ctx
        in
