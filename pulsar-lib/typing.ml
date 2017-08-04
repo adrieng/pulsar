@@ -616,17 +616,3 @@ let pass =
     ~pp_out:T.print_file
     ~name:"typing"
     type_file
-
-let serialize =
-  let typing_serialize_file file =
-    if !Options.display_types
-    then
-      Format.printf "%a@."
-        Typed_tree.print_interface file.T.f_annot;
-    file
-  in
-  Compiler.Pass.atomic
-    ~pp_in:Warp.Print.pp_nothing
-    ~pp_out:Warp.Print.pp_nothing
-    ~name:"typing_serialize"
-    typing_serialize_file

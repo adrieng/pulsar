@@ -18,7 +18,7 @@ let frontend =
   Parse.pass
   >>> Scoping.pass
   >>> Typing.pass
-  >>> Typing.serialize
+  >>> Diagnosis.pass
 
 let compiler =
   frontend

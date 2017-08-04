@@ -11,4 +11,4 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
-val pass : (Scoped_tree.T.file -> Typed_tree.T.file) Compiler.Pass.t
+val pass : (Typed_tree.T.file -> Typed_tree.T.file) Compiler.Pass.t

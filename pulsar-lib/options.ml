@@ -86,6 +86,33 @@ let display_types = ref false
 
 let auto_const = ref true
 
+(* Diagnosis *)
+
+type diagnosis_kind =
+  | Nothing
+  | Everything
+  | Buffer
+
+let diag : diagnosis_kind ref =
+  ref Nothing
+
+let diagnosis_kinds =
+  [
+    "nothing";
+    "buffers";
+    "everything";
+  ]
+
+let diagnose kind =
+  let about =
+    match kind with
+    | "nothing" -> Nothing
+    | "buffers" -> Buffer
+    | "everything" -> Everything
+    | _ -> invalid_arg @@ "diagnose: bad argument " ^ kind
+  in
+  diag := about
+
 (* Command-line arguments related to global options *)
 
 let global_command_line_arguments =
@@ -97,6 +124,10 @@ let global_command_line_arguments =
     "-i",
     Arg.Set display_types,
     " display types";
+
+    "-d",
+    Arg.Symbol (diagnosis_kinds, diagnose),
+    " display additional information about";
 
     yes_no
       ~opt:"utf8"

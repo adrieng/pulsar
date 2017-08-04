@@ -121,6 +121,9 @@ struct
     | PDecl _ ->
        []
 
+  let sub_file file =
+    List.map (fun ph -> `Phr ph) file.f_phrases
+
   let sub thing =
     match thing with
     | `Pat p -> sub_pat p
@@ -129,6 +132,7 @@ struct
     | `Block b -> sub_block b
     | `Eq eq -> sub_eq eq
     | `Phr ph -> sub_phrase ph
+    | `File file -> sub_file file
 
   let sub_file file =
     List.map (fun phr -> `Phr phr) file.f_phrases

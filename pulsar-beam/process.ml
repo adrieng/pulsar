@@ -46,15 +46,16 @@ let show_type file pos =
        with Not_found ->
          Response.Silent
      end
-  | Compiler.Pass.Error err ->
-     Response.Diagnoses [err]
+  | Compiler.Pass.Error _ ->
+     Response.Diagnoses (List.rev !diagnoses)
 
 let diagnosis file =
+  Options.diag := Options.Everything;
   match type_file file with
   | Compiler.Pass.Correct _ ->
      Response.Diagnoses (List.rev !diagnoses)
-  | Compiler.Pass.Error err ->
-     Response.Diagnoses (List.rev @@ err :: !diagnoses)
+  | Compiler.Pass.Error _ ->
+     Response.Diagnoses (List.rev !diagnoses)
 
 let process req =
   match req with
