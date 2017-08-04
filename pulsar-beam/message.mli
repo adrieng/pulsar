@@ -21,6 +21,7 @@ module Request :
 sig
   type t =
     | Show of { file : string; pos : Loc.pos; kind : [`Type]; }
+    | Diagnosis of { file : string; }
 
   val of_json : json -> t
 
@@ -32,7 +33,7 @@ sig
   type ok =
     | Silent
     | Show of { loc : Loc.t; content : string; }
-    | Diagnostics of Compiler.Diagnostic.t list
+    | Diagnoses of Compiler.Diagnostic.t list
 
   type ko =
     | Decoding of { reason : string; }

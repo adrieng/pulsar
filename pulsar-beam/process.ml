@@ -15,6 +15,8 @@ open Message
 
 module Find = Source_tree_utils.Find(Typed_tree.T)
 
+let diagnoses = ref []
+
 let type_file filename =
   Compiler.Pass.run Flow.frontend filename
 
@@ -45,9 +47,18 @@ let show_type file pos =
          Response.Silent
      end
   | Compiler.Pass.Error err ->
-     Diagnostics [err]
+     Response.Diagnoses [err]
+
+let diagnosis file =
+  match type_file file with
+  | Compiler.Pass.Correct _ ->
+     Response.Diagnoses (List.rev !diagnoses)
+  | Compiler.Pass.Error err ->
+     Response.Diagnoses (List.rev @@ err :: !diagnoses)
 
 let process req =
   match req with
   | Request.Show { file; pos; kind = `Type; } ->
      Response.Ok (show_type file pos)
+  | Request.Diagnosis { file; } ->
+     Response.Ok (diagnosis file)

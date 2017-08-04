@@ -17,8 +17,6 @@ open Message
 module U = Warp.Utils
 module J = Yojson.Basic
 
-let diags = ref []
-
 let decode line =
   try U.Left (Request.of_json @@ J.from_string line)
   with Yojson.Json_error reason ->
@@ -30,16 +28,8 @@ let decode line =
 let encode resp =
   J.to_string @@ Response.to_json resp
 
-let flush_diags () =
-  let open Response in
-  print_string @@ encode @@ Ok (Diagnostics !diags);
-  diags := [];
-  ()
-
 let diag_callback diag =
-  let open Compiler.Diagnostic in
-  diags := diag :: !diags;
-  if diag.kind = Error then flush_diags ();
+  Process.diagnoses := diag :: !Process.diagnoses;
   ()
 
 let rec do_req req_str =

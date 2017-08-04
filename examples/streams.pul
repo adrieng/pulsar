@@ -41,7 +41,7 @@ rec
 {
   h ((x :: xs) : stream bool) : `(2) ⊛ stream bool =
     let { ys = (h xs) by `0(1) } in
-      (x :: (not x :: ys) by `0(1)) by `(2);
+    (x :: (not x :: ys) by `0(1)) by `(2);
 }
 
 rec
@@ -65,4 +65,12 @@ rec
   fib : stream int =
     let { ys = (tail fib) by `0(1) } in
     0 :: (1 :: (zipWith plus fib ys) by `0(1)) by `0(1);
+}
+
+{
+  iter (f : int -> int) (ini : int) : stream int =
+    loop ini where rec
+    { loop (acc : int)
+      : stream int
+      = acc :: (loop (f acc)) by `0(1) }
 }

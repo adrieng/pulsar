@@ -63,6 +63,7 @@ module Request =
 struct
   type t =
     | Show of { file : string; pos : Loc.pos; kind : [`Type]; }
+    | Diagnosis of { file : string; }
 
   let of_json json =
     match decode_variant json with
@@ -70,6 +71,8 @@ struct
                        "pos", pos;
                        "kind", `String "Type"; ] ->
        Show { file; pos = pos_of_json pos; kind = `Type; }
+    | "diagnosis", `Assoc [ "file", `String file; ] ->
+       Diagnosis { file; }
     | _, json ->
        could_not_decode ~json ~reason:"ill-formed request" ()
 
@@ -83,6 +86,8 @@ struct
               "Type"
          in
          "show", `Assoc [ "pos", pos_to_json pos; "kind", `String kind; ]
+      | Diagnosis { file; } ->
+         "diagnosis", `Assoc [ "file", `String file; ]
     in
     encode_variant tag value
 end
@@ -92,7 +97,7 @@ struct
   type ok =
     | Silent
     | Show of { loc : Loc.t; content : string; }
-    | Diagnostics of Compiler.Diagnostic.t list
+    | Diagnoses of Compiler.Diagnostic.t list
 
   type ko =
     | Decoding of { reason : string; }
@@ -148,8 +153,8 @@ struct
                        "content", `String content; ] ->
        Show { loc = loc_of_json loc; content; }
 
-    | "diagnostics", `List jsons ->
-       Diagnostics (List.map diagnostic_of_json jsons)
+    | "diagnoses", `List jsons ->
+       Diagnoses (List.map diagnostic_of_json jsons)
 
     | _, json ->
        could_not_decode ~json ~reason:"ill-formed ok" ()
@@ -166,8 +171,8 @@ struct
          `Assoc [ "loc", loc_to_json loc;
                   "content", `String content; ]
 
-      | Diagnostics diags ->
-         "diagnostics", `List (List.map json_of_diagnostic diags)
+      | Diagnoses diags ->
+         "diagnoses", `List (List.map json_of_diagnostic diags)
     in
     encode_variant tag value
 

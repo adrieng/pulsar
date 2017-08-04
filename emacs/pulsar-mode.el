@@ -65,6 +65,11 @@
    `(:tag "show"
      :value (:file ,file :pos ,(pulsar--pair-of-pos pos) :kind "Type"))))
 
+(defun pulsar--json-diagnosis (file)
+  (json-encode
+   `(:tag "diagnosis"
+     :value (:file ,file))))
+
 (defun pulsar--pos-of-array (arr)
   (pcase arr
     (`(,lnum ,cnum)
@@ -125,7 +130,7 @@
          (`(:tag "silent" :value nil) ())
          (`(:tag "show" :value (:loc ,loc :content ,content))
           (pulsar--highlight-range loc content))
-         (`(:tag "diagnostics" :value ,diags)
+         (`(:tag "diagnoses" :value ,diags)
           (dolist (diag diags) (pulsar--highlight-diagnosis diag)))
          (_ (message "unknown answer %S" resp))))
       (_ ())
@@ -135,6 +140,11 @@
   (interactive)
   (let ((req (pulsar--json-show-type (buffer-file-name) (point))))
     (pulsar--process-response (pulsar--beam-request req))))
+
+(defun pulsar-diagnosis-buffer ()
+  (interactive)
+  (pulsar--process-response
+   (pulsar--beam-request (pulsar--json-diagnosis (buffer-file-name)))))
 
 ;; Syntax table
 
@@ -361,6 +371,7 @@
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-c") 'pulsar-compile-buffer)
     (define-key map (kbd "C-c C-t") 'pulsar-show-type-at-point)
+    (define-key map (kbd "C-c C-l") 'pulsar-diagnosis-buffer)
     map)
   "Keymap for `pulsar-mode'.")
 
