@@ -74,3 +74,6 @@ let ( <= ) p q =
 
 let div p q =
   Warp (Periodic.div (normalize p) (normalize q))
+
+let size p q =
+  Periodic.size (normalize p) (normalize q)

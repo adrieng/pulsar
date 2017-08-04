@@ -40,4 +40,9 @@ module type S =
 
     (** The warp represented by 0(1) *)
     val zero_one : t
+
+    (** Assuming [p <= q], [size p q] returns the buffer capacity needed to
+        delay [q] to [p]. We assume that instantenous communication takes no
+        space, e.g. [size one one] returns zero. *)
+    val size : t -> t -> Enat.t
   end

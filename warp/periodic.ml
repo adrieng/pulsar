@@ -473,15 +473,15 @@ let on p q =
 let lc_phase p q =
   max (Word.length p.u) (Word.length q.u)
 
-let period per =
-  match per with
+let period_length p =
+  match p.v with
   | Ext _ ->
      1
   | Pat v ->
      Word.length v
 
 let lc_period p q =
-  max (period p.v) (period q.v)
+  max (period_length p) (period_length q)
 
 let lc_length p q =
   lc_phase p q + lc_period p q
@@ -529,3 +529,24 @@ let ( <= ) p q =
       Enat.(sum_p <= sum_q) && loop sum_p sum_q (i + 1) max
   in
   loop (Enat.Fin 0) (Enat.Fin 0) 0 (hyper_prefix p q + hyper_period p q)
+
+let size p q =
+  assert (p <= q);
+  let rec loop max_occ occ i max =
+    if i >= max
+    then max_occ
+    else
+      let occ = Enat.(occ + at q i - at p i) in
+      assert Enat.(zero <= occ);
+      loop Enat.(max max_occ occ) occ (i + 1) max
+  in
+  match p.v, q.v with
+  | Ext Omega, Ext Omega ->
+     (* This case avoids computing Enat.(Fin - Fin) in the loop above. *)
+     Enat.Inf
+  | _, _ ->
+     let r1 = Enat.(period_weight p * Fin (period_length q)) in
+     let r2 = Enat.(period_weight q * Fin (period_length p)) in
+     if r1 <> r2
+     then Enat.Inf
+     else loop (Enat.Fin 0) (Enat.Fin 0) 0 (hyper_prefix p q + hyper_period p q)
