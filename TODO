@@ -5,4 +5,5 @@
 * Rework the ugly bits of Warp/{Word,Periodic}
 * Fix the pretty-printing of expressions, currently buggy in edge cases
 * Implement Word using ropes
-* Scoping: check for duplicate var coercions in ESub
+* Scoping: check for duplicate free vars in ESub
+* Fuse Coercion into Source_tree to give each coe a proper location
