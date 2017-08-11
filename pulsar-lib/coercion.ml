@@ -11,95 +11,121 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
-type invertible =
-  | Wrap
-  | Unwrap
-  | Concat of Warp.Formal.t * Warp.Formal.t
-  | Decat of Warp.Formal.t * Warp.Formal.t
-  | Dist
-  | Fact
-  | Infl
-  | Defl
+module Invertible =
+struct
+  type t =
+    | Id
+    | Wrap
+    | Unwrap
+    | Concat of Warp.Formal.t * Warp.Formal.t
+    | Decat of Warp.Formal.t * Warp.Formal.t
+    | Dist
+    | Fact
+    | Infl
+    | Defl
+
+  let print fmt i =
+    match i with
+    | Id ->
+       Format.fprintf fmt "id"
+    | Wrap ->
+       Format.fprintf fmt "wrap"
+    | Unwrap ->
+       Format.fprintf fmt "unwrap"
+    | Concat (p, q) ->
+       Format.fprintf fmt "@[concat@ %a@ %a@]"
+         Warp.Formal.print p
+         Warp.Formal.print q
+    | Decat (p, q) ->
+       Format.fprintf fmt "@[decat@ %a@ %a@]"
+         Warp.Formal.print p
+         Warp.Formal.print q
+    | Dist ->
+       Format.fprintf fmt "dist"
+    | Fact ->
+       Format.fprintf fmt "fact"
+    | Infl ->
+       Format.fprintf fmt "infl"
+    | Defl ->
+       Format.fprintf fmt "defl"
+
+  let compare i1 i2 =
+    let tag_to_int i =
+      match i with
+      | Id -> 0
+      | Wrap -> 1
+      | Unwrap -> 2
+      | Concat _ -> 3
+      | Decat _ -> 4
+      | Dist -> 5
+      | Fact -> 6
+      | Infl -> 7
+      | Defl -> 8
+    in
+    match i1, i2 with
+    | Id, Id
+    | Wrap, Wrap
+    | Unwrap, Unwrap
+    | Dist, Dist
+    | Fact, Fact
+    | Infl, Infl
+    | Defl, Defl
+      ->
+       0
+    | Concat (p1, q1), Concat (p2, q2)
+      | Decat (p1, q1), Decat (p2, q2)
+      ->
+       Warp.Utils.compare_both
+         (Warp.Formal.compare p1 p2)
+         (fun () -> Warp.Formal.compare q1 q2)
+    | (Id | Wrap | Unwrap | Concat _ | Decat _ | Dist | Fact | Infl
+       | Defl), _ ->
+       Warp.Utils.compare_int (tag_to_int i1) (tag_to_int i2)
+
+  let equal i1 i2 =
+    0 = compare i1 i2
+
+  let invert i =
+    match i with
+    | Id ->
+       Id
+    | Wrap ->
+       Unwrap
+    | Unwrap ->
+       Wrap
+    | Concat (p, q) ->
+       Decat (p, q)
+    | Decat (p, q) ->
+       Concat (p, q)
+    | Dist ->
+       Fact
+    | Fact ->
+       Dist
+    | Infl ->
+       Defl
+    | Defl ->
+       Infl
+end
 
 type t =
-  | Id
   | Seq of t * t
   | Arr of t * t
   | Prod of t * t
   | Warped of Warp.Formal.t * t
-  | Invertible of invertible
+  | Invertible of Invertible.t
   | Delay of Warp.Formal.t * Warp.Formal.t
-
-let compare_invertible i1 i2 =
-  let tag_to_int i =
-    match i with
-    | Wrap -> 0
-    | Unwrap -> 1
-    | Concat _ -> 2
-    | Decat _ -> 3
-    | Dist -> 4
-    | Fact -> 5
-    | Infl -> 6
-    | Defl -> 7
-  in
-  match i1, i2 with
-  | Wrap, Wrap
-  | Unwrap, Unwrap
-  | Dist, Dist
-  | Fact, Fact
-  | Infl, Infl
-  | Defl, Defl
-    ->
-     0
-  | Concat (p1, q1), Concat (p2, q2)
-  | Decat (p1, q1), Decat (p2, q2)
-    ->
-     Warp.Utils.compare_both
-       (Warp.Formal.compare p1 p2)
-       (fun () -> Warp.Formal.compare q1 q2)
-  | (Wrap | Unwrap | Concat _ | Decat _ | Dist | Fact | Infl | Defl), _ ->
-     Warp.Utils.compare_int (tag_to_int i1) (tag_to_int i2)
-
-let equal_invertible i1 i2 =
-  0 = compare_invertible i1 i2
-
-let print_invertible fmt i =
-  match i with
-  | Wrap ->
-     Format.fprintf fmt "wrap"
-  | Unwrap ->
-     Format.fprintf fmt "unwrap"
-  | Concat (p, q) ->
-     Format.fprintf fmt "@[concat@ %a@ %a@]"
-       Warp.Formal.print p
-       Warp.Formal.print q
-  | Decat (p, q) ->
-     Format.fprintf fmt "@[decat@ %a@ %a@]"
-       Warp.Formal.print p
-       Warp.Formal.print q
-  | Dist ->
-     Format.fprintf fmt "dist"
-  | Fact ->
-     Format.fprintf fmt "fact"
-  | Infl ->
-     Format.fprintf fmt "infl"
-  | Defl ->
-     Format.fprintf fmt "defl"
 
 let compare c1 c2 =
   let tag_to_int c =
     match c with
-    | Id -> 0
-    | Seq _ -> 1
-    | Arr _ -> 2
-    | Prod _ -> 3
-    | Warped _ -> 4
-    | Invertible _ -> 5
-    | Delay _ -> 6
+    | Seq _ -> 0
+    | Arr _ -> 1
+    | Prod _ -> 2
+    | Warped _ -> 3
+    | Invertible _ -> 4
+    | Delay _ -> 5
   in
   match c1, c2 with
-  | Id, Id ->
-     0
   | Seq (c1_1, c1_2), Seq (c2_1, c2_2)
   | Arr (c1_1, c1_2), Arr (c2_1, c2_2)
   | Prod (c1_1, c1_2), Prod (c2_1, c2_2)
@@ -112,12 +138,12 @@ let compare c1 c2 =
        (Warp.Formal.compare p1 p2)
        (fun () -> compare c1 c2)
   | Invertible i1, Invertible i2 ->
-     compare_invertible i1 i2
+     Invertible.compare i1 i2
   | Delay (p1, q1), Delay (p2, q2) ->
      Warp.Utils.compare_both
        (Warp.Formal.compare p1 p2)
        (fun () -> Warp.Formal.compare q1 q2)
-  | (Id | Seq _ | Arr _ | Prod _ | Warped _ | Invertible _ | Delay _), _ ->
+  | (Seq _ | Arr _ | Prod _ | Warped _ | Invertible _ | Delay _), _ ->
      Warp.Utils.compare_int (tag_to_int c1) (tag_to_int c2)
 
 let equal c1 c2 =
@@ -125,7 +151,7 @@ let equal c1 c2 =
 
 let priority c =
   match c with
-  | Id | Invertible _ | Delay _ ->
+  | Invertible _ | Delay _ ->
      0
   | Warped _ ->
      10
@@ -142,8 +168,6 @@ let rec print pri fmt c =
   let paren = pri < pri' in
   if paren then Format.fprintf fmt "(@[";
   begin match c with
-  | Id ->
-     Format.fprintf fmt "id"
   | Seq (c1, c2) ->
      Format.fprintf fmt "@[%a;@ %a@]"
        print c1
@@ -164,7 +188,7 @@ let rec print pri fmt c =
        Warp.Print.pp_circledast ()
        print c
   | Invertible i ->
-     print_invertible fmt i
+     Invertible.print fmt i
   | Delay (p, q) ->
      Format.fprintf fmt "@[delay %a %a@]"
        Warp.Formal.print p
@@ -183,29 +207,11 @@ and print_under_arr pri fmt c =
 let print =
   print 500
 
-let invert i =
-  match i with
-  | Wrap ->
-     Unwrap
-  | Unwrap ->
-     Wrap
-  | Concat (p, q) ->
-     Decat (p, q)
-  | Decat (p, q) ->
-     Concat (p, q)
-  | Dist ->
-     Fact
-  | Fact ->
-     Dist
-  | Infl ->
-     Defl
-  | Defl ->
-     Infl
+let id =
+  Invertible Invertible.Id
 
 let rec try_invert c =
   match c with
-  | Id ->
-     Id
   | Seq (c1, c2) ->
      Seq (try_invert c2, try_invert c1)
   | Prod (c1, c2) ->
@@ -215,7 +221,7 @@ let rec try_invert c =
   | Warped (p, c) ->
      Warped (p, try_invert c)
   | Invertible i ->
-     Invertible (invert i)
+     Invertible (Invertible.invert i)
   | Delay (p, q) ->
      if Warp.Formal.equal p q
      then c
@@ -256,10 +262,14 @@ let get_warped_check q ty =
   if not (Warp.Formal.equal p q) then raise Ill_typed;
   ty
 
+open Invertible
+
 (* Typing *)
 
 let output_type_invertible i ty =
   match i with
+  | Id ->
+     ty
   | Wrap ->
      Type.Warped (Warp.Formal.one, ty)
   | Unwrap ->
@@ -290,8 +300,6 @@ let output_type_invertible i ty =
 
 let rec output_type c ty =
   match c with
-  | Id ->
-     ty
   | Seq (c1, c2) ->
      output_type c2 (output_type c1 ty)
   | Arr (c1, c2) ->
@@ -313,8 +321,6 @@ let rec output_type c ty =
 
 and input_type c ty =
   match c with
-  | Id ->
-     ty
   | Seq (c1, c2) ->
      input_type c1 (input_type c2 ty)
   | Arr (c1, c2) ->
@@ -354,10 +360,10 @@ let rec seq (c1, c2) =
         seq (c1, c3)
      end
 
-  | Id, _ ->
+  | Invertible Id, _ ->
      c2
 
-  | _, Id ->
+  | _, Invertible Id ->
      c1
 
   | Prod (c11, c12), Prod (c21, c22) ->
@@ -366,8 +372,8 @@ let rec seq (c1, c2) =
   | Arr (c11, c12), Arr (c21, c22) ->
      arr (seq (c21, c11), seq (c12, c22))
 
-  | Invertible i, Invertible i' when equal_invertible i (invert i') ->
-     Id
+  | Invertible i, Invertible i' when Invertible.equal i (invert i') ->
+     Invertible Id
 
   | _ ->
      Seq (c1, c2)
@@ -375,7 +381,7 @@ let rec seq (c1, c2) =
 and seqs cs =
   match cs with
   | [] ->
-     Id
+     Invertible Id
   | [c] ->
      c
   | c :: cs ->
@@ -383,16 +389,16 @@ and seqs cs =
 
 and arr (c1, c2) =
   match c1, c2 with
-  | Id, Id ->
-     Id
+  | Invertible Id, Invertible Id ->
+     Invertible Id
 
   | _ ->
      Arr (c1, c2)
 
 and prod (c1, c2) =
   match c1, c2 with
-  | Id, Id ->
-     Id
+  | Invertible Id, Invertible Id ->
+     Invertible Id
 
   | _ ->
      Prod (c1, c2)
@@ -400,8 +406,8 @@ and prod (c1, c2) =
 and warped (p, c) =
   let open Warp.Formal in
   match c with
-  | Id ->
-     Id
+  | Invertible Id ->
+     Invertible Id
 
   | Seq (c1, c2) ->
      seq (warped (p, c1), warped (p, c2))
@@ -462,13 +468,11 @@ and invertible i =
 
 and delay (p, q) =
   if Warp.Formal.equal p q
-  then Id
+  then Invertible Id
   else Delay (p, q)
 
 let rec reduce c =
   match c with
-  | Id ->
-     Id
   | Seq (c1, c2) ->
      seq (reduce c1, reduce c2)
   | Arr (c1, c2) ->

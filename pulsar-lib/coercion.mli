@@ -11,38 +11,37 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
-type invertible =
-  | Wrap
-  | Unwrap
-  | Concat of Warp.Formal.t * Warp.Formal.t
-  | Decat of Warp.Formal.t * Warp.Formal.t
-  | Dist
-  | Fact
-  | Infl
-  | Defl
+module Invertible :
+sig
+  type t =
+    | Id
+    | Wrap
+    | Unwrap
+    | Concat of Warp.Formal.t * Warp.Formal.t
+    | Decat of Warp.Formal.t * Warp.Formal.t
+    | Dist
+    | Fact
+    | Infl
+    | Defl
+
+  include Warp.Utils.PrintableOrderedType with type t := t
+
+  val equal : t -> t -> bool
+
+  val invert : t -> t
+end
 
 type t =
-  | Id
   | Seq of t * t
   | Arr of t * t
   | Prod of t * t
   | Warped of Warp.Formal.t * t
-  | Invertible of invertible
+  | Invertible of Invertible.t
   | Delay of Warp.Formal.t * Warp.Formal.t
 
-val compare_invertible : invertible -> invertible -> int
+include Warp.Utils.PrintableOrderedType with type t := t
 
-val equal_invertible : invertible -> invertible -> bool
-
-val print_invertible : Format.formatter -> invertible -> unit
-
-val compare : t -> t -> int
-
-val equal : t -> t -> bool
-
-val print : Format.formatter -> t -> unit
-
-val invert : invertible -> invertible
+val id : t
 
 (** [try_invert coe] tries to invert the coercion coe. It raises
     invalid_argument if this is not possible. *)
@@ -70,7 +69,7 @@ val prod : t * t -> t
 
 val warped : Warp.Formal.t * t -> t
 
-val invertible : invertible -> t
+val invertible : Invertible.t -> t
 
 val delay : Warp.Formal.t * Warp.Formal.t -> t
 

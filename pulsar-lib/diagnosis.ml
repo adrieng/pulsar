@@ -19,7 +19,7 @@ let diag_buffers_coercion coe =
   let rec loop c =
     let open Coercion in
     match c with
-    | Id | Invertible _ ->
+    | Invertible _ ->
        ()
     | Seq (c1, c2) | Arr (c1, c2) | Prod (c1, c2) ->
        loop c1;

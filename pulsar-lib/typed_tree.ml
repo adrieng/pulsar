@@ -60,7 +60,7 @@ let ty_of coe = coe.c_ann.src, coe.c_ann.dst
 let id ?(loc = Loc.nowhere) ty =
   let open CoeAnnot in
   {
-    c_desc = Coercion.Id;
+    c_desc = Coercion.id;
     c_loc = Loc.nowhere;
     c_ann = { src = ty; dst = ty; };
   }
@@ -125,7 +125,7 @@ let seq_ctx ctx ctx' =
     | Some c, None | None, Some c -> Some c
     | Some c, Some c' -> Some (seq (c, c'))
   in
-  List.filter (fun (v, c) -> c.c_desc <> Coercion.Id)
+  List.filter (fun (v, c) -> c.c_desc <> Coercion.id)
   @@ Ident.Env.to_list
   @@ Ident.Env.merge seq ctx ctx'
 
@@ -143,12 +143,12 @@ let sub ?(ctx' = []) ?res' e ty =
   let open T in
   let ctx' = simplify_ctx ctx' in
   match ctx', res'.c_desc, e.e_desc with
-  | [], Coercion.Id, _ ->
+  | [], Coercion.(Invertible Invertible.Id), _ ->
      e
   | _, _, ESub { ctx; exp; res; } ->
      let ctx = seq_ctx ctx ctx' in
      let res = seq (res, res') in
-     if ctx <> [] || res.c_desc <> Coercion.Id
+     if ctx <> [] || res.c_desc <> Coercion.id
      then { e with e_desc = ESub { ctx; exp; res; }; }
      else exp
   | _ ->

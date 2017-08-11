@@ -158,7 +158,7 @@ let simplify_ty ty =
 
   let rec loop ty =
     if is_simplified ty
-    then ty, Id, Id
+    then ty, id, id
     else
       match ty with
       | Base _ ->
