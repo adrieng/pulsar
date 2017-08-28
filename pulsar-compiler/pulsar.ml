@@ -21,7 +21,7 @@ let diagnostic_callback diag =
 let args = Flow.common_args
 
 let process filename =
-  match Warp.Utils.file_extension filename with
+  match Filename.extension filename with
   | ".pul" ->
      let open Compiler.Pass in
      let res = run Flow.compiler filename in

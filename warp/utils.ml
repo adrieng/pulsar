@@ -540,14 +540,6 @@ let hashtable_of_assoc_list l =
 
 let is_ascii i = i >= 0 && i < 128
 
-let file_extension filename =
-  try
-    let p = Filename.chop_extension filename in
-    let p_l = String.length p in
-    String.sub filename p_l (String.length filename - p_l)
-  with Invalid_argument _ ->
-    ""
-
 module type PrintableType =
 sig
   type t
