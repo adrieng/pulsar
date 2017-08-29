@@ -344,15 +344,15 @@ lit:
 (* Coercions *)
 
 invertible:
-| ID { Coercion.Invertible.Id }
-| WRAP { Coercion.Invertible.Wrap }
-| UNWRAP { Coercion.Invertible.Unwrap }
-| CONCAT p = warp_ty q = warp_ty { Coercion.Invertible.Concat (p, q) }
-| DECAT p = warp_ty q = warp_ty { Coercion.Invertible.Decat (p, q) }
-| DIST { Coercion.Invertible.Dist }
-| FACT { Coercion.Invertible.Fact }
-| INFL { Coercion.Invertible.Infl }
-| DEFL { Coercion.Invertible.Defl }
+| ID { Invertible.Id }
+| WRAP { Invertible.Wrap }
+| UNWRAP { Invertible.Unwrap }
+| CONCAT p = warp_ty q = warp_ty { Invertible.Concat (p, q) }
+| DECAT p = warp_ty q = warp_ty { Invertible.Decat (p, q) }
+| DIST { Invertible.Dist }
+| FACT { Invertible.Fact }
+| INFL { Invertible.Infl }
+| DEFL { Invertible.Defl }
 
 coercion_desc:
 | c1 = coercion_desc SEMICOLON c2 = coercion_desc { Coercion.Seq (c1, c2) }

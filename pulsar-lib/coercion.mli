@@ -11,26 +11,6 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
-module Invertible :
-sig
-  type t =
-    | Id
-    | Wrap
-    | Unwrap
-    | Concat of Warp.Formal.t * Warp.Formal.t
-    | Decat of Warp.Formal.t * Warp.Formal.t
-    | Dist
-    | Fact
-    | Infl
-    | Defl
-
-  include Warp.Utils.PrintableOrderedType with type t := t
-
-  val equal : t -> t -> bool
-
-  val invert : t -> t
-end
-
 type t =
   | Seq of t * t
   | Arr of t * t
