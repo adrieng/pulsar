@@ -158,3 +158,38 @@ let later ty =
 
 let constant ty =
   Warped (Warp.Formal.omega, ty)
+
+let get_base ty =
+  match ty with
+  | Base bty ->
+     bty
+  | _ ->
+     invalid_arg "get_base"
+
+let get_stream ty =
+  match ty with
+  | Stream bty ->
+     bty
+  | _ ->
+     invalid_arg "get_stream"
+
+let get_fun ty =
+  match ty with
+  | Fun (ty1, ty2) ->
+     ty1, ty2
+  | _ ->
+     invalid_arg "get_fun"
+
+let get_prod ty =
+  match ty with
+  | Prod (ty1, ty2) ->
+     ty1, ty2
+  | _ ->
+     invalid_arg "get_prod"
+
+let get_warped ty =
+  match ty with
+  | Warped (p, ty) ->
+     p, ty
+  | _ ->
+     invalid_arg "get_warped"

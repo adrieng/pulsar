@@ -99,10 +99,18 @@ sig
 
   type coe =
     {
-      c_desc : Coercion.t;
+      c_desc : coe_desc;
       c_loc : Loc.t;
       c_ann : CoeAnnot.t;
     }
+
+  and coe_desc =
+    | CSeq of coe * coe
+    | CArr of coe * coe
+    | CProd of coe * coe
+    | CWarped of Warp.Formal.t * coe
+    | CInvertible of Invertible.t
+    | CDelay of Warp.Formal.t * Warp.Formal.t
 
   type exp =
       {
@@ -204,10 +212,18 @@ struct
 
   type coe =
     {
-      c_desc : Coercion.t;
+      c_desc : coe_desc;
       c_loc : Loc.t;
       c_ann : CoeAnnot.t;
     }
+
+  and coe_desc =
+    | CSeq of coe * coe
+    | CArr of coe * coe
+    | CProd of coe * coe
+    | CWarped of Warp.Formal.t * coe
+    | CInvertible of Invertible.t
+    | CDelay of Warp.Formal.t * Warp.Formal.t
 
   type exp =
       {
@@ -266,8 +282,64 @@ struct
          print_pat p
          Type.print ty
 
-  let print_coe fmt coe =
-    Coercion.print fmt coe.c_desc
+
+  let priority c =
+    match c.c_desc with
+    | CInvertible _ | CDelay _ ->
+       0
+    | CWarped _ ->
+       10
+    | CArr _ ->
+       20
+    | CProd _ ->
+       30
+    | CSeq _ ->
+       40
+
+  let rec print_coe pri fmt c =
+    let pri' = priority c in
+    let print = print_coe pri' in
+    let paren = pri < pri' in
+    if paren then Format.fprintf fmt "(@[";
+    begin match c.c_desc with
+    | CSeq (c1, c2) ->
+       Format.fprintf fmt "@[%a;@ %a@]"
+         print c1
+         print c2
+    | CArr (c1, c2) ->
+       Format.fprintf fmt "@[%a %a@ %a@]"
+         (print_under_arr pri) c1
+         Warp.Print.pp_arrow ()
+         print c2
+    | CProd (c1, c2) ->
+       Format.fprintf fmt "@[%a %a@ %a@]"
+         print c1
+         Warp.Print.pp_times ()
+         print c2
+    | CWarped (p, c) ->
+       Format.fprintf fmt "@[%a@ %a (@[<hov>%a@])@]"
+         Warp.Formal.print p
+         Warp.Print.pp_circledast ()
+         print c
+    | CInvertible i ->
+       Invertible.print fmt i
+    | CDelay (p, q) ->
+       Format.fprintf fmt "@[delay %a %a@]"
+         Warp.Formal.print p
+         Warp.Formal.print q
+    end;
+    if paren then Format.fprintf fmt "@])"
+
+  and print_under_arr pri fmt c =
+    match c.c_desc with
+    | CArr _ ->
+       Format.fprintf fmt "(@[%a@])"
+         (print_coe pri) c
+    | _ ->
+       print_coe pri fmt c
+
+  let print_coe =
+    print_coe 500
 
   let rec print_exp_prio prio fmt e =
     let open Warp.Print in
@@ -425,9 +497,40 @@ struct
       | (PVar _ | PPair _ | PCons _ | PAnnot _), _ ->
          Warp.Utils.compare_int (tag_to_int p1.p_desc) (tag_to_int p2.p_desc)
 
-  let compare_coe c1 c2 =
+  let rec compare_coe_desc cd1 cd2 =
+    let tag_to_int cd =
+      match cd with
+      | CSeq _ -> 0
+      | CArr _ -> 1
+      | CProd _ -> 2
+      | CWarped _ -> 3
+      | CInvertible _ -> 4
+      | CDelay _ -> 5
+    in
+    match cd1, cd2 with
+    | CSeq (c1_1, c1_2), CSeq (c2_1, c2_2)
+    | CArr (c1_1, c1_2), CArr (c2_1, c2_2)
+    | CProd (c1_1, c1_2), CProd (c2_1, c2_2)
+      ->
+       Warp.Utils.compare_both
+         (compare c1_1 c2_1)
+         (fun () -> compare c1_2 c2_2)
+    | CWarped (p1, c1), CWarped (p2, c2) ->
+       Warp.Utils.compare_both
+         (Warp.Formal.compare p1 p2)
+         (fun () -> compare c1 c2)
+    | CInvertible i1, CInvertible i2 ->
+       Invertible.compare i1 i2
+    | CDelay (p1, q1), CDelay (p2, q2) ->
+       Warp.Utils.compare_both
+         (Warp.Formal.compare p1 p2)
+         (fun () -> Warp.Formal.compare q1 q2)
+    | (CSeq _ | CArr _ | CProd _ | CWarped _ | CInvertible _ | CDelay _), _ ->
+       Warp.Utils.compare_int (tag_to_int cd1) (tag_to_int cd2)
+
+  and compare_coe c1 c2 =
     Warp.Utils.compare_both
-      (Coercion.compare c1.c_desc c2.c_desc)
+      (compare_coe_desc c1.c_desc c2.c_desc)
       (fun () -> CoeAnnot.compare c1.c_ann c2.c_ann)
 
   let rec compare_exp e1 e2 =

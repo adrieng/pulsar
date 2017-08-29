@@ -67,10 +67,18 @@ sig
 
   type coe =
     {
-      c_desc : Coercion.t;
+      c_desc : coe_desc;
       c_loc : Loc.t;
       c_ann : CoeAnnot.t;
     }
+
+  and coe_desc =
+    | CSeq of coe * coe
+    | CArr of coe * coe
+    | CProd of coe * coe
+    | CWarped of Warp.Formal.t * coe
+    | CInvertible of Invertible.t
+    | CDelay of Warp.Formal.t * Warp.Formal.t
 
   (** Expressions, the main syntactic category *)
   type exp =

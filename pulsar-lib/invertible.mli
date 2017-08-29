@@ -27,3 +27,11 @@ include Warp.Utils.PrintableOrderedType with type t := t
 val equal : t -> t -> bool
 
 val invert : t -> t
+
+exception Ill_typed
+
+(** may raise [Ill_typed] *)
+val dst_ty : t -> Type.t -> Type.t
+
+(** may raise [Ill_typed] *)
+val src_ty : t -> Type.t -> Type.t

@@ -57,20 +57,25 @@ open T
 
 let ty_of coe = coe.c_ann.src, coe.c_ann.dst
 
-let id ?(loc = Loc.nowhere) ty =
-  let open CoeAnnot in
+let is_id coe = coe.c_desc = CInvertible Invertible.Id
+
+let invertible ?(loc = Loc.nowhere) src i =
+  let dst = Invertible.dst_ty i src in
   {
-    c_desc = Coercion.id;
-    c_loc = Loc.nowhere;
-    c_ann = { src = ty; dst = ty; };
+    c_desc = CInvertible i;
+    c_loc = loc;
+    c_ann = { src; dst; };
   }
+
+let id ?loc ty =
+  invertible ?loc ty Invertible.Id
 
 let seq (c1, c2) =
   let src, _ = ty_of c1 in
   let _, dst = ty_of c2 in
   let open CoeAnnot in
   {
-    c_desc = Coercion.seq (c1.c_desc, c2.c_desc);
+    c_desc = CSeq (c1, c2);
     c_loc = Loc.join c1.c_loc c2.c_loc;
     c_ann = { src; dst; };
   }
@@ -79,7 +84,7 @@ let prod (c1, c2) =
   let src1, dst1 = ty_of c1 in
   let src2, dst2 = ty_of c2 in
   {
-    c_desc = Coercion.prod (c1.c_desc, c2.c_desc);
+    c_desc = CProd (c1, c2);
     c_loc = Loc.join c1.c_loc c2.c_loc;
     c_ann = { src = Type.Prod (src1, src2); dst = Type.Prod (dst1, dst2); };
   }
@@ -88,32 +93,28 @@ let arr (c1, c2) =
   let src1, dst1 = ty_of c1 in
   let src2, dst2 = ty_of c2 in
   {
-    c_desc = Coercion.arr (c1.c_desc, c2.c_desc);
+    c_desc = CArr (c1, c2);
     c_loc = Loc.join c1.c_loc c2.c_loc;
     c_ann = { src = Type.Fun (dst1, src2); dst = Type.Fun (src1, dst2); };
   }
 
 let warped (p, c) =
   let src, dst = ty_of c in
+  let src = Type.Warped (p, src) in
+  let dst = Type.Warped (p, dst) in
   {
-    c_desc = Coercion.warped (p, c.c_desc);
+    c_desc = CWarped (p, c);
     c_loc = c.c_loc;
-    c_ann = { src = Type.Warped (p, src); dst = Type.Warped (p, dst); };
+    c_ann = { src; dst; };
   }
 
 let delay ty (p, q) =
+  let src = Type.Warped (p, ty) in
+  let dst = Type.Warped (q, ty) in
   {
-    c_desc = Coercion.delay (p, q);
+    c_desc = CDelay (p, q);
     c_loc = Loc.nowhere;
-    c_ann = { src = Type.Warped (p, ty); dst = Type.Warped (q, ty); };
-  }
-
-let invertible src inv =
-  let desc = Coercion.invertible inv in
-  {
-    c_desc = desc;
-    c_loc = Loc.nowhere;
-    c_ann = { src = src; dst = Coercion.output_type desc src; };
+    c_ann = { src; dst; };
   }
 
 let seq_ctx ctx ctx' =
@@ -125,12 +126,37 @@ let seq_ctx ctx ctx' =
     | Some c, None | None, Some c -> Some c
     | Some c, Some c' -> Some (seq (c, c'))
   in
-  List.filter (fun (v, c) -> c.c_desc <> Coercion.id)
+  List.filter (fun (v, c) -> c.c_desc <> CInvertible Invertible.Id)
   @@ Ident.Env.to_list
   @@ Ident.Env.merge seq ctx ctx'
 
 let simplify_ctx ctx =
   seq_ctx ctx []
+
+let rec try_invert c =
+  let src, dst = ty_of c in
+  let desc =
+    match c.c_desc with
+    | CSeq (c1, c2) ->
+       CSeq (try_invert c2, try_invert c1)
+    | CProd (c1, c2) ->
+       CProd (try_invert c1, try_invert c2)
+    | CArr (c1, c2) ->
+       CArr (try_invert c1, try_invert c2)
+    | CWarped (p, c) ->
+       CWarped (p, try_invert c)
+    | CInvertible i ->
+       CInvertible (Invertible.invert i)
+    | CDelay (p, q) ->
+       if Warp.Formal.equal p q
+       then CDelay (p, q)
+       else invalid_arg "non-invertible delay coercion"
+  in
+  {
+    c_desc = desc;
+    c_loc = Loc.nowhere;
+    c_ann = { src = dst; dst = src; };
+  }
 
 (** {3 Expressions} *)
 
@@ -143,12 +169,12 @@ let sub ?(ctx' = []) ?res' e ty =
   let open T in
   let ctx' = simplify_ctx ctx' in
   match ctx', res'.c_desc, e.e_desc with
-  | [], Coercion.(Invertible Invertible.Id), _ ->
+  | [], CInvertible Invertible.Id, _ ->
      e
   | _, _, ESub { ctx; exp; res; } ->
      let ctx = seq_ctx ctx ctx' in
      let res = seq (res, res') in
-     if ctx <> [] || res.c_desc <> Coercion.id
+     if ctx <> [] || not (is_id res)
      then { e with e_desc = ESub { ctx; exp; res; }; }
      else exp
   | _ ->

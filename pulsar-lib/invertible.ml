@@ -103,3 +103,49 @@ let invert i =
      Defl
   | Defl ->
      Infl
+
+exception Ill_typed
+
+let get_warped_check p ty =
+  let q, ty = Type.get_warped ty in
+  if not (Warp.Formal.equal p q) then raise Ill_typed;
+  ty
+
+let dst_ty i ty =
+  try
+    let open Type in
+    match i with
+    | Id ->
+       ty
+    | Wrap ->
+       Type.Warped (Warp.Formal.one, ty)
+    | Unwrap ->
+       get_warped_check Warp.Formal.one ty
+    | Concat (p, q) ->
+       let ty = get_warped_check p ty in
+       let ty = get_warped_check q ty in
+       Type.Warped (Warp.Formal.on p q, ty)
+    | Decat (p, q) ->
+       let ty = get_warped_check (Warp.Formal.on p q) ty in
+       Type.Warped (p, Type.Warped (q, ty))
+    | Dist ->
+       let p, ty = get_warped ty in
+       let ty1, ty2 = get_prod ty in
+       Type.(Prod (Warped (p, ty1), Warped (p, ty2)))
+    | Fact ->
+       let ty1, ty2 = get_prod ty in
+       let p, ty1 = get_warped ty1 in
+       let q, ty2 = get_warped ty2 in
+       Type.(Prod (Warped (p, ty1), Warped (p, ty2)))
+    | Infl ->
+       ignore @@ get_base ty;
+       Type.Warped (Warp.Formal.omega, ty)
+    | Defl ->
+       let ty = get_warped_check Warp.Formal.omega ty in
+       ignore @@ get_base ty;
+       ty
+  with Invalid_argument _ ->
+    raise Ill_typed
+
+let src_ty i dst =
+  dst_ty (invert i) dst

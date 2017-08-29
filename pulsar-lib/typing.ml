@@ -13,7 +13,8 @@
 
 module E = Ident.Env
 module S = Scoped_tree.T
-module T = Typed_tree.T
+module TT = Typed_tree
+module T = TT.T
 
 (* Errors *)
 
@@ -75,7 +76,7 @@ let cannot_infer ~kind ~loc () =
 let cannot_coerce ?id ~ty ~coe ~loc () =
   let body fmt () =
     Format.fprintf fmt "cannot apply coerci@[<v>on @[%a@]@ to @[%a@]"
-      Coercion.print coe
+      S.print_coe coe
       Type.print ty;
     begin match id with
     | None -> ()
@@ -126,6 +127,12 @@ let eq_ty eq =
 let p_ty pat =
   pat.T.p_ann
 
+let coe_src c =
+  c.T.c_ann.src
+
+let coe_dst c =
+  c.T.c_ann.dst
+
 let build_fun_ty tys =
   let rec loop acc tys =
     match tys with
@@ -152,70 +159,46 @@ let rec is_simplified ty =
   | _ ->
      false
 
-let simplify_ty ty =
-  let open Coercion in
+(* [simplify_ty ty] always returns an invertible coercion from [ty] to its
+simplified form. *)
+let rec simplify ty =
   let open Type in
 
-  let rec loop ty =
-    if is_simplified ty
-    then ty, id, id
-    else
-      match ty with
-      | Base _ ->
-         Warped (Warp.Formal.omega, ty),
-         invertible Infl,
-         invertible Defl
+  if is_simplified ty
+  then TT.id ty
+  else
+    match ty with
+    | Base _ ->
+       TT.invertible ty Infl
 
-      | Stream _ ->
-         Warped (Warp.Formal.one, ty),
-         invertible Wrap,
-         invertible Unwrap
+    | Stream _ ->
+       TT.invertible ty Wrap
 
-      | Prod (ty1, ty2) ->
-         let ty1, c11, c12 = loop ty1 in
-         let ty2, c21, c22 = loop ty2 in
-         Prod (ty1, ty2),
-         Coercion.prod (c11, c21),
-         Coercion.prod (c21, c22)
+    | Prod (ty1, ty2) ->
+       TT.prod (simplify ty1, simplify ty2)
 
-      | Fun (ty1, ty2) ->
-         let ty1, c11, c12 = loop ty1 in
-         let ty2, c21, c22 = loop ty2 in
-         Warped (Warp.Formal.one, Fun (ty1, ty2)),
-         Coercion.(seq (arr (c12, c21), invertible Wrap)),
-         Coercion.(seq (invertible Unwrap, arr (c11, c22)))
+    | Fun (ty1, ty2) ->
+       let c1 = simplify ty1 in
+       let c2 = simplify ty2 in
+       let c = TT.(arr (try_invert c1, c2)) in
+       let i = TT.invertible c.T.c_ann.dst Wrap in
+       TT.seq (c, i)
 
-      | Warped (p, Prod (ty1, ty2)) ->
-         let ty, c1, c2 = loop (Prod (Warped (p, ty1), Warped (p, ty2))) in
-         ty,
-         Coercion.(seq (invertible Dist, c1)),
-         Coercion.(seq (c2, invertible Fact))
+    | Warped (p, (Prod (ty1, ty2))) ->
+       let c = simplify (Prod (Warped (p, ty1), Warped (p, ty2))) in
+       let i = TT.invertible ty Dist in
+       TT.seq (i, c)
 
-      | Warped (p, ty) ->
-         let q, ty, c1, c2 =
-           let ty, c1, c2 = loop ty in
-           match ty with
-           | Warped (q, ty) ->
-              q, ty, c1, c2
-           | _ ->
-              assert false
-         in
-         Warped (Warp.Formal.on p q, ty),
-         Coercion.(seq (warped (p, c1), invertible (Concat (p, q)))),
-         Coercion.(seq (invertible (Decat (p, q)), warped (p, c2)))
-  in
-  let ty', coe1, coe2 = loop ty in
-  ty',
-  {
-    T.c_desc = coe1;
-    T.c_loc = Loc.nowhere;
-    T.c_ann = { src = ty; dst = ty'; };
-  },
-  {
-    T.c_desc = coe2;
-    T.c_loc = Loc.nowhere;
-    T.c_ann = { src = ty'; dst = ty; };
-  }
+    | Warped (p, ty) ->
+       let c1 = simplify ty in
+       let q, ty = Type.get_warped c1.T.c_ann.dst in
+       let c1 = TT.warped (p, c1) in
+       let c2 = TT.invertible c1.T.c_ann.dst (Concat (p, q)) in
+       TT.seq (c1, c2)
+
+let simplify_ty ty =
+  let c = simplify ty in
+  c.T.c_ann.dst, c
 
 let precedes_coe ~loc ~orig_ty1 ~orig_ty2 ty ty' =
   let not_a_subtype clash_ty1 clash_ty2 =
@@ -224,28 +207,29 @@ let precedes_coe ~loc ~orig_ty1 ~orig_ty2 ty ty' =
   let rec loop ty ty' =
     let open Type in
     if Type.equal ty ty'
-    then Typed_tree.id ty
+    then TT.id ty
     else
       match ty, ty' with
       | Prod (ty1, ty2), Prod (ty1', ty2') ->
          let c1 = loop ty1 ty1' in
          let c2 = loop ty2 ty2' in
-         Typed_tree.prod (c1, c2)
+         TT.prod (c1, c2)
       | Fun (ty1, ty2), Fun (ty1', ty2') ->
          let c1 = loop ty1' ty1 in
          let c2 = loop ty2 ty2' in
-         Typed_tree.arr (c1, c2)
+         TT.arr (c1, c2)
       | Warped (p, ty), Warped (q, ty') when Warp.Formal.(q <= p) ->
          let c = loop ty ty' in
-         Typed_tree.(seq (warped (p, c), delay ty' (p, q)))
+         TT.(seq (warped (p, c), delay ty' (p, q)))
       | _ ->
          not_a_subtype ty ty'
   in
   loop ty ty'
 
 let subty_coe ~loc ty1 ty2 =
-  let ty1', c1, _ = simplify_ty ty1 in
-  let ty2', _, c2' = simplify_ty ty2 in
+  let ty1', c1 = simplify_ty ty1 in
+  let c2' = TT.try_invert @@ simplify ty2 in
+  let ty2' = c2'.T.c_ann.src in
   assert (is_simplified ty1');
   assert (is_simplified ty2');
   let c3 = precedes_coe ~loc ~orig_ty1:ty1 ~orig_ty2:ty2 ty1' ty2' in
@@ -258,39 +242,25 @@ let coerce ~loc exp ty =
 let div_ctx env p =
   let rec div_ty ty =
     let open Type in
-    let rec loop ty =
-      match ty with
-      | Warped (q, ty) ->
-         let q_div_p = Warp.Formal.div q p in
-         Warped (q_div_p, ty),
-         Coercion.(
-           seqs
-             [
-               delay (q, Warp.Formal.on p q_div_p);
-               invertible (Decat (p, q_div_p))
-             ]
-         )
-      | Prod (ty1, ty2) ->
-         let ty1, c1 = loop ty1 in
-         let ty2, c2 = loop ty2 in
-         Prod (ty1, ty2), Coercion.prod (c1, c2)
-      | _ ->
-         assert false             (* not simplified? *)
-    in
-    let ty', desc = loop ty in
-    ty',
-    {
-      T.c_desc = desc;
-      T.c_loc = Loc.nowhere;
-      T.c_ann = { src = ty; dst = Warped (p, ty'); };
-    }
+    match ty with
+    | Warped (q, ty) ->
+       (* q = p * (q / p) *)
+       let q_div_p = Warp.Formal.div q p in
+       let ty' = Warped (p, Warped (q_div_p, ty)) in
+       subty_coe ~loc:Loc.nowhere (Warped (q, ty)) ty', Warped (q_div_p, ty)
+    | Prod (ty1, ty2) ->
+       let c1, ty1 = div_ty ty1 in
+       let c2, ty2 = div_ty ty2 in
+       TT.prod (c1, c2), Prod (ty1, ty2)
+    | _ ->
+       assert false             (* not simplified? *)
   in
 
   let div_binding id ty (env, coes) =
-    let ty, c1, _ = simplify_ty ty in
-    let ty, c2 = div_ty ty in
+    let ty, c1 = simplify_ty ty in
+    let c2, ty = div_ty ty in
     Ident.Env.add id ty env,
-    (id, Typed_tree.seq (c1, c2)) :: coes
+    (id, TT.seq (c1, c2)) :: coes
   in
 
   let env, coes = E.fold div_binding env (E.empty, []) in
@@ -323,7 +293,7 @@ let get_prod loc actual =
 (** [inv_XXX] functions solve inequations *)
 
 let inv_fun e =
-  let ty, _, _ = simplify_ty e.T.e_ann in
+  let ty, _ = simplify_ty e.T.e_ann in
   match ty with
   | Type.(Warped (_, Fun (ty1, ty2))) ->
      (* We call coerce to avoid redoing coercion generation; note that it may
@@ -333,7 +303,7 @@ let inv_fun e =
      type_clash ~expected:(Sub Fun) ~actual:e.T.e_ann ~loc:e.T.e_loc ()
 
 let inv_prod e =
-  let ty, c1, _ = simplify_ty e.T.e_ann in
+  let ty, c1 = simplify_ty e.T.e_ann in
   match ty with
   | Type.Prod (ty1, ty2) as ty ->
      (* Same as above, but coerce never fails. *)
@@ -342,7 +312,7 @@ let inv_prod e =
      type_clash ~expected:(Sub Prod) ~actual:e.T.e_ann ~loc:e.T.e_loc ()
 
 let inv_base e =
-  let ty, c1, _ = simplify_ty e.T.e_ann in
+  let ty, c1 = simplify_ty e.T.e_ann in
   match ty with
   | Type.(Warped (_, Base bty)) ->
      (* Same as above, coerce may fail as in [inv_fun]. *)
@@ -353,8 +323,8 @@ let inv_base e =
 (* Main code *)
 
 (* TODO: there is no provision for applying coercions inside patterns, and thus
-the following two functions use exact type equality instead of subtyping. This
-restriction should be lifted in a future version. *)
+   the following two functions use exact type equality instead of
+   subtyping. This restriction should be lifted in a future version. *)
 
 let rec expect_pat p ty out_env =
   let out_env, pd =
@@ -412,16 +382,94 @@ let rec type_pat env p =
     T.p_ann = ty;
   }
 
-let type_coe ?id src coe =
+let rec type_coe_fwd ?id src c =
   try
-    let dst = Coercion.output_type coe.S.c_desc src in
+    let desc, dst =
+      match c.S.c_desc, src with
+      | S.CSeq (c1, c2), _ ->
+         let c1 = type_coe_fwd ?id src c1 in
+         let c2 = type_coe_fwd ?id (coe_dst c1) c2 in
+         T.CSeq (c1, c2), coe_dst c2
+
+      | S.CProd (c1, c2), Type.Prod (src1, src2) ->
+         let c1 = type_coe_fwd ?id src1 c1 in
+         let c2 = type_coe_fwd ?id src2 c2 in
+         T.CProd (c1, c2), Type.Prod (coe_dst c1, coe_dst c2)
+
+      | S.CArr (c1, c2), Type.Fun (src1, src2)  ->
+         let c1 = type_coe_bwd ?id src1 c1 in
+         let c2 = type_coe_fwd ?id src2 c2 in
+         T.CArr (c1, c2), Type.Fun (coe_src c1, coe_dst c2)
+
+      | S.CWarped (p, c), Type.Warped (p', src) ->
+         if not (Warp.Formal.equal p p') then invalid_arg "ill-typed";
+         let c = type_coe_fwd ?id src c in
+         T.CWarped (p, c), Type.Warped (p', coe_dst c)
+
+      | S.CInvertible i, _ ->
+         let dst = Invertible.dst_ty i src in
+         T.CInvertible i, dst
+
+      | S.CDelay (p, q), Type.Warped (p', src) ->
+         if not (Warp.Formal.equal p p') then invalid_arg "ill-typed";
+         if not Warp.Formal.(q <= p) then invalid_arg "ill-typed";
+         T.CDelay (p, q), Type.Warped (q, src)
+
+      | _ ->
+         invalid_arg "ill-typed"
+    in
     {
-      T.c_desc = coe.S.c_desc;
-      T.c_loc = coe.S.c_loc;
+      T.c_desc = desc;
+      T.c_loc = c.S.c_loc;
       T.c_ann = { src; dst; };
     }
-  with Coercion.Ill_typed ->
-    cannot_coerce ?id ~ty:src ~coe:coe.S.c_desc ~loc:coe.S.c_loc ()
+  with Invertible.Ill_typed | Invalid_argument _ ->
+    cannot_coerce ?id ~ty:src ~coe:c ~loc:c.S.c_loc ()
+
+and type_coe_bwd ?id dst c =
+  try
+    let desc, src =
+      match c.S.c_desc, dst with
+      | S.CSeq (c1, c2), _ ->
+         let c2 = type_coe_bwd ?id dst c2 in
+         let c1 = type_coe_bwd ?id (coe_src c2) c1 in
+         T.CSeq (c1, c2), coe_src c1
+
+      | S.CProd (c1, c2), Type.Prod (dst1, dst2) ->
+         let c1 = type_coe_bwd ?id dst1 c1 in
+         let c2 = type_coe_bwd ?id dst2 c2 in
+         T.CProd (c1, c2), Type.Prod (coe_src c1, coe_src c2)
+
+      | S.CArr (c1, c2), Type.Fun (dst1, dst2)  ->
+         let c1 = type_coe_fwd ?id dst1 c1 in
+         let c2 = type_coe_bwd ?id dst2 c2 in
+         T.CArr (c1, c2), Type.Fun (coe_dst c1, coe_src c2)
+
+      | S.CWarped (p, c), Type.Warped (p', dst) ->
+         if not (Warp.Formal.equal p p') then invalid_arg "ill-typed";
+         let c = type_coe_bwd ?id dst c in
+         T.CWarped (p, c), Type.Warped (p', coe_src c)
+
+      | S.CInvertible i, _ ->
+         let dst = Invertible.src_ty i dst in
+         T.CInvertible i, dst
+
+      | S.CDelay (p, q), Type.Warped (q', dst) ->
+         if not (Warp.Formal.equal q q') then invalid_arg "ill-typed";
+         if not Warp.Formal.(q <= p) then invalid_arg "ill-typed";
+         T.CDelay (p, q), Type.Warped (p, dst)
+
+      | _ ->
+         invalid_arg "ill-typed"
+    in
+    {
+      T.c_desc = desc;
+      T.c_loc = c.S.c_loc;
+      T.c_ann = { src; dst; };
+    }
+  with Invertible.Ill_typed | Invalid_argument _ ->
+    (* FIXME The error message will not be right. *)
+    cannot_coerce ?id ~ty:dst ~coe:c ~loc:c.S.c_loc ()
 
 let bind_rec_eq out_env eq =
   let res_ty =
@@ -518,13 +566,13 @@ let rec type_exp env e =
     | S.ESub { ctx; exp; res; } ->
        let apply_coe_env (env, ctx) (id, coe) =
          let ty = E.find id env in
-         let coe = type_coe ~id ty coe in
+         let coe = type_coe_fwd ~id ty coe in
          E.add id coe.T.c_ann.dst env,
          (id, coe) :: ctx
        in
        let env, ctx = List.fold_left apply_coe_env (env, []) ctx in
        let exp = type_exp env exp in
-       let res = type_coe exp.T.e_ann res in
+       let res = type_coe_fwd exp.T.e_ann res in
        res.T.c_ann.dst, T.ESub { ctx; exp; res; }
   in
   {

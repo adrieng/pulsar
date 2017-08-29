@@ -7,4 +7,5 @@
 * Implement Word using ropes
 * Scoping: check for duplicate free vars in ESub
 * Fuse Coercion into Source_tree to give each coe a proper location
-* Isolate some signatures in their own .mli files
+* Isolate some signatures in their own .ml files
+* Fix error message in Typing.type_coe_bwd

@@ -17,16 +17,15 @@ module Sub = Source_tree_utils.Sub(Typed_tree.T)
 
 let diag_buffers_coercion coe =
   let rec loop c =
-    let open Coercion in
-    match c with
-    | Invertible _ ->
+    match c.c_desc with
+    | CInvertible _ ->
        ()
-    | Seq (c1, c2) | Arr (c1, c2) | Prod (c1, c2) ->
+    | CSeq (c1, c2) | CArr (c1, c2) | CProd (c1, c2) ->
        loop c1;
        loop c2
-    | Warped (_, c) ->
+    | CWarped (_, c) ->
        loop c
-    | Delay (p, q) ->
+    | CDelay (p, q) ->
        let size = Warp.Formal.size q p in
        let body fmt () =
          Format.fprintf fmt "delay of size %a"
@@ -34,7 +33,7 @@ let diag_buffers_coercion coe =
        in
        Compiler.Diagnostic.info ~loc:coe.c_loc ~body ()
   in
-  loop coe.c_desc
+  loop coe
 
 let rec diag_buffers thing =
   match thing with

@@ -56,3 +56,18 @@ val later : t -> t
 
 (** Add the warp equivalent of the constant modality *)
 val constant : t -> t
+
+(** partial inverse to [Base]; may raise Invalid_argument *)
+val get_base : t -> base
+
+(** partial inverse to [Stream]; may raise Invalid_argument *)
+val get_stream : t -> base
+
+(** partial inverse to [Prod]; may raise Invalid_argument *)
+val get_prod : t -> t * t
+
+(** partial inverse to [Fun]; may raise Invalid_argument *)
+val get_fun : t -> t * t
+
+(** partial inverse to [Warped]; may raise Invalid_argument *)
+val get_warped : t -> Warp.Formal.t * t

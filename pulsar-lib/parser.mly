@@ -142,6 +142,31 @@
        e
     | e' :: e_l ->
        make_app_l (Raw_tree.make_app e e') e_l
+
+  let make_coe start stop desc =
+    {
+      Raw_tree.T.c_desc = desc;
+      Raw_tree.T.c_loc = Loc.of_lexing_pos_pair ~start ~stop;
+      Raw_tree.T.c_ann = ();
+    }
+
+  let seq start stop (c1, c2) =
+    make_coe start stop (CSeq (c1, c2))
+
+  let arr start stop (c1, c2) =
+    make_coe start stop (CArr (c1, c2))
+
+  let prod start stop (c1, c2) =
+    make_coe start stop (CProd (c1, c2))
+
+  let warped start stop (p, q) =
+    make_coe start stop (CWarped (p, q))
+
+  let invertible start stop i =
+    make_coe start stop (CInvertible i)
+
+  let delay start stop (p, q) =
+    make_coe start stop (CDelay (p, q))
 %}
 
 %start<Raw_tree.T.file> file
@@ -354,17 +379,21 @@ invertible:
 | INFL { Invertible.Infl }
 | DEFL { Invertible.Defl }
 
-coercion_desc:
-| c1 = coercion_desc SEMICOLON c2 = coercion_desc { Coercion.Seq (c1, c2) }
-| c1 = coercion_desc ARR c2 = coercion_desc { Coercion.Arr (c1, c2) }
-| c1 = coercion_desc TIMES c2 = coercion_desc { Coercion.Prod (c1, c2) }
-| p = warp_ty MOD c = coercion_desc { Coercion.Warped (p, c) }
-| i = invertible { Coercion.Invertible i }
-| DELAY p = warp_ty q = warp_ty { Coercion.Delay (p, q) }
-| c = paren(coercion_desc) { c }
-
 coercion:
-| desc = coercion_desc { make_coe $startpos $endpos desc }
+| c1 = coercion SEMICOLON c2 = coercion
+  { seq $startpos $endpos (c1, c2) }
+| c1 = coercion ARR c2 = coercion
+  { arr $startpos $endpos (c1, c2) }
+| c1 = coercion TIMES c2 = coercion
+  { prod $startpos $endpos (c1, c2) }
+| p = warp_ty MOD c = coercion
+  { warped $startpos $endpos (p, c) }
+| i = invertible
+  { invertible $startpos $endpos i }
+| DELAY p = warp_ty q = warp_ty
+  { delay $startpos $endpos (p, q) }
+| c = paren(coercion)
+  { c }
 
 var_coercion:
 | id = IDENT LLANGLE c = coercion { (id, c) }

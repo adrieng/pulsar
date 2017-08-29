@@ -61,10 +61,30 @@ let rec scope_pat env p =
     S.p_ann = ();
   }
 
-let scope_coe _ coe =
+let rec scope_coe c =
+  let desc =
+    match c.R.c_desc with
+    | R.CSeq (c1, c2) ->
+       S.CSeq (scope_coe c1, scope_coe c2)
+
+    | R.CArr (c1, c2) ->
+       S.CArr (scope_coe c1, scope_coe c2)
+
+    | R.CProd (c1, c2) ->
+       S.CProd (scope_coe c1, scope_coe c2)
+
+    | R.CWarped (p, c) ->
+       S.CWarped (p, scope_coe c)
+
+    | R.CInvertible i ->
+       S.CInvertible i
+
+    | R.CDelay (p, q) ->
+       S.CDelay (p, q)
+  in
   {
-    S.c_desc = coe.R.c_desc;
-    S.c_loc = coe.R.c_loc;
+    S.c_desc = desc;
+    S.c_loc = c.R.c_loc;
     S.c_ann = ();
   }
 
@@ -106,13 +126,13 @@ let rec scope_exp env e =
     | R.ESub { ctx; exp; res; } ->
        let ctx =
          let scope_var_coe (id, coe) =
-           try E.find id env, scope_coe env coe
+           try E.find id env, scope_coe coe
            with Not_found -> unbound_identifier id e.R.e_loc
          in
          List.map scope_var_coe ctx
        in
        let exp = scope_exp env exp in
-       let res = scope_coe env res in
+       let res = scope_coe res in
        S.ESub { ctx; exp; res; }
   in
   {
