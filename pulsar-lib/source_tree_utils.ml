@@ -197,3 +197,18 @@ struct
   let find_in_file pos file =
     find_in_things pos @@ S.sub_file file
 end
+
+module Misc(T : Source_tree.Tree) =
+struct
+  open T
+
+  let loc thing =
+    match thing with
+    | `Pat p -> p.p_loc
+    | `Coe c -> c.c_loc
+    | `Exp e -> e.e_loc
+    | `Block b -> b.b_loc
+    | `Eq eq -> eq.eq_loc
+    | `Phr ph -> ph.ph_loc
+    | `File file -> file.f_loc
+end
