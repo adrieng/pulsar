@@ -45,10 +45,25 @@
 
 ;; Interactive features
 
+(defvar pulsar--debug
+  nil
+  "Set to non-nil to show debugging messages")
+
+(defun pulsar-debug-toggle ()
+  "Toggle debugging features on and off"
+  (interactive)
+  (setq pulsar--debug (not pulsar--debug))
+  (if pulsar--debug
+      (message "pulsar: enabled debug mode")
+    (message "pulsar: disabled debug mode")))
+
 (defun pulsar--beam-request (req)
   (when (buffer-modified-p) (save-buffer))
   (let ((command (format "%s \'%s\'" pulsar-beam-command req)))
-    (shell-command-to-string command)))
+    (when pulsar--debug (message "call: %s" command))
+    (let ((response (shell-command-to-string command)))
+      (when pulsar--debug (message "resp: %s" response))
+      response)))
 
 (defun pulsar--column-number-at-pos (pos)
   (save-excursion
@@ -368,6 +383,7 @@
 
 (defvar pulsar-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-d") 'pulsar-debug-toggle)
     (define-key map (kbd "C-c C-c") 'pulsar-compile-buffer)
     (define-key map (kbd "C-c C-t") 'pulsar-show-type-at-point)
     (define-key map (kbd "C-c C-l") 'pulsar-diagnosis-buffer)
