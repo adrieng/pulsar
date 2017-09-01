@@ -81,7 +81,7 @@ module Sub(T : Source_tree.Tree) =
 struct
   open T
 
-  let rec sub_pat p =
+  let sub_pat p =
     match p.p_desc with
     | PVar _ ->
        []
@@ -89,6 +89,15 @@ struct
        [ `Pat p1; `Pat p2; ]
     | PAnnot (p, _) ->
        [ `Pat p ]
+
+  let sub_coe c =
+    match c.c_desc with
+    | CInvertible _ | CDelay _ ->
+       []
+    | CSeq (c1, c2) | CProd (c1, c2) | CArr (c1, c2) ->
+       [ `Coe c1; `Coe c2; ]
+    | CWarped (_, c) ->
+       [ `Coe c ]
 
   let sub_exp e =
     match e.e_desc with
@@ -127,7 +136,7 @@ struct
   let sub thing =
     match thing with
     | `Pat p -> sub_pat p
-    | `Coe c -> []
+    | `Coe c -> sub_coe c
     | `Exp e -> sub_exp e
     | `Block b -> sub_block b
     | `Eq eq -> sub_eq eq
