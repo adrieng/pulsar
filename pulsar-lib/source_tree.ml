@@ -308,7 +308,7 @@ struct
          print c2
     | CArr (c1, c2) ->
        Format.fprintf fmt "@[%a %a@ %a@]"
-         (print_under_arr pri) c1
+         (print_under_arr pri') c1
          Warp.Print.pp_arrow ()
          print c2
     | CProd (c1, c2) ->
