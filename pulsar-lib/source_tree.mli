@@ -168,6 +168,7 @@ sig
       {
         f_name : string;
         f_phrases : phr list;
+        f_loc : Loc.t;
         f_annot : FileAnnot.t;
       }
 

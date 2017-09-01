@@ -14,10 +14,11 @@
 %{
   (* AST helpers *)
 
-  let make_file p phrases =
+  let make_file start stop phrases =
     {
-      Raw_tree.T.f_name = p.Lexing.pos_fname;
+      Raw_tree.T.f_name = start.Lexing.pos_fname;
       Raw_tree.T.f_phrases = phrases;
+      Raw_tree.T.f_loc = Loc.of_lexing_pos_pair ~start ~stop;
       Raw_tree.T.f_annot = ();
     }
 
@@ -483,5 +484,5 @@ phrase:
     { make_decl $startpos $endpos id ty }
 
 file:
-| body = list(phrase) EOF { make_file $startpos body }
+| body = list(phrase) EOF { make_file $startpos $endpos body }
 | error { Parser_error.parsing_error $startpos $endpos }

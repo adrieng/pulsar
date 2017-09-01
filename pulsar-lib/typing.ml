@@ -658,6 +658,7 @@ let type_file file =
   {
     T.f_name = file.S.f_name;
     T.f_phrases = phrases;
+    T.f_loc = file.S.f_loc;
     T.f_annot = env;
   }
 

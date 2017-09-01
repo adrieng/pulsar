@@ -185,6 +185,7 @@ sig
       {
         f_name : string;
         f_phrases : phr list;
+        f_loc : Loc.t;
         f_annot : FileAnnot.t;
       }
 
@@ -676,10 +677,11 @@ struct
       {
         f_name : string;
         f_phrases : phr list;
+        f_loc : Loc.t;
         f_annot : FileAnnot.t;
       }
 
-  let print_file fmt { f_name; f_phrases; } =
+  let print_file fmt { f_name; f_phrases; _ } =
     Warp.Print.pp_list
       ~pp_left:(fun fmt () -> Format.fprintf fmt "@\n")
       ~pp_sep:(fun fmt () -> Format.fprintf fmt "@\n@\n")

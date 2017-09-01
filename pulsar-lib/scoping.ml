@@ -216,6 +216,7 @@ let scope_file file =
   {
     S.f_name = file.R.f_name;
     S.f_phrases = phrases;
+    S.f_loc = file.R.f_loc;
     S.f_annot = ();
   }
 
