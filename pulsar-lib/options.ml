@@ -86,6 +86,8 @@ let display_types = ref false
 
 let auto_const = ref true
 
+let auto_shrink = ref true
+
 (* Diagnosis *)
 
 type diagnosis_kind =
@@ -134,13 +136,20 @@ let global_command_line_arguments =
       ~msg:"use UTF-8 for pretty-printing"
       Warp.Print.utf8_output;
 
-    let msg fmt () =
-      Format.fprintf fmt
-        "automatically scale top-level definitions by %a"
-        Warp.Print.pp_omega ()
-    in
     yes_no
       ~opt:"auto-const"
-      ~msg:(Warp.Print.string_of msg ())
+      ~msg:(
+        let msg fmt () =
+          Format.fprintf fmt
+                         "automatically scale top-level definitions by %a"
+                         Warp.Print.pp_omega ()
+        in
+        Warp.Print.string_of msg ()
+      )
       auto_const;
+
+    yes_no
+      ~opt:"auto-shrink"
+      ~msg:"automatically shrink implicit coercions"
+      auto_shrink;
   ]

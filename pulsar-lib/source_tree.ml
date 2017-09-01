@@ -317,7 +317,7 @@ struct
          Warp.Print.pp_times ()
          print c2
     | CWarped (p, c) ->
-       Format.fprintf fmt "@[%a@ %a (@[<hov>%a@])@]"
+       Format.fprintf fmt "@[%a@ %a @[<hov>%a@]@]"
          Warp.Formal.print p
          Warp.Print.pp_circledast ()
          print c

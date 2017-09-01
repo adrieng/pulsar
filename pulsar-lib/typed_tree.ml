@@ -59,7 +59,102 @@ let ty_of coe = coe.c_ann.src, coe.c_ann.dst
 
 let is_id coe = coe.c_desc = CInvertible Invertible.Id
 
-let invertible ?(loc = Loc.nowhere) src i =
+(** {4 Smart Constructors} *)
+
+let rec shrink_seq c1 c2 =
+  let open Invertible in
+  match c1.c_desc, c2.c_desc with
+  | CSeq (c11, c12), _ ->
+     (cseq (c11, cseq (c12, c2))).c_desc
+
+  (* c ; id = id ; c = c *)
+  | CInvertible Id, _ ->
+     c2.c_desc
+  | _, CInvertible Id ->
+     c1.c_desc
+
+  (* c; c^-1 = id *)
+  | CInvertible i1, CInvertible i2 when equal i1 (invert i2) ->
+     CInvertible Id
+
+  (* (c1 x c2);(c1' x c2') = (c1;c1') x (c2;c2') *)
+  | CProd (c1, c2), CProd (c1', c2') ->
+     (cprod (cseq (c1, c1'), cseq (c2, c2'))).c_desc
+
+  (* (c1 -> c2);(c1' -> c2') = (c1' ; c1) -> (c2 ; c2') *)
+  | CArr (c1, c2), CArr (c1', c2') ->
+     (carr (cseq (c1', c1), cseq (c2, c2'))).c_desc
+
+  | CDelay (p, q), CDelay (q', r) ->
+     assert (Warp.Formal.equal q q'); (* Ill-typed? *)
+     CDelay (p, r)
+
+  | _ ->
+     CSeq (c1, c2)
+
+and shrink_prod c1 c2 =
+  match c1.c_desc, c2.c_desc with
+  | CInvertible Id, CInvertible Id ->
+     CInvertible Id
+
+  | _ ->
+     CProd (c1, c2)
+
+and shrink_arr c1 c2 =
+  match c1.c_desc, c2.c_desc with
+  | CInvertible Id, CInvertible Id ->
+     CInvertible Id
+
+  | _ ->
+     CArr (c1, c2)
+
+and shrink_warp p c =
+  let open Invertible in
+  let open Warp.Formal in
+  let src = Type.Warped (p, c.c_ann.src) in
+  match c.c_desc with
+  | CInvertible Id ->
+     CInvertible Id
+
+  | CSeq (c1, c2) ->
+     (cseq (cwarped (p, c1), cwarped (p, c2))).c_desc
+
+  | CProd (c1, c2) ->
+     let c1 = cinvertible src Dist in
+     let c2 = cprod (cwarped (p, c1), cwarped (p, c2)) in
+     let c3 = cinvertible c2.c_ann.dst Fact in
+     (cseqs [c1; c2; c3]).c_desc
+
+  | CWarped (q, c) ->
+     let c1 = cinvertible src (Concat (p, q)) in
+     let c2 = cwarped (on p q, c) in
+     let c3 = cinvertible c2.c_ann.dst (Decat (p, q)) in
+     (cseqs [c1; c2; c3]).c_desc
+
+  | CInvertible Wrap ->
+     (cinvertible src (Decat (p, one))).c_desc
+
+  | CInvertible Unwrap ->
+     (cinvertible src (Concat (p, one))).c_desc
+
+  | CInvertible Defl ->
+     let c1 = cinvertible src (Concat (p, omega)) in
+     let c2 = cdelay c1.c_ann.dst (on p omega, p) in
+     (cseqs [c1; c2]).c_desc
+
+  | CDelay (q, r) ->
+     let c1 = cinvertible src (Concat (p, q)) in
+     let c2 = cdelay c1.c_ann.dst (on p q, on p r) in
+     let c3 = cinvertible c2.c_ann.dst (Decat (p, r)) in
+     (cseqs [c1; c2; c3]).c_desc
+
+  | _ ->
+     if equal p one
+     then
+       (cseqs [cinvertible src Unwrap; c; cinvertible c.c_ann.dst Wrap]).c_desc
+     else CWarped (p, c)
+
+and cinvertible ?(loc = Loc.nowhere) src i =
   let dst = Invertible.dst_ty i src in
   {
     c_desc = CInvertible i;
@@ -67,48 +162,57 @@ let invertible ?(loc = Loc.nowhere) src i =
     c_ann = { src; dst; };
   }
 
-let id ?loc ty =
-  invertible ?loc ty Invertible.Id
+and cid ?loc ty =
+  cinvertible ?loc ty Invertible.Id
 
-let seq (c1, c2) =
+and cseq (c1, c2) =
   let src, _ = ty_of c1 in
   let _, dst = ty_of c2 in
   let open CoeAnnot in
   {
-    c_desc = CSeq (c1, c2);
+    c_desc = if !Options.auto_shrink then shrink_seq c1 c2 else CSeq (c1, c2);
     c_loc = Loc.join c1.c_loc c2.c_loc;
     c_ann = { src; dst; };
   }
 
-let prod (c1, c2) =
+and cseqs cs =
+  match cs with
+  | [] ->
+     invalid_arg "cseqs: empty list"
+  | [c] ->
+     c
+  | c1 :: c2 :: cs ->
+     cseqs (cseq (c1, c2) :: cs)
+
+and cprod (c1, c2) =
   let src1, dst1 = ty_of c1 in
   let src2, dst2 = ty_of c2 in
   {
-    c_desc = CProd (c1, c2);
+    c_desc = if !Options.auto_shrink then shrink_prod c1 c2 else CProd (c1, c2);
     c_loc = Loc.join c1.c_loc c2.c_loc;
     c_ann = { src = Type.Prod (src1, src2); dst = Type.Prod (dst1, dst2); };
   }
 
-let arr (c1, c2) =
+and carr (c1, c2) =
   let src1, dst1 = ty_of c1 in
   let src2, dst2 = ty_of c2 in
   {
-    c_desc = CArr (c1, c2);
+    c_desc = if !Options.auto_shrink then shrink_arr c1 c2 else CArr (c1, c2);
     c_loc = Loc.join c1.c_loc c2.c_loc;
     c_ann = { src = Type.Fun (dst1, src2); dst = Type.Fun (src1, dst2); };
   }
 
-let warped (p, c) =
+and cwarped (p, c) =
   let src, dst = ty_of c in
   let src = Type.Warped (p, src) in
   let dst = Type.Warped (p, dst) in
   {
-    c_desc = CWarped (p, c);
+    c_desc = if !Options.auto_shrink then shrink_warp p c else CWarped (p, c);
     c_loc = c.c_loc;
     c_ann = { src; dst; };
   }
 
-let delay ty (p, q) =
+and cdelay ty (p, q) =
   let src = Type.Warped (p, ty) in
   let dst = Type.Warped (q, ty) in
   {
@@ -124,7 +228,7 @@ let seq_ctx ctx ctx' =
     match c, c' with
     | None, None -> None
     | Some c, None | None, Some c -> Some c
-    | Some c, Some c' -> Some (seq (c, c'))
+    | Some c, Some c' -> Some (cseq (c, c'))
   in
   List.filter (fun (v, c) -> c.c_desc <> CInvertible Invertible.Id)
   @@ Ident.Env.to_list
@@ -163,7 +267,7 @@ let rec try_invert c =
 let sub ?(ctx' = []) ?res' e ty =
   let res' =
     match res' with
-    | None -> id ty
+    | None -> cid ty
     | Some res' -> res'
   in
   let open T in
@@ -173,7 +277,7 @@ let sub ?(ctx' = []) ?res' e ty =
      e
   | _, _, ESub { ctx; exp; res; } ->
      let ctx = seq_ctx ctx ctx' in
-     let res = seq (res, res') in
+     let res = cseq (res, res') in
      if ctx <> [] || not (is_id res)
      then { e with e_desc = ESub { ctx; exp; res; }; }
      else exp

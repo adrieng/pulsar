@@ -165,36 +165,36 @@ let rec simplify ty =
   let open Type in
 
   if is_simplified ty
-  then TT.id ty
+  then TT.cid ty
   else
     match ty with
     | Base _ ->
-       TT.invertible ty Infl
+       TT.cinvertible ty Infl
 
     | Stream _ ->
-       TT.invertible ty Wrap
+       TT.cinvertible ty Wrap
 
     | Prod (ty1, ty2) ->
-       TT.prod (simplify ty1, simplify ty2)
+       TT.cprod (simplify ty1, simplify ty2)
 
     | Fun (ty1, ty2) ->
        let c1 = simplify ty1 in
        let c2 = simplify ty2 in
-       let c = TT.(arr (try_invert c1, c2)) in
-       let i = TT.invertible c.T.c_ann.dst Wrap in
-       TT.seq (c, i)
+       let c = TT.(carr (try_invert c1, c2)) in
+       let i = TT.cinvertible c.T.c_ann.dst Wrap in
+       TT.cseq (c, i)
 
     | Warped (p, (Prod (ty1, ty2))) ->
        let c = simplify (Prod (Warped (p, ty1), Warped (p, ty2))) in
-       let i = TT.invertible ty Dist in
-       TT.seq (i, c)
+       let i = TT.cinvertible ty Dist in
+       TT.cseq (i, c)
 
     | Warped (p, ty) ->
        let c1 = simplify ty in
        let q, ty = Type.get_warped c1.T.c_ann.dst in
-       let c1 = TT.warped (p, c1) in
-       let c2 = TT.invertible c1.T.c_ann.dst (Concat (p, q)) in
-       TT.seq (c1, c2)
+       let c1 = TT.cwarped (p, c1) in
+       let c2 = TT.cinvertible c1.T.c_ann.dst (Concat (p, q)) in
+       TT.cseq (c1, c2)
 
 let simplify_ty ty =
   let c = simplify ty in
@@ -207,20 +207,20 @@ let precedes_coe ~loc ~orig_ty1 ~orig_ty2 ty ty' =
   let rec loop ty ty' =
     let open Type in
     if Type.equal ty ty'
-    then TT.id ty
+    then TT.cid ty
     else
       match ty, ty' with
       | Prod (ty1, ty2), Prod (ty1', ty2') ->
          let c1 = loop ty1 ty1' in
          let c2 = loop ty2 ty2' in
-         TT.prod (c1, c2)
+         TT.cprod (c1, c2)
       | Fun (ty1, ty2), Fun (ty1', ty2') ->
          let c1 = loop ty1' ty1 in
          let c2 = loop ty2 ty2' in
-         TT.arr (c1, c2)
+         TT.carr (c1, c2)
       | Warped (p, ty), Warped (q, ty') when Warp.Formal.(q <= p) ->
          let c = loop ty ty' in
-         TT.(seq (warped (p, c), delay ty' (p, q)))
+         TT.(cseq (cwarped (p, c), cdelay ty' (p, q)))
       | _ ->
          not_a_subtype ty ty'
   in
@@ -233,7 +233,7 @@ let subty_coe ~loc ty1 ty2 =
   assert (is_simplified ty1');
   assert (is_simplified ty2');
   let c3 = precedes_coe ~loc ~orig_ty1:ty1 ~orig_ty2:ty2 ty1' ty2' in
-  Typed_tree.(seq (seq (c1, c3), c2'))
+  Typed_tree.(cseq (cseq (c1, c3), c2'))
 
 let coerce ~loc exp ty =
   let res' = subty_coe ~loc (e_ty exp) ty in
@@ -251,7 +251,7 @@ let div_ctx env p =
     | Prod (ty1, ty2) ->
        let c1, ty1 = div_ty ty1 in
        let c2, ty2 = div_ty ty2 in
-       TT.prod (c1, c2), Prod (ty1, ty2)
+       TT.cprod (c1, c2), Prod (ty1, ty2)
     | _ ->
        assert false             (* not simplified? *)
   in
@@ -260,7 +260,7 @@ let div_ctx env p =
     let ty, c1 = simplify_ty ty in
     let c2, ty = div_ty ty in
     Ident.Env.add id ty env,
-    (id, TT.seq (c1, c2)) :: coes
+    (id, TT.cseq (c1, c2)) :: coes
   in
 
   let env, coes = E.fold div_binding env (E.empty, []) in
