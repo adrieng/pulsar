@@ -88,6 +88,8 @@ let auto_const = ref true
 
 let auto_shrink = ref true
 
+let serialize_dir = ref ""
+
 (* Diagnosis *)
 
 type diagnosis_kind =

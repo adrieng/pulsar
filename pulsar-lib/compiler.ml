@@ -129,6 +129,11 @@ struct
         (Filename.chop_extension input_file)
         at.name
     in
+    let output_file =
+      if !Options.serialize_dir = ""
+      then output_file
+      else Filename.(!Options.serialize_dir ^ dir_sep ^ basename output_file)
+    in
     let oc = open_out output_file in
     let fmt = Format.formatter_of_out_channel oc in
     let tm = Unix.(localtime @@ time ()) in
@@ -196,12 +201,19 @@ struct
       "-debug-pass",
       Arg.Symbol (pass_names p, Options.set_debug),
       " display debugging information for pass";
+
       "-serialize",
       Arg.Symbol (pass_names p, Options.set_serialize),
       " serialize the output of pass to file.pass.ext";
+
+      "-serialize-dir",
+      Arg.String (fun s -> Options.serialize_dir := s),
+      " serialization directory";
+
       "-stop-before",
       Arg.Symbol (pass_names p, Options.set_stop_before),
       " stop before running pass";
+
       "-stop-after",
       Arg.Symbol (pass_names p, Options.set_stop_after),
       " stop after running pass";
