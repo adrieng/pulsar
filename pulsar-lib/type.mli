@@ -39,8 +39,11 @@ type t =
 (** Pretty-print a type *)
 val print : Format.formatter -> t -> unit
 
-(** Compute the normal form of a tpe w.r.t. reversible tpe laws *)
+(** Compute the normal form of a tpe w.r.t. reversible type laws *)
 val normalize : t -> t
+
+(** Pretty-print the normal form of a type *)
+val print_normalized : Format.formatter -> t -> unit
 
 (** Comparison function for tpes a la [Pervasives.compare] *)
 val compare : t -> t -> int

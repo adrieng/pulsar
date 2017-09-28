@@ -30,13 +30,13 @@ let show_type file pos =
            let open Typed_tree in
            match thing with
            | `Pat p ->
-              p.p_loc, Warp.Print.string_of Type.print p.p_ann
+              p.p_loc, Warp.Print.string_of Type.print_normalized p.p_ann
            | `Coe c ->
               c.c_loc, Warp.Print.string_of CoeAnnot.print c.c_ann
            | `Eq eq ->
-              eq.eq_loc, Warp.Print.string_of Type.print eq.eq_ann
+              eq.eq_loc, Warp.Print.string_of Type.print_normalized eq.eq_ann
            | `Exp e ->
-              e.e_loc, Warp.Print.string_of Type.print e.e_ann
+              e.e_loc, Warp.Print.string_of Type.print_normalized e.e_ann
            | `Phr ph ->
               ph.ph_loc, "phrase"
            | `Block block ->

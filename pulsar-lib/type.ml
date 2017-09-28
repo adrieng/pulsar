@@ -121,6 +121,9 @@ let rec normalize ty =
 
   push Warp.Formal.one ty
 
+let print_normalized fmt ty =
+  print fmt @@ normalize ty
+
 let rec compare ty1 ty2 =
   if ty1 == ty2 then 0
   else
