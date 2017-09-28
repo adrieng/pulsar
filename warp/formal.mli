@@ -14,3 +14,5 @@
 include Warp_sig.S
 
 val periodic : Periodic.t -> t
+
+val normalize : t -> Periodic.t

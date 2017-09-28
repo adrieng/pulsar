@@ -104,13 +104,16 @@ let print =
 
 let rec normalize ty =
   let box p ty =
+    let p = Warp.Formal.(periodic @@ normalize p) in
     if Warp.Formal.(equal p one) then ty else Warped (p, ty)
   in
 
   let rec push p ty =
     match ty with
-    | Base _ | Stream _ ->
-      box p ty                  (* FIXME *)
+    | Base _ ->
+       if Warp.Formal.(one <= p) then ty else box p ty (* FIXME *)
+    | Stream _ ->
+      box p ty
     | Prod (ty1, ty2) ->
       Prod (push p ty1, push p ty2)
     | Fun (ty1, ty2) ->
