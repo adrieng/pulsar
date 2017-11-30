@@ -1,0 +1,57 @@
+extern head : stream int → int
+extern tail : stream int → `0(1) ⊛ stream int
+
+rec
+{
+  empty : `(0) ⊛ stream int = empty;
+}
+
+rec
+{
+  merge3
+    (xs : `1 1 1(0) ⊛ stream int)
+    (ys : `0 0 0(1) ⊛ stream int)
+  : stream int =
+    let seq
+      {
+        xs1 = (tail xs) by `1 1 1(0);
+        xs2 = (tail xs1) by `0 1 1(0);
+        xs3 = (tail xs2) by `0 0 1(0);
+        x0 = (head xs) by `1 1 1(0);
+        x1 = (head xs1) by `0 1 1(0);
+        x2 = (head xs2) by `0 0 1(0);
+      }
+    in
+    x0 :: (x1 :: (x2 :: ys) by `0 (1)) by `0(1)
+}
+
+rec
+{
+  split3 (xs : stream int)
+  : `1 1 1(0) ⊛ stream int × `0 0 0(1) ⊛ stream int =
+    let seq
+      {
+        xs1 = tail xs;
+        xs2 = (tail xs1) by `0 (1);
+        xs3 = (tail xs2) by `0 0(1);
+        x0 = head xs;
+        x1 = (head xs1) by `0(1);
+        x2 = (head xs2) by `0 0(1);
+        ys = (x0 :: ((x1 :: (x2 :: empty) by `0(1)) by `0(1))) by `1 1 1(0);
+      }
+    in
+    (ys, xs3)
+}
+
+rec
+{
+  reset3 (f : stream int → stream int) (xs : stream int) : stream int =
+    let
+      {
+        (xs1, xs2) = split3 xs;
+        ys1 = (f xs1) by `1 1 1(0);
+        ys2 = (reset3 f xs2) by `0 0 0(1);
+      }
+    in
+    merge3 ys1 ys2;
+}
