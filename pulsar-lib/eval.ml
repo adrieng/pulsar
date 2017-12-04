@@ -244,7 +244,18 @@ and eval_coe n c v =
         eval_coe n c2 (eval_coe n c1 v)
 
      | CArr (c1, c2), Vclo (p, e, env) ->
-        assert false
+        (* (c1 -> c2) [ (\p.e){env} ]
+           =>
+           (\x.(\p.e !> c2) (x !> c1)){env}
+         *)
+        let x = Ident.make_internal "x" in
+        let open Typed_tree in
+        let e =
+          let e1 = lam p (sub ~output:c2 e) in
+          let e2 = sub ~output:c1 (var x c1.c_ann.src) in
+          app e1 e2
+        in
+        Vclo (pvar x c1.c_ann.src, e, env)
 
      | CProd (c1, c2), Vpair (v1, v2) ->
         Vpair (eval_coe n c1 v1, eval_coe n c2 v2)
