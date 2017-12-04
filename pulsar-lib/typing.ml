@@ -237,7 +237,7 @@ let subty_coe ~loc ty1 ty2 =
 
 let coerce ~loc exp ty =
   let res' = subty_coe ~loc (e_ty exp) ty in
-  Typed_tree.sub ~res' exp ty
+  Typed_tree.sub ~res' exp
 
 let div_ctx env p =
   let rec div_ty ty =
@@ -555,7 +555,7 @@ let rec type_exp env e =
            T.e_ann = ty;
          }
        in
-       let exp = Typed_tree.sub ~ctx' exp ty in
+       let exp = Typed_tree.sub ~ctx' exp in
        ty, exp.T.e_desc
 
     | S.EAnnot { exp; kind; annot; } ->

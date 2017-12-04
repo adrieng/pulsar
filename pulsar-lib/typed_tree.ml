@@ -264,10 +264,17 @@ let rec try_invert c =
 
 (** {3 Expressions} *)
 
-let sub ?(ctx' = []) ?res' e ty =
+let var ?(id = "x") ?(loc = Loc.nowhere) ty =
+  {
+    e_desc = T.EVar (Ident.make_internal id);
+    e_loc = loc;
+    e_ann = ty;
+  }
+
+let sub ?(ctx' = []) ?res' e =
   let res' =
     match res' with
-    | None -> cid ty
+    | None -> cid e.e_ann
     | Some res' -> res'
   in
   let open T in
@@ -285,7 +292,7 @@ let sub ?(ctx' = []) ?res' e ty =
      {
        e_desc = T.ESub { ctx = ctx'; exp = e; res = res'; };
        e_loc = e.e_loc;
-       e_ann = ty;
+       e_ann = res'.c_ann.dst;
      }
 
 (** {3 Files} *)
