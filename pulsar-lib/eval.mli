@@ -51,3 +51,5 @@ val eval_coe : Warp.Enat.t -> coe -> value -> value
 val eval_exp : Warp.Enat.t -> exp -> env -> value
 
 val eval_eq : Warp.Enat.t -> i_env:env -> e_env:env -> eq -> env
+
+val eval_phr : Warp.Enat.t -> phr -> env -> env

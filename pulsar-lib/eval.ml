@@ -410,3 +410,10 @@ and iter_block n m ~e_env ~i_env block =
     let e_env' = Ident.Env.merge_biased ~winner:i_env ~loser:e_env' in
     let i_env = eval_block (Enat.Fin m) block e_env' in
     iter_block (n + 1) m ~e_env ~i_env block
+
+let eval_phr n phr env =
+  match phr.ph_desc with
+  | PDef block ->
+     eval_block n block env
+  | PDecl _ ->
+     env
