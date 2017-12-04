@@ -20,6 +20,9 @@ module type S =
 
     val equal : t -> t -> bool
 
+    (** Evaluation of a warp at a point. *)
+    val eval : t -> Enat.t -> Enat.t
+
     (** Warp composition *)
     val on : t -> t -> t
 

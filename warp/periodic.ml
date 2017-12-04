@@ -99,7 +99,7 @@ let pop p =
 let push n p =
   { p with u = Word.(singleton n ^^ p.u); }
 
-let ones p ii =
+let eval p ii =
   let open Word in
 
   (* /!\ zero-indexed /!\ *)
@@ -378,10 +378,10 @@ let weight p =
      Enat.Fin (Word.weight p.u)
 
 let iof p j =
-  ones (ladj p) j
+  eval (ladj p) j
 
 let lbf p j =
-  ones (radj p) (Enat.succ j)
+  eval (radj p) (Enat.succ j)
 
 let on p q =
   let on_pref len p q =
@@ -406,7 +406,7 @@ let on p q =
           | Enat.Inf ->
              (* special case *)
              assert (i + 1 = len);
-             Enat.to_int (ones q Enat.Inf), q
+             Enat.to_int (eval q Enat.Inf), q
         in
         loop Word.(acc ^^ singleton s) (i + 1) p q
     in

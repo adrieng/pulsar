@@ -33,6 +33,13 @@ let print fmt ck =
   | _ ->
      print fmt ck
 
+let rec eval ck i =
+  match ck with
+  | Warp p ->
+     Periodic.eval p i
+  | On (ck1, ck2) ->
+     eval ck2 (eval ck1 i)
+
 let rec normalize ck =
   match ck with
   | Warp p ->
