@@ -262,37 +262,67 @@ let rec try_invert c =
     c_ann = { src = dst; dst = src; };
   }
 
+(** {3 Patterns} *)
+
+let pvar ?(loc = Loc.nowhere) id ty =
+  {
+    p_desc = T.PVar id;
+    p_loc = loc;
+    p_ann = ty;
+  }
+
 (** {3 Expressions} *)
 
-let var ?(id = "x") ?(loc = Loc.nowhere) ty =
+let var ?(loc = Loc.nowhere) id ty =
   {
-    e_desc = T.EVar (Ident.make_internal id);
+    e_desc = T.EVar id;
     e_loc = loc;
     e_ann = ty;
   }
 
-let sub ?(ctx' = []) ?res' e =
-  let res' =
-    match res' with
+let lam ?(loc = Loc.nowhere) p e =
+  {
+    e_desc = T.ELam (p, e);
+    e_loc = loc;
+    e_ann = Type.Fun (p.p_ann, e.e_ann);
+  }
+
+let app ?(loc = Loc.nowhere) e1 e2 =
+  let ty =
+    match e1.e_ann with
+    | Type.Fun (_, ty) ->
+       ty
+    | _ ->
+       invalid_arg "app"
+  in
+  {
+    e_desc = T.EApp (e1, e2);
+    e_loc = loc;
+    e_ann = ty;
+  }
+
+let sub ?(input = []) ?output e =
+  let output =
+    match output with
     | None -> cid e.e_ann
-    | Some res' -> res'
+    | Some output -> output
   in
   let open T in
-  let ctx' = simplify_ctx ctx' in
-  match ctx', res'.c_desc, e.e_desc with
+  let input = simplify_ctx input in
+  match input, output.c_desc, e.e_desc with
   | [], CInvertible Invertible.Id, _ ->
      e
   | _, _, ESub { ctx; exp; res; } ->
-     let ctx = seq_ctx ctx ctx' in
-     let res = cseq (res, res') in
+     let ctx = seq_ctx ctx input in
+     let res = cseq (res, output) in
      if ctx <> [] || not (is_id res)
      then { e with e_desc = ESub { ctx; exp; res; }; }
      else exp
   | _ ->
      {
-       e_desc = T.ESub { ctx = ctx'; exp = e; res = res'; };
+       e_desc = T.ESub { ctx = input; exp = e; res = output; };
        e_loc = e.e_loc;
-       e_ann = res'.c_ann.dst;
+       e_ann = output.c_ann.dst;
      }
 
 (** {3 Files} *)
