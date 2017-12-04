@@ -45,12 +45,12 @@ rec
 
 rec
 {
-  reset3 (f : stream int → stream int) (xs : stream int) : stream int =
+  resetEvery3 (f : stream int → stream int) (xs : stream int) : stream int =
     let
       {
         (xs1, xs2) = split3 xs;
         ys1 = (f xs1) by `1 1 1(0);
-        ys2 = (reset3 f xs2) by `0 0 0(1);
+        ys2 = (resetEvery3 f xs2) by `0 0 0(1);
       }
     in
     merge3 ys1 ys2;
