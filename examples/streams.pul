@@ -74,3 +74,17 @@ rec
       : stream int
       = acc :: (loop (f acc)) by `0(1) }
 }
+
+{
+  zeroFix (f : stream int → stream int) =
+    let rec { x : `(0) ⊛ stream int = (f x) by `(0); } in
+    x
+}
+
+{
+  isoL (f : `0(1) ⊛ (stream int → stream int)) (x : `0(1) ⊛ stream int) =
+    (f x) by `0(1);
+
+  isoR (f : `0(1) ⊛ stream int → `0(1) ⊛ stream int) =
+    (λ (x : stream int) ⇒ (f x) by `2(1)) by `0(1);
+}
