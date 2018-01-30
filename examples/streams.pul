@@ -1,4 +1,4 @@
-(* Examples from "Time Warps for Guarded Recursion" *)
+(* Examples on streams. *)
 
 extern not : `(ω) ⊛ (bool → bool)
 
@@ -33,6 +33,13 @@ rec
 
 rec
 {
+  nat : `(1 0) ⊛ stream int = (0 :: pos) by `(1 0);
+
+  pos : `(0 1) ⊛ stream int = (incr nat) by `(0 1);
+}
+
+rec
+{
   nat : stream int =
     0 :: (map (λ (x : int) ⇒ x + 1) nat) by `0(1);
 }
@@ -49,13 +56,6 @@ rec
   thuemorse : stream bool =
     let { ys = (h thuemorse) by `0(1) } in
     false :: (tail ys) by `0(2);
-}
-
-rec
-{
-  nat : `(1 0) ⊛ stream int = (0 :: pos) by `(1 0);
-
-  pos : `(0 1) ⊛ stream int = (incr nat) by `(0 1);
 }
 
 extern tail : `(ω) ⊛ (stream int → `0(1) ⊛ stream int)
@@ -75,12 +75,15 @@ rec
       = acc :: (loop (f acc)) by `0(1) }
 }
 
+(* Generic but useless fixpoint combinator. *)
+
 {
   zeroFix (f : stream int → stream int) =
     let rec { x : `(0) ⊛ stream int = (f x) by `(0); } in
     x
 }
 
+(* Isomorphism between later(X → Y) and later(X) → later(Y). *)
 {
   isoL (f : `0(1) ⊛ (stream int → stream int)) (x : `0(1) ⊛ stream int) =
     (f x) by `0(1);
