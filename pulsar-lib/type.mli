@@ -48,10 +48,10 @@ val print_normalized : Format.formatter -> t -> unit
 (** Comparison function for tpes a la [Pervasives.compare] *)
 val compare : t -> t -> int
 
-(** Equalit testing for tpes *)
+(** Equality testing for tpes *)
 val equal : t -> t -> bool
 
-(** Equivalence testing for tpes w.r.t. reversible tpe laws *)
+(** Equivalence testing for types w.r.t. reversible type laws *)
 val equiv : t -> t -> bool
 
 (** Add the warp equivalent of the later modality *)

@@ -160,7 +160,7 @@ let rec is_simplified ty =
      false
 
 (* [simplify_ty ty] always returns an invertible coercion from [ty] to its
-simplified form. *)
+   simplified form. *)
 let rec simplify ty =
   let open Type in
 
