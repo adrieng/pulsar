@@ -149,10 +149,21 @@ let build_fun_ty tys =
 
 (* Coercion and subtyping *)
 
+(* [is_shifted_omega p] is true iff p is of the form 0^d(\omega). *)
+let is_shifted_omega p =
+  (* (1)/p = d(0) iff p = 0^d(omega)  *)
+  let open Warp.Enat in
+  let open Warp.Formal in
+  let q = div one p in
+  eval q Inf = eval q (Fin 1)
+
 let rec is_simplified ty =
   let open Type in
   match ty with
-  | Warped (_, (Base _ | Stream _)) ->
+  | Warped (p, Base _) ->
+     is_shifted_omega p
+
+  | Warped (_, (Stream _)) ->
      true
   | Warped (_, Fun (ty1, ty2)) | Prod (ty1, ty2) ->
      is_simplified ty1 && is_simplified ty2
