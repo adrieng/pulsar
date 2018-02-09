@@ -22,6 +22,7 @@ sig
   type t =
     | Show of { file : string; pos : Loc.pos; kind : [`Type]; }
     | Diagnosis of { file : string; }
+    | Passes
 
   val of_json : json -> t
 
@@ -34,6 +35,7 @@ sig
     | Silent
     | Show of { loc : Loc.t; content : string; }
     | Diagnoses of Compiler.Diagnostic.t list
+    | Passes of string list
 
   type ko =
     | Decoding of { reason : string; }

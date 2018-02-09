@@ -77,6 +77,10 @@ sig
 
   (** {3 Misc} *)
 
+  (** [names p] returns the name of the atomic passes included in the pass
+  [p]. *)
+  val names : 'a t -> string list
+
   (** [command_line p] computes the command-line options for the pass [p] in the
       format understood by the Arg module. *)
   val command_line : 'a t -> (string * Arg.spec * string) list

@@ -188,22 +188,22 @@ struct
     in
     loop p x
 
+  let rec names : type a. a t -> string list =
+    fun p ->
+    match p with
+    | Atomic { name; _ } ->
+       [name]
+    | Seq (p1, p2) ->
+       names p1 @ names p2
+
   let command_line p =
-    let rec pass_names : type a. a t -> string list =
-      fun p ->
-      match p with
-      | Atomic { name; _ } ->
-         [name]
-      | Seq (p1, p2) ->
-         pass_names p1 @ pass_names p2
-    in
     [
       "-debug-pass",
-      Arg.Symbol (pass_names p, Options.set_debug),
+      Arg.Symbol (names p, Options.set_debug),
       " display debugging information for pass";
 
       "-serialize",
-      Arg.Symbol (pass_names p, Options.set_serialize),
+      Arg.Symbol (names p, Options.set_serialize),
       " serialize the output of pass to file.pass.ext";
 
       "-serialize-dir",
@@ -211,11 +211,11 @@ struct
       " serialization directory";
 
       "-stop-before",
-      Arg.Symbol (pass_names p, Options.set_stop_before),
+      Arg.Symbol (names p, Options.set_stop_before),
       " stop before running pass";
 
       "-stop-after",
-      Arg.Symbol (pass_names p, Options.set_stop_after),
+      Arg.Symbol (names p, Options.set_stop_after),
       " stop after running pass";
     ]
 end

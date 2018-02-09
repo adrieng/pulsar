@@ -43,27 +43,11 @@
   :tag "Command for Pulsar Beam"
   :options '("pulsar-beam"))
 
-;; Interactive features
+;; Global variables
 
 (defvar pulsar--debug
   nil
   "Set to non-nil to show debugging messages")
-
-(defun pulsar-debug-toggle ()
-  "Toggle debugging features on and off"
-  (interactive)
-  (setq pulsar--debug (not pulsar--debug))
-  (if pulsar--debug
-      (message "pulsar: enabled debug mode")
-    (message "pulsar: disabled debug mode")))
-
-(defun pulsar--beam-request (req)
-  (when (buffer-modified-p) (save-buffer))
-  (let ((command (format "%s \'%s\'" pulsar-beam-command req)))
-    (when pulsar--debug (message "call: %s" command))
-    (let ((response (shell-command-to-string command)))
-      (when pulsar--debug (message "resp: %s" response))
-      response)))
 
 (defun pulsar--column-number-at-pos (pos)
   (save-excursion
@@ -75,6 +59,16 @@
         (cnum (pulsar--column-number-at-pos pos)))
     `(,lnum ,cnum)))
 
+;; Communication with pulsar-beam
+
+(defun pulsar--beam-request (req)
+  (when (buffer-modified-p) (save-buffer))
+  (let ((command (format "%s \'%s\'" pulsar-beam-command req)))
+    (when pulsar--debug (message "call: %s" command))
+    (let ((response (shell-command-to-string command)))
+      (when pulsar--debug (message "resp: %s" response))
+      response)))
+
 (defun pulsar--json-show-type (file pos)
   (json-encode
    `(:tag "show"
@@ -84,6 +78,11 @@
   (json-encode
    `(:tag "diagnosis"
      :value (:file ,file))))
+
+(defun pulsar--json-passes ()
+  (json-encode
+   `(:tag "passes"
+     :value ())))
 
 (defun pulsar--pos-of-array (arr)
   (pcase arr
@@ -101,10 +100,6 @@
 
 (defvar pulsar--show-overlay
   nil)
-
-(defun pulsar-clear-diagnosis-overlays ()
-  (interactive)
-  (remove-overlays nil nil "pulsar-diagnosis"))
 
 (defun pulsar--clear-show-overlay-look ()
   (move-overlay pulsar--show-overlay 1 1))
@@ -146,9 +141,27 @@
           (pulsar--highlight-range loc content))
          (`(:tag "diagnoses" :value ,diags)
           (dolist (diag diags) (pulsar--highlight-diagnosis diag)))
+         (`(:tag "passes" :value ,passes)
+          passes)
          (_ (message "unknown answer %S" resp))))
       (_ ())
       )))
+
+(defun pulsar--compile-until-pass (filename pass)
+  (let* ((temp-dir (make-temp-file "pulsar" t))
+         (basen (file-name-nondirectory (file-name-sans-extension filename)))
+         (command (concat
+                   pulsar-command " -serialize-dir " temp-dir
+                   " -serialize " pass " -stop-after " pass " " filename)))
+    (progn
+      (shell-command-to-string command)
+      (concat (file-name-as-directory temp-dir) basen "." pass ".pul"))))
+
+;; Interactive features
+
+(defun pulsar-clear-diagnosis-overlays ()
+  (interactive)
+  (remove-overlays nil nil "pulsar-diagnosis"))
 
 (defun pulsar-show-type-at-point ()
   (interactive)
@@ -159,6 +172,21 @@
   (interactive)
   (pulsar--process-response
    (pulsar--beam-request (pulsar--json-diagnosis (buffer-file-name)))))
+
+(defun pulsar-debug-toggle ()
+  "Toggle debugging features on and off"
+  (interactive)
+  (setq pulsar--debug (not pulsar--debug))
+  (if pulsar--debug
+      (message "pulsar: enabled debug mode")
+    (message "pulsar: disabled debug mode")))
+
+(defun pulsar-display-pass-result ()
+  (interactive)
+  (let* ((out (pulsar--beam-request (pulsar--json-passes)))
+         (passes (pulsar--process-response out))
+         (pass (completing-read "Display pass result: " passes nil t)))
+    (find-file (pulsar--compile-until-pass (buffer-file-name) pass))))
 
 ;; Syntax table
 
@@ -387,6 +415,7 @@
     (define-key map (kbd "C-c C-c") 'pulsar-compile-buffer)
     (define-key map (kbd "C-c C-t") 'pulsar-show-type-at-point)
     (define-key map (kbd "C-c C-l") 'pulsar-diagnosis-buffer)
+    (define-key map (kbd "C-c C-p") 'pulsar-display-pass-result)
     map)
   "Keymap for `pulsar-mode'.")
 

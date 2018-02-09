@@ -57,9 +57,14 @@ let diagnosis file =
   | Compiler.Pass.Error _ ->
      Response.Diagnoses (List.rev !diagnoses)
 
+let passes () =
+  Response.Passes (Compiler.Pass.names Flow.compiler)
+
 let process req =
   match req with
   | Request.Show { file; pos; kind = `Type; } ->
      Response.Ok (show_type file pos)
   | Request.Diagnosis { file; } ->
      Response.Ok (diagnosis file)
+  | Request.Passes ->
+     Response.Ok (passes ())

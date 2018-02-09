@@ -64,6 +64,7 @@ struct
   type t =
     | Show of { file : string; pos : Loc.pos; kind : [`Type]; }
     | Diagnosis of { file : string; }
+    | Passes
 
   let of_json json =
     match decode_variant json with
@@ -73,6 +74,8 @@ struct
        Show { file; pos = pos_of_json pos; kind = `Type; }
     | "diagnosis", `Assoc [ "file", `String file; ] ->
        Diagnosis { file; }
+    | "passes", _ ->
+       Passes
     | _, json ->
        could_not_decode ~json ~reason:"ill-formed request" ()
 
@@ -88,6 +91,8 @@ struct
          "show", `Assoc [ "pos", pos_to_json pos; "kind", `String kind; ]
       | Diagnosis { file; } ->
          "diagnosis", `Assoc [ "file", `String file; ]
+      | Passes ->
+         "passes", `Assoc []
     in
     encode_variant tag value
 end
@@ -98,6 +103,7 @@ struct
     | Silent
     | Show of { loc : Loc.t; content : string; }
     | Diagnoses of Compiler.Diagnostic.t list
+    | Passes of string list
 
   type ko =
     | Decoding of { reason : string; }
@@ -144,6 +150,13 @@ struct
              "kind", `String kind;
              "body", `String body; ]
 
+  let string_of_json js =
+    match js with
+    | `String s ->
+       s
+    | _ ->
+       failwith "string_of_json: not a string"
+
   let ok_of_json json =
     match decode_variant json with
     | "silent", `Assoc [] ->
@@ -155,6 +168,9 @@ struct
 
     | "diagnoses", `List jsons ->
        Diagnoses (List.map diagnostic_of_json jsons)
+
+    | "passes", `List jsons ->
+       Passes (List.map string_of_json jsons)
 
     | _, json ->
        could_not_decode ~json ~reason:"ill-formed ok" ()
@@ -173,6 +189,9 @@ struct
 
       | Diagnoses diags ->
          "diagnoses", `List (List.map json_of_diagnostic diags)
+
+      | Passes passes ->
+         "passes", `List (List.map (fun s -> `String s) passes)
     in
     encode_variant tag value
 
