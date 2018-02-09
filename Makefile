@@ -1,15 +1,20 @@
+PULSAR=./pulsar
+BEAM=./beam
+
+TESTS=$(subst .pul,.res,$(wildcard examples/*.pul) $(wildcard tests/*.pul))
+
 .PHONY: all clean watch test
 
 all:
 	jbuilder build @install warp/warp.cma # warp.cma for toplevel use
-	[ -h pulsar ] || ln -s _build/install/default/bin/pulsar pulsar
-	[ -h beam ] || ln -s _build/install/default/bin/pulsar-beam beam
+	[ -h $(PULSAR) ] || ln -s _build/install/default/bin/pulsar $(PULSAR)
+	[ -h $(BEAM) ] || ln -s _build/install/default/bin/pulsar-beam $(BEAM)
 
 clean:
 	rm -rf _build
 	rm -f pulsar.install
-	[ -h pulsar ] && unlink pulsar
-	[ -h beam ] && unlink beam
+	[ -h $(PULSAR) ] && unlink $(PULSAR) || :
+	[ -h $(BEAM) ] && unlink $(BEAM) || :
 	find -name ".merlin" -exec rm {} \;
 
 watch:
@@ -20,5 +25,7 @@ watch:
 		make all; \
 	done
 
-test: all
-	./pulsar examples/*.pul
+test: all $(TESTS)
+
+%.res: %.pul
+	$(PULSAR) $^ > $@
