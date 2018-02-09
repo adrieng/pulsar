@@ -84,6 +84,8 @@ let pass_stop_after s =
 
 let display_types = ref false
 
+let display_normalized_types = ref true
+
 let auto_const = ref true
 
 let auto_shrink = ref true
@@ -132,6 +134,11 @@ let global_command_line_arguments =
     "-d",
     Arg.Symbol (diagnosis_kinds, diagnose),
     " display additional information about";
+
+    yes_no
+      ~opt:"types-normalize"
+      ~msg:"display types in normalized form"
+      display_normalized_types;
 
     yes_no
       ~opt:"utf8"

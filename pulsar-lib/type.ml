@@ -127,6 +127,11 @@ let rec normalize ty =
 let print_normalized fmt ty =
   print fmt @@ normalize ty
 
+let print fmt ty =
+  if !Options.display_normalized_types
+  then print fmt ty
+  else print_normalized fmt ty
+
 let rec compare ty1 ty2 =
   if ty1 == ty2 then 0
   else
