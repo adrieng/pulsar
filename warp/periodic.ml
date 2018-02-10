@@ -544,6 +544,10 @@ let size p q =
   | Ext Omega, Ext Omega ->
      (* This case avoids computing Enat.(Fin - Fin) in the loop above. *)
      Enat.Inf
+
+  | (Ext Zero | Pat _), Ext Omega ->
+     invalid_arg "size p q: p must precede q"
+
   | _, _ ->
      let r1 = Enat.(period_weight p * Fin (period_length q)) in
      let r2 = Enat.(period_weight q * Fin (period_length p)) in
