@@ -77,6 +77,9 @@ let rec shrink_seq c1 c2 =
   | CInvertible i1, CInvertible i2 when equal i1 (invert i2) ->
      CInvertible Id
 
+  | CStream c, CStream c' ->
+     (cstream (cseq (c, c'))).c_desc
+
   (* (c1 x c2);(c1' x c2') = (c1;c1') x (c2;c2') *)
   | CProd (c1, c2), CProd (c1', c2') ->
      (cprod (cseq (c1, c1'), cseq (c2, c2'))).c_desc
@@ -91,6 +94,14 @@ let rec shrink_seq c1 c2 =
 
   | _ ->
      CSeq (c1, c2)
+
+and shrink_stream c =
+  match c.c_desc with
+  | CInvertible Id ->
+     CInvertible Id
+
+  | _ ->
+     CStream c
 
 and shrink_prod c1 c2 =
   match c1.c_desc, c2.c_desc with
@@ -184,6 +195,14 @@ and cseqs cs =
   | c1 :: c2 :: cs ->
      cseqs (cseq (c1, c2) :: cs)
 
+and cstream c =
+  let src, dst = ty_of c in
+  {
+    c_desc = if !Options.auto_shrink then shrink_stream c else CStream c;
+    c_loc = c.c_loc;
+    c_ann = { src = Type.Stream src; dst = Type.Stream dst; };
+  }
+
 and cprod (c1, c2) =
   let src1, dst1 = ty_of c1 in
   let src2, dst2 = ty_of c2 in
@@ -243,6 +262,8 @@ let rec try_invert c =
     match c.c_desc with
     | CSeq (c1, c2) ->
        CSeq (try_invert c2, try_invert c1)
+    | CStream c ->
+       CStream (try_invert c)
     | CProd (c1, c2) ->
        CProd (try_invert c1, try_invert c2)
     | CArr (c1, c2) ->

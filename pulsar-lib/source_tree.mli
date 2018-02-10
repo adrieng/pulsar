@@ -74,6 +74,7 @@ sig
 
   and coe_desc =
     | CSeq of coe * coe
+    | CStream of coe
     | CArr of coe * coe
     | CProd of coe * coe
     | CWarped of Warp.Formal.t * coe

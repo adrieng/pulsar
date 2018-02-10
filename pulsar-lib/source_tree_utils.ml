@@ -96,7 +96,7 @@ struct
        []
     | CSeq (c1, c2) | CProd (c1, c2) | CArr (c1, c2) ->
        [ `Coe c1; `Coe c2; ]
-    | CWarped (_, c) ->
+    | CStream c | CWarped (_, c) ->
        [ `Coe c ]
 
   let sub_exp e =

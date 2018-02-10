@@ -23,7 +23,7 @@ let rec diag_buffers_coercion ctx_loc c =
   | CSeq (c1, c2) | CArr (c1, c2) | CProd (c1, c2) ->
      diag_buffers_coercion ctx_loc c1;
      diag_buffers_coercion ctx_loc c2
-  | CWarped (_, c) ->
+  | CStream c | CWarped (_, c) ->
      diag_buffers_coercion ctx_loc c
   | CDelay (p, q) ->
      let size = Warp.Formal.size q p in

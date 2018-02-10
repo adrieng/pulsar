@@ -31,7 +31,7 @@ val equal_base : base -> base -> bool
 (** General types *)
 type t =
   | Base of base
-  | Stream of base
+  | Stream of t
   | Prod of t * t
   | Fun of t * t
   | Warped of Warp.Formal.t * t
@@ -64,7 +64,7 @@ val constant : t -> t
 val get_base : t -> base
 
 (** partial inverse to [Stream]; may raise Invalid_argument *)
-val get_stream : t -> base
+val get_stream : t -> t
 
 (** partial inverse to [Prod]; may raise Invalid_argument *)
 val get_prod : t -> t * t

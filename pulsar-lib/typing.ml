@@ -162,9 +162,8 @@ let rec is_simplified ty =
   match ty with
   | Warped (p, Base _) ->
      is_shifted_omega p
-
-  | Warped (_, (Stream _)) ->
-     true
+  | Warped (_, (Stream ty)) ->
+     is_simplified ty
   | Warped (_, Fun (ty1, ty2)) | Prod (ty1, ty2) ->
      is_simplified ty1 && is_simplified ty2
   | _ ->
@@ -182,8 +181,10 @@ let rec simplify ty =
     | Base _ ->
        TT.cinvertible ty Infl
 
-    | Stream _ ->
-       TT.cinvertible ty Wrap
+    | Stream ty ->
+       let c = simplify ty in
+       let ty' = c.T.c_ann.dst in
+       TT.(cseq (cstream c, cinvertible (Stream ty') Wrap))
 
     | Prod (ty1, ty2) ->
        TT.cprod (simplify ty1, simplify ty2)
@@ -221,6 +222,9 @@ let precedes_coe ~loc ~orig_ty1 ~orig_ty2 ty ty' =
     then TT.cid ty
     else
       match ty, ty' with
+      | Stream ty, Stream ty' ->
+         let c = loop ty ty' in
+         TT.cstream c
       | Prod (ty1, ty2), Prod (ty1', ty2') ->
          let c1 = loop ty1 ty1' in
          let c2 = loop ty2 ty2' in
@@ -331,6 +335,15 @@ let inv_base e =
   | _ ->
      type_clash ~expected:(Sub Base) ~actual:e.T.e_ann ~loc:e.T.e_loc ()
 
+let inv_stream e =
+  let ty, c1 = simplify_ty e.T.e_ann in
+  match ty with
+  | Type.(Warped (_, Stream ty)) ->
+     (* Same as above, coerce may fail as in [inv_fun]. *)
+     coerce ~loc:e.T.e_loc e (Type.Stream ty), ty
+  | _ ->
+     type_clash ~expected:(Sub Stream) ~actual:e.T.e_ann ~loc:e.T.e_loc ()
+
 (* Main code *)
 
 (* TODO: there is no provision for applying coercions inside patterns, and thus
@@ -348,9 +361,9 @@ let rec expect_pat p ty out_env =
        let out_env, p2 = expect_pat p2 ty2 out_env in
        out_env, T.PPair (p1, p2)
     | S.PCons (p1, p2) ->
-       let bty = get_stream p.S.p_loc ty in
-       let out_env, p1 = expect_pat p1 (Type.Base bty) out_env in
-       let out_env, p2 = expect_pat p2 Type.(later @@ Stream bty) out_env in
+       let ty = get_stream p.S.p_loc ty in
+       let out_env, p1 = expect_pat p1 ty out_env in
+       let out_env, p2 = expect_pat p2 Type.(later @@ Stream ty) out_env in
        out_env, T.PCons (p1, p2)
     | S.PAnnot (p, ty') ->
        if not (Type.equal ty ty')
@@ -378,9 +391,9 @@ let rec type_pat env p =
 
     | S.PCons (p1, p2) ->
        let env, p1 = type_pat env p1 in
-       let bty = get_base p.S.p_loc (p_ty p1) in
-       let env, p2 = expect_pat p2 Type.(later @@ Stream bty) env in
-       env, T.PCons (p1, p2), Type.Stream bty
+       let ty = p_ty p1 in
+       let env, p2 = expect_pat p2 Type.(later @@ Stream ty) env in
+       env, T.PCons (p1, p2), Type.Stream ty
 
     | S.PAnnot (p, ty) ->
        let bound_env, p = expect_pat p ty env in
@@ -520,10 +533,10 @@ let rec type_exp env e =
 
     | S.ECons (e1, e2) ->
        let e1 = type_exp env e1 in
-       let e1, bt = inv_base e1 in
+       let ty = e1.T.e_ann in
        let e2 = type_exp env e2 in
-       let e2 = coerce e2 Type.(later (Stream bt)) in
-       Type.Stream bt, T.ECons (e1, e2)
+       let e2 = coerce e2 Type.(later (Stream ty)) in
+       Type.Stream ty, T.ECons (e1, e2)
 
     | S.EPair (e1, e2) ->
        let e1 = type_exp env e1 in

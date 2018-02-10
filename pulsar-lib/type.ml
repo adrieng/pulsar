@@ -55,7 +55,7 @@ let equal_base bty1 bty2 =
 
 type t =
   | Base of base
-  | Stream of base
+  | Stream of t
   | Prod of t * t
   | Fun of t * t
   | Warped of Warp.Formal.t * t
@@ -79,8 +79,8 @@ let rec print pri fmt ty =
   begin match ty with
   | Base bty ->
      print_base fmt bty
-  | Stream bty ->
-     Format.fprintf fmt "stream %a" print_base bty
+  | Stream ty ->
+     Format.fprintf fmt "stream %a" print_rec ty
   | Prod (ty1, ty2) ->
      Format.fprintf fmt "@[%a %a@ %a@]"
        print_rec ty1
@@ -146,8 +146,8 @@ let rec compare ty1 ty2 =
     match ty1, ty2 with
     | Base bty1, Base bty2 ->
        compare_base bty1 bty2
-    | Stream bty1, Stream bty2 ->
-      compare_base bty1 bty2
+    | Stream ty1, Stream ty2 ->
+      compare ty1 ty2
     | Prod (ty1, ty2), Prod (ty1', ty2')
     | Fun (ty1, ty2), Fun (ty1', ty2') ->
       Warp.Utils.compare_both

@@ -157,6 +157,9 @@
   let arr start stop (c1, c2) =
     make_coe start stop (CArr (c1, c2))
 
+  let stream start stop c =
+    make_coe start stop (CStream c)
+
   let prod start stop (c1, c2) =
     make_coe start stop (CProd (c1, c2))
 
@@ -255,7 +258,7 @@
 %right ARR
 %left PLUS MINUS
 %left TIMES DIV
-%nonassoc MOD
+%nonassoc MOD STREAM
 %right CONS
 
 %%
@@ -312,7 +315,7 @@ bty:
 
 ty:
 | bty = bty { Type.Base bty }
-| STREAM bty = bty { Type.Stream bty }
+| STREAM ty = ty { Type.Stream ty }
 | ty1 = ty TIMES ty2 = ty { Type.Prod (ty1, ty2) }
 | ty1 = ty ARR ty2 = ty { Type.Fun (ty1, ty2) }
 | p = warp_ty MOD ty = ty { Type.Warped (p, ty) }
@@ -385,6 +388,8 @@ coercion:
   { seq $startpos $endpos (c1, c2) }
 | c1 = coercion ARR c2 = coercion
   { arr $startpos $endpos (c1, c2) }
+| STREAM c = coercion
+  { stream $startpos $endpos c }
 | c1 = coercion TIMES c2 = coercion
   { prod $startpos $endpos (c1, c2) }
 | p = warp_ty MOD c = coercion

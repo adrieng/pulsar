@@ -106,6 +106,7 @@ sig
 
   and coe_desc =
     | CSeq of coe * coe
+    | CStream of coe
     | CArr of coe * coe
     | CProd of coe * coe
     | CWarped of Warp.Formal.t * coe
@@ -220,6 +221,7 @@ struct
 
   and coe_desc =
     | CSeq of coe * coe
+    | CStream of coe
     | CArr of coe * coe
     | CProd of coe * coe
     | CWarped of Warp.Formal.t * coe
@@ -290,12 +292,14 @@ struct
        0
     | CWarped _ ->
        10
-    | CArr _ ->
+    | CStream _ ->
        20
-    | CProd _ ->
+    | CArr _ ->
        30
-    | CSeq _ ->
+    | CProd _ ->
        40
+    | CSeq _ ->
+       50
 
   let rec print_coe pri fmt c =
     let pri' = priority c in
@@ -307,6 +311,9 @@ struct
        Format.fprintf fmt "@[%a;@ %a@]"
          print c1
          print c2
+    | CStream c ->
+       Format.fprintf fmt "@[stream@ %a@]"
+         print c
     | CArr (c1, c2) ->
        Format.fprintf fmt "@[%a %a@ %a@]"
          (print_under_arr pri') c1
@@ -502,13 +509,17 @@ struct
     let tag_to_int cd =
       match cd with
       | CSeq _ -> 0
-      | CArr _ -> 1
-      | CProd _ -> 2
-      | CWarped _ -> 3
-      | CInvertible _ -> 4
-      | CDelay _ -> 5
+      | CStream _ -> 1
+      | CArr _ -> 2
+      | CProd _ -> 3
+      | CWarped _ -> 4
+      | CInvertible _ -> 5
+      | CDelay _ -> 6
     in
     match cd1, cd2 with
+    | CStream c_1, CStream c_2
+      ->
+       compare c_1 c_2
     | CSeq (c1_1, c1_2), CSeq (c2_1, c2_2)
     | CArr (c1_1, c1_2), CArr (c2_1, c2_2)
     | CProd (c1_1, c1_2), CProd (c2_1, c2_2)
@@ -526,7 +537,8 @@ struct
        Warp.Utils.compare_both
          (Warp.Formal.compare p1 p2)
          (fun () -> Warp.Formal.compare q1 q2)
-    | (CSeq _ | CArr _ | CProd _ | CWarped _ | CInvertible _ | CDelay _), _ ->
+    | (CSeq _ | CStream _ | CArr _ | CProd _ | CWarped _ | CInvertible _
+       | CDelay _), _ ->
        Warp.Utils.compare_int (tag_to_int cd1) (tag_to_int cd2)
 
   and compare_coe c1 c2 =

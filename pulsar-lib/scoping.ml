@@ -67,6 +67,9 @@ let rec scope_coe c =
     | R.CSeq (c1, c2) ->
        S.CSeq (scope_coe c1, scope_coe c2)
 
+    | R.CStream c ->
+       S.CStream (scope_coe c)
+
     | R.CArr (c1, c2) ->
        S.CArr (scope_coe c1, scope_coe c2)
 
