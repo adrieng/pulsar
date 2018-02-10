@@ -415,6 +415,10 @@ let rec type_coe_fwd ?id src c =
          let c2 = type_coe_fwd ?id (coe_dst c1) c2 in
          T.CSeq (c1, c2), coe_dst c2
 
+      | S.CStream c, Type.Stream src ->
+         let c = type_coe_fwd ?id src c in
+         T.CStream c, Type.Stream (coe_dst c)
+
       | S.CProd (c1, c2), Type.Prod (src1, src2) ->
          let c1 = type_coe_fwd ?id src1 c1 in
          let c2 = type_coe_fwd ?id src2 c2 in
@@ -458,6 +462,10 @@ and type_coe_bwd ?id dst c =
          let c2 = type_coe_bwd ?id dst c2 in
          let c1 = type_coe_bwd ?id (coe_src c2) c1 in
          T.CSeq (c1, c2), coe_src c1
+
+      | S.CStream c, Type.Stream src ->
+         let c = type_coe_bwd ?id src c in
+         T.CStream c, Type.Stream (coe_src c)
 
       | S.CProd (c1, c2), Type.Prod (dst1, dst2) ->
          let c1 = type_coe_bwd ?id dst1 c1 in
