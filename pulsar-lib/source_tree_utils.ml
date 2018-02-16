@@ -11,7 +11,7 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
-module Vars(T : Source_tree.Tree with type Id.t = Ident.t) =
+module Vars(T : Source_tree_sig.Tree with type Id.t = Ident.t) =
   struct
     open T
     module S = Ident.Set
@@ -60,7 +60,7 @@ module Vars(T : Source_tree.Tree with type Id.t = Ident.t) =
         vars_pats (List.map (fun eq -> eq.eq_lhs) b_body)
       in
 
-      let open Source_tree.BlockKind in
+      let open Source_tree_annot.BlockKind in
       match b_kind with
       | Seq ->
          let add_eq (bound, free) eq =
@@ -77,7 +77,7 @@ module Vars(T : Source_tree.Tree with type Id.t = Ident.t) =
          bound_vars, S.diff (free_vars_eqs b_body) bound_vars
   end
 
-module Sub(T : Source_tree.Tree) =
+module Sub(T : Source_tree_sig.Tree) =
 struct
   open T
 
@@ -147,7 +147,7 @@ struct
     List.map (fun phr -> `Phr phr) file.f_phrases
 end
 
-module Find(T : Source_tree.Tree) =
+module Find(T : Source_tree_sig.Tree) =
 struct
   module S = Sub(T)
 
@@ -198,7 +198,7 @@ struct
     find_in_things pos @@ S.sub_file file
 end
 
-module Misc(T : Source_tree.Tree) =
+module Misc(T : Source_tree_sig.Tree) =
 struct
   open T
 

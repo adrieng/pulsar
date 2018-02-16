@@ -367,7 +367,7 @@ and eval_exp n (e : exp) env =
      end
 
 and eval_block n block env =
-  let open Source_tree.BlockKind in
+  let open Source_tree_annot.BlockKind in
   match block.b_kind with
   | Seq ->
      List.fold_left

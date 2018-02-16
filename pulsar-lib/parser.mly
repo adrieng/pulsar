@@ -322,14 +322,14 @@ ty:
 | ty = paren(ty) { ty }
 
 annot_kind:
-| COLON { Source_tree.AnnotKind.Typing }
-| SUBTY { Source_tree.AnnotKind.Subtyping }
+| COLON { Source_tree_annot.AnnotKind.Typing }
+| SUBTY { Source_tree_annot.AnnotKind.Subtyping }
 
 %inline block_kind:
-| { Source_tree.BlockKind.default }
-| SEQ { Source_tree.BlockKind.Seq }
-| PAR { Source_tree.BlockKind.Par }
-| REC { Source_tree.BlockKind.Rec }
+|     { Source_tree_annot.BlockKind.default }
+| SEQ { Source_tree_annot.BlockKind.Seq }
+| PAR { Source_tree_annot.BlockKind.Par }
+| REC { Source_tree_annot.BlockKind.Rec }
 
 (* Identifiers *)
 

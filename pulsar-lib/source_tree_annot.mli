@@ -11,12 +11,23 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
-open Source_tree_sig
+module AnnotKind :
+sig
+  type t =
+    | Typing
+    | Subtyping
 
-module Make (I : Info) : Tree with type Id.t = I.Id.t
-                               and type PatAnnot.t = I.PatAnnot.t
-                               and type CoeAnnot.t = I.CoeAnnot.t
-                               and type ExpAnnot.t = I.ExpAnnot.t
-                               and type EquAnnot.t = I.EquAnnot.t
-                               and type PhrAnnot.t = I.PhrAnnot.t
-                               and type FileAnnot.t = I.FileAnnot.t
+  include Warp.Utils.PrintableOrderedType with type t := t
+end
+
+module BlockKind :
+sig
+  type t =
+    | Seq
+    | Par
+    | Rec
+
+  val default : t
+
+  include Warp.Utils.PrintableOrderedType with type t := t
+end
