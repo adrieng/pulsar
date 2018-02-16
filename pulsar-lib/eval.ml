@@ -327,24 +327,6 @@ and eval_exp n (e : exp) env =
         let v2 = eval_exp n e2 env in
         Vpair (v1, v2)
 
-     | EFst e ->
-        let v = eval_exp n e env in
-        begin match v with
-        | Vpair (v1, _) ->
-           v1
-        | _ ->
-           tag_error_expression e "pair expected"
-        end
-
-     | ESnd e ->
-        let v = eval_exp n e env in
-        begin match v with
-        | Vpair (_, v2) ->
-           v2
-        | _ ->
-           tag_error_expression e "pair expected"
-        end
-
      | ELet { block; body; } | EWhere { block; body; } ->
         let env = eval_block n block env in
         eval_exp n body env

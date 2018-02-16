@@ -64,8 +64,6 @@ struct
     | EApp of exp * exp
     | ECons of exp * exp
     | EPair of exp * exp
-    | EFst of exp
-    | ESnd of exp
     | ELet of { block : block; body : exp; }
     | EWhere of { body : exp; block : block; }
     | EConst of Const.const
@@ -229,14 +227,6 @@ struct
       Format.fprintf fmt "@[%a@ where %a@]"
         print_exp body
         print_block block
-
-    | EFst e ->
-      Format.fprintf fmt "@[fst@ %a@]"
-        print_exp e
-
-    | ESnd e ->
-      Format.fprintf fmt "@[snd@ %a@]"
-        print_exp e
 
     | EConst c ->
       Const.print_const fmt c
@@ -402,8 +392,6 @@ struct
         | EApp _ -> 2
         | ECons _ -> 12
         | EPair _ -> 3
-        | EFst _ -> 4
-        | ESnd _ -> 5
         | ELet _ -> 13
         | EWhere _ -> 6
         | EConst _ -> 7
@@ -424,8 +412,6 @@ struct
          Warp.Utils.compare_both
            (compare_exp e1 e1')
            (fun () -> compare_exp e2 e2')
-      | EFst e, EFst e' | ESnd e, ESnd e' ->
-        compare_exp e e'
       | ELet { block = b1; body = e1; },
         ELet { block = b2; body = e2; }
       | EWhere { body = e1; block = b1; },
@@ -464,7 +450,7 @@ struct
                (compare_coe res1 res2)
                (fun () ->
                  Warp.Utils.compare_list compare_ident_coercion ctx1 ctx2))
-      | (EVar _ | ELam _ | EApp _ | ECons _ | EPair _ | EFst _ | ESnd _ | ELet _
+      | (EVar _ | ELam _ | EApp _ | ECons _ | EPair _ | ELet _
          | EWhere _ | EConst _ | EBy _ | EAnnot _ | ESub _), _ ->
         Warp.Utils.compare_int (tag_to_int ed1) (tag_to_int ed2)
 

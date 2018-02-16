@@ -116,10 +116,6 @@ let rec scope_exp env e =
        S.ECons (scope_exp env e1, scope_exp env e2)
     | R.EPair (e1, e2) ->
        S.EPair (scope_exp env e1, scope_exp env e2)
-    | R.EFst e ->
-       S.EFst (scope_exp env e)
-    | R.ESnd e ->
-       S.ESnd (scope_exp env e)
     | R.ELet { block; body; } ->
        let env, block = scope_block env block in
        S.ELet { block; body = scope_exp env body; }

@@ -39,8 +39,7 @@ module Vars(T : Source_tree_sig.Tree with type Id.t = Ident.t) =
          Ident.Set.diff (free_vars_exp e) (vars_pat p)
       | EApp (e1, e2) | ECons (e1, e2) | EPair (e1, e2) ->
          S.union (free_vars_exp e1) (free_vars_exp e2)
-      | EFst exp | ESnd exp | EBy { body = exp; _ }
-      | EAnnot { exp; _ } | ESub { exp; _ } ->
+      | EBy { body = exp; _ } | EAnnot { exp; _ } | ESub { exp; _ } ->
          free_vars_exp exp
       | ELet { block; body; } | EWhere { body; block; } ->
          let locals, vars = free_vars_block block in
@@ -107,7 +106,7 @@ struct
        [ `Pat p; `Exp e; ]
     | EApp (e1, e2) | ECons (e1, e2) | EPair (e1, e2) ->
        [ `Exp e1; `Exp e2; ]
-    | EFst e | ESnd e | EAnnot { exp = e; _ } | EBy { body = e; } ->
+    | EAnnot { exp = e; _ } | EBy { body = e; } ->
        [ `Exp e; ]
     | ELet { block; body; } | EWhere { body; block; } ->
        [ `Exp body; `Block block; ]

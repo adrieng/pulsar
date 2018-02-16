@@ -90,12 +90,6 @@
   let make_pair start stop e1 e2 =
     make_exp start stop (Raw_tree.T.EPair (e1, e2))
 
-  let make_fst start stop e =
-    make_exp start stop (Raw_tree.T.EFst e)
-
-  let make_snd start stop e =
-    make_exp start stop (Raw_tree.T.ESnd e)
-
   let make_block start stop b_kind b_body =
     {
       Raw_tree.T.b_kind;

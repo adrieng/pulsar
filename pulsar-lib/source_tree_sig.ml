@@ -83,8 +83,6 @@ sig
     | EApp of exp * exp
     | ECons of exp * exp
     | EPair of exp * exp
-    | EFst of exp
-    | ESnd of exp
     | ELet of { block : block; body : exp; }
     | EWhere of { body : exp; block : block; }
     | EConst of Const.const

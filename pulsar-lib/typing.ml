@@ -556,16 +556,6 @@ let rec type_exp env e =
        let e2 = type_exp env e2 in
        Type.Prod (e_ty e1, e_ty e2), T.EPair (e1, e2)
 
-    | S.EFst e ->
-       let e = type_exp env e in
-       let e, t1, _ = inv_prod e in
-       t1, T.EFst e
-
-    | S.ESnd e ->
-       let e = type_exp env e in
-       let e, _, t2 = inv_prod e in
-       t2, T.ESnd e
-
     | S.ELet { block; body; } ->
        let bound_env, block = type_block env block in
        let body = type_exp (E.merge_biased bound_env env) body in
