@@ -47,6 +47,10 @@ struct
     | CInvertible of Invertible.t
     | CDelay of Warp.Formal.t * Warp.Formal.t
 
+  type var =
+    | VLocal of Id.t
+    | VExternal of Name.t
+
   type exp =
       {
         e_desc : exp_desc;
@@ -55,8 +59,7 @@ struct
       }
 
   and exp_desc =
-    | EVar of Id.t
-    | EExternal of Name.t
+    | EVar of var
     | ELam of pat * exp
     | EApp of exp * exp
     | ECons of exp * exp
@@ -168,14 +171,19 @@ struct
   let print_coe =
     print_coe 500
 
+  let print_var fmt v =
+    match v with
+    | VLocal id ->
+       Id.print fmt id
+
+    | VExternal n ->
+       Name.print fmt n
+
   let rec print_exp_prio prio fmt e =
     let open Warp.Print in
     match e.e_desc with
-    | EVar x ->
-      Id.print fmt x
-
-    | EExternal n ->
-       Name.print fmt n
+    | EVar v ->
+       print_var fmt v
 
     | ELam (p, e) ->
       Format.fprintf fmt "@[<hov 2>%a %a %a@ %a@]"
@@ -365,6 +373,22 @@ struct
       (compare_coe_desc c1.c_desc c2.c_desc)
       (fun () -> CoeAnnot.compare c1.c_ann c2.c_ann)
 
+  let var_compare v1 v2 =
+    if v1 == v2 then 0
+    else
+      let tag_to_int v =
+        match v with
+        | VLocal _ -> 0
+        | VExternal _ -> 1
+      in
+      match v1, v2 with
+      | VLocal x1, VLocal x2 ->
+         Id.compare x1 x2
+      | VExternal n1, VExternal n2 ->
+         Name.compare n1 n2
+      | (VLocal _ | VExternal _), _ ->
+        Warp.Utils.compare_int (tag_to_int v1) (tag_to_int v2)
+
   let rec compare_exp e1 e2 =
     if e1 == e2 then 0 else compare_exp_desc e1.e_desc e2.e_desc
 
@@ -374,7 +398,6 @@ struct
       let tag_to_int ed =
         match ed with
         | EVar _ -> 0
-        | EExternal _ -> 11
         | ELam _ -> 1
         | EApp _ -> 2
         | ECons _ -> 12
@@ -390,9 +413,7 @@ struct
       in
       match ed1, ed2 with
       | EVar v1, EVar v2 ->
-         Id.compare v1 v2
-      | EExternal n1, EExternal n2 ->
-         Name.compare n1 n2
+         var_compare v1 v2
       | ELam (p, e), ELam (p', e') ->
         Warp.Utils.compare_both
           (compare_pat p p')
@@ -443,9 +464,8 @@ struct
                (compare_coe res1 res2)
                (fun () ->
                  Warp.Utils.compare_list compare_ident_coercion ctx1 ctx2))
-      | (EVar _ | EExternal _ | ELam _ | EApp _ | ECons _ | EPair _
-         | EFst _ | ESnd _ | ELet _ | EWhere _ | EConst _ | EBy _ | EAnnot _
-         | ESub _), _ ->
+      | (EVar _ | ELam _ | EApp _ | ECons _ | EPair _ | EFst _ | ESnd _ | ELet _
+         | EWhere _ | EConst _ | EBy _ | EAnnot _ | ESub _), _ ->
         Warp.Utils.compare_int (tag_to_int ed1) (tag_to_int ed2)
 
   and compare_eq

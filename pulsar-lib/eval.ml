@@ -296,11 +296,11 @@ and eval_exp n (e : exp) env =
   | Enat.Fin n' ->
      assert (n' > 0);
      begin match e.e_desc with
-     | EVar x ->
+     | EVar (VLocal x) ->
         Ident.Env.find x env
 
-     | EExternal _ ->
-        assert false
+     | EVar (VExternal _) ->
+        assert false            (* TODO *)
 
      | ELam (p, e) ->
         Vclo (p, e, env)

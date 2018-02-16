@@ -31,9 +31,9 @@ module Vars(T : Source_tree_sig.Tree with type Id.t = Ident.t) =
 
     let rec free_vars_exp e =
       match e.e_desc with
-      | EVar id ->
+      | EVar (VLocal id) ->
          S.singleton id
-      | EExternal _ | EConst _ ->
+      | EVar (VExternal _) | EConst _ ->
          S.empty
       | ELam (p, e) ->
          Ident.Set.diff (free_vars_exp e) (vars_pat p)
@@ -101,7 +101,7 @@ struct
 
   let sub_exp e =
     match e.e_desc with
-    | EVar _ | EExternal _ | EConst _ ->
+    | EVar _ | EConst _ ->
        []
     | ELam (p, e) ->
        [ `Pat p; `Exp e; ]

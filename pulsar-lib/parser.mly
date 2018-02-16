@@ -76,10 +76,10 @@
     }
 
   let make_var start stop x =
-    make_exp start stop (Raw_tree.T.EVar x)
+    make_exp start stop Raw_tree.T.(EVar (VLocal x))
 
   let make_external start stop ln =
-    make_exp start stop (Raw_tree.T.EExternal ln)
+    make_exp start stop Raw_tree.T.(EVar (VExternal ln))
 
   let make_lam start stop (p : Raw_tree.T.pat) e =
     make_exp start stop (Raw_tree.T.ELam (p, e))

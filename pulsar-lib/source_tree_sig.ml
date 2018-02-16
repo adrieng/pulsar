@@ -62,6 +62,12 @@ sig
     | CInvertible of Invertible.t
     | CDelay of Warp.Formal.t * Warp.Formal.t
 
+  (** Variables, file-local or external *)
+
+  type var =
+    | VLocal of Id.t
+    | VExternal of Name.t
+
   (** Expressions, the main syntactic category *)
   type exp =
       {
@@ -72,8 +78,7 @@ sig
 
   (** Expression bodies *)
   and exp_desc =
-    | EVar of Id.t
-    | EExternal of Name.t
+    | EVar of var
     | ELam of pat * exp
     | EApp of exp * exp
     | ECons of exp * exp

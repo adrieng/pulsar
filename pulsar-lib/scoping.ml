@@ -91,16 +91,22 @@ let rec scope_coe c =
     S.c_ann = ();
   }
 
+let scope_var env v loc =
+  (* TODO: proper scoping of external variables *)
+  match v with
+  | R.VLocal id ->
+     begin
+       try S.EVar (S.VLocal (E.find id env))
+       with Not_found -> unbound_identifier id loc
+     end
+  | R.VExternal n ->
+     assert false
+
 let rec scope_exp env e =
   let ed =
     match e.R.e_desc with
-    | R.EVar id ->
-       begin
-         try S.EVar (E.find id env)
-         with Not_found -> unbound_identifier id e.R.e_loc
-       end
-    | R.EExternal n ->
-       S.EExternal n
+    | R.EVar v ->
+       scope_var env v e.R.e_loc
     | R.ELam (p, e) ->
        let env, p = scope_pat env p in
        S.ELam (p, scope_exp env e)

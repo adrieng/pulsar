@@ -296,7 +296,7 @@ let pvar ?(loc = Loc.nowhere) id ty =
 
 let var ?(loc = Loc.nowhere) id ty =
   {
-    e_desc = T.EVar id;
+    e_desc = T.(EVar (VLocal id));
     e_loc = loc;
     e_ann = ty;
   }

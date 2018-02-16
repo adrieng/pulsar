@@ -517,15 +517,20 @@ let bind_rec_eq out_env eq =
   in
   fst @@ expect_pat eq.S.eq_lhs ty out_env
 
+let type_var env v =
+  match v with
+  | S.VLocal id ->
+     Ident.Env.find id env, T.VLocal id
+  | S.VExternal _ ->
+     assert false               (* TODO *)
+
 let rec type_exp env e =
   let coerce = coerce ~loc:e.S.e_loc in
   let ty, ed =
     match e.S.e_desc with
-    | S.EVar id ->
-       Ident.Env.find id env, T.EVar id
-
-    | S.EExternal n ->
-       assert false             (* TODO *)
+    | S.EVar v ->
+       let ty, v = type_var env v in
+       ty, T.EVar v
 
     | S.ELam (p, e) ->
        let env, p = type_pat env p in
