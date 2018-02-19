@@ -110,10 +110,11 @@ let rec normalize ty =
 
   let rec push p ty =
     match ty with
-    | Base _ ->
-       if Warp.Formal.(one <= p) then ty else box p ty (* FIXME *)
-    | Stream _ ->
-      box p ty
+    | Base bty ->
+     (* TODO we could simplify 0(3 2 0)*int to 0(1)*int. *)
+      if Warp.Formal.(one <= p) then ty else box p ty (* FIXME *)
+    | Stream ty ->
+      box p (Stream (normalize ty))
     | Prod (ty1, ty2) ->
       Prod (push p ty1, push p ty2)
     | Fun (ty1, ty2) ->
@@ -129,8 +130,8 @@ let print_normalized fmt ty =
 
 let print fmt ty =
   if !Options.display_normalized_types
-  then print fmt ty
-  else print_normalized fmt ty
+  then print_normalized fmt ty
+  else print fmt ty
 
 let rec compare ty1 ty2 =
   if ty1 == ty2 then 0
