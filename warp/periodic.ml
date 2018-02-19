@@ -350,8 +350,17 @@ let div p q =
      let u_n = Word.length q.u in
      let prefix, _ = loop Word.empty 0 0 u_n in
      extremal ~prefix Omega
-  | Ext Zero, Pat v ->
-     let u_n = max (Word.length p.u) (Word.length q.u) in
+  | Ext Zero, Pat q_v ->
+     (* u(0) / p = u'(0) where u'
+        1 1 1(0) / 0 0 0 (1) = 3(0)
+
+        1 2 (0) / 1 1 2 (0 1) = 1 2 (0)
+      *)
+     let u_n =
+       max
+         Word.(length p.u)
+         Word.(length q.u + find_first_non_null_index q_v + 1)
+     in
      let prefix, _ = loop Word.empty 0 0 u_n in
      extremal ~prefix Zero
   | Pat _, Pat q_v ->

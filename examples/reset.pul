@@ -45,7 +45,9 @@ rec
 
 rec
 {
-  resetEvery3 (f : stream int → stream int) (xs : stream int) : stream int =
+  resetEvery3
+    (f : `1 1 1(0) ⊛ (stream int → stream int))
+    (xs : stream int) : stream int =
     let
       {
         (xs1, xs2) = split3 xs;
