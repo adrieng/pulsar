@@ -2,5 +2,6 @@
 
 (library
  (
+  (libraries (unix str))
   (name warp)
   ))
