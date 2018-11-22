@@ -8,6 +8,8 @@ homepage: "https://github.com/adrieng/pulsar"
 bug-reports: "https://github.com/adrieng/pulsar/issues"
 license: "GPL-3.0-or-later"
 dev-repo: "git://github.com:adrieng/pulsar.git"
+license: "GPL-3"
+dev-repo: "git+https://github.com/adrieng/pulsar"
 build: [
   ["dune" "build" "-p" name "-j" jobs]
 ]
