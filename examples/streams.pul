@@ -91,3 +91,14 @@ rec
   isoR (f : `0(1) ⊛ stream int → `0(1) ⊛ stream int) =
     (λ (x : stream int) ⇒ (f x) by `2(1)) by `0(1);
 }
+
+extern le : int -> int -> bool
+extern min : int -> int -> int
+extern select : bool -> stream int -> stream int -> stream int
+
+rec
+{
+  mergeF ((x :: xs) : stream int) ((y :: ys) : stream int) : stream int =
+    min x y
+    :: (select (le x y) (mergeF xs (y :: ys)) (mergeF (x :: xs) ys)) by `0(1);
+}
