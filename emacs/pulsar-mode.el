@@ -41,7 +41,7 @@
   :group 'pulsar
   :type 'string
   :tag "Command for Pulsar Beam"
-  :options '("pulsar-beam"))
+  :options '("beam"))
 
 ;; Global variables
 
