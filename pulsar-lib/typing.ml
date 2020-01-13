@@ -169,8 +169,8 @@ let rec is_simplified ty =
   | _ ->
      false
 
-(* [simplify_ty ty] always returns an invertible coercion from [ty] to its
-   simplified form. *)
+(* [simplify_ty ty] returns an invertible coercion from [ty] to its simplified
+   form. *)
 let rec simplify ty =
   let open Type in
 
@@ -203,7 +203,7 @@ let rec simplify ty =
 
     | Warped (p, ty) ->
        let c1 = simplify ty in
-       let q, ty = Type.get_warped c1.T.c_ann.dst in
+       let q, _ = Type.get_warped c1.T.c_ann.dst in
        let c1 = TT.cwarped (p, c1) in
        let c2 = TT.cinvertible c1.T.c_ann.dst (Concat (p, q)) in
        TT.cseq (c1, c2)
@@ -318,7 +318,7 @@ let inv_fun e =
      type_clash ~expected:(Sub Fun) ~actual:e.T.e_ann ~loc:e.T.e_loc ()
 
 let inv_prod e =
-  let ty, c1 = simplify_ty e.T.e_ann in
+  let ty, _ = simplify_ty e.T.e_ann in
   match ty with
   | Type.Prod (ty1, ty2) as ty ->
      (* Same as above, but coerce never fails. *)
@@ -327,7 +327,7 @@ let inv_prod e =
      type_clash ~expected:(Sub Prod) ~actual:e.T.e_ann ~loc:e.T.e_loc ()
 
 let inv_base e =
-  let ty, c1 = simplify_ty e.T.e_ann in
+  let ty, _ = simplify_ty e.T.e_ann in
   match ty with
   | Type.(Warped (_, Base bty)) ->
      (* Same as above, coerce may fail as in [inv_fun]. *)
@@ -336,7 +336,7 @@ let inv_base e =
      type_clash ~expected:(Sub Base) ~actual:e.T.e_ann ~loc:e.T.e_loc ()
 
 let inv_stream e =
-  let ty, c1 = simplify_ty e.T.e_ann in
+  let ty, _ = simplify_ty e.T.e_ann in
   match ty with
   | Type.(Warped (_, Stream ty)) ->
      (* Same as above, coerce may fail as in [inv_fun]. *)
@@ -381,7 +381,7 @@ let rec expect_pat p ty out_env =
 let rec type_pat env p =
   let env, pd, ty =
     match p.S.p_desc with
-    | S.PVar id ->
+    | S.PVar _ ->
        cannot_infer ~kind:(Pat p) ~loc:p.S.p_loc ()
 
     | S.PPair (p1, p2) ->
@@ -397,7 +397,7 @@ let rec type_pat env p =
 
     | S.PAnnot (p, ty) ->
        let bound_env, p = expect_pat p ty env in
-       E.merge_biased bound_env env, T.PAnnot (p, ty), ty
+       E.merge_biased ~winner:bound_env ~loser:env, T.PAnnot (p, ty), ty
   in
   env,
   {
@@ -558,12 +558,12 @@ let rec type_exp env e =
 
     | S.ELet { block; body; } ->
        let bound_env, block = type_block env block in
-       let body = type_exp (E.merge_biased bound_env env) body in
+       let body = type_exp (E.merge_biased ~winner:bound_env ~loser:env) body in
        e_ty body, T.ELet { block; body; }
 
     | S.EWhere { body; block; } ->
        let bound_env, block = type_block env block in
-       let body = type_exp (E.merge_biased bound_env env) body in
+       let body = type_exp (E.merge_biased ~winner:bound_env ~loser:env) body in
        e_ty body, T.EWhere { body; block; }
 
     | S.EConst c ->
@@ -619,7 +619,7 @@ and type_eq
   let rhs =
     match eq.S.eq_ty with
     | None -> rhs
-    | Some ty -> coerce eq.S.eq_loc rhs ty
+    | Some ty -> coerce ~loc:eq.S.eq_loc rhs ty
   in
   let ty = build_fun_ty (e_ty rhs :: List.rev_map p_ty params) in
   let out_env, lhs = expect_pat eq.S.eq_lhs ty out_env in
@@ -638,12 +638,12 @@ and type_block env { S.b_kind; S.b_body; S.b_loc; } =
     match b_kind with
     | Seq ->
        let type_eq bound_env eq =
-         type_eq (E.merge_biased bound_env env) bound_env eq
+         type_eq (E.merge_biased ~winner:bound_env ~loser:env) bound_env eq
        in
        Warp.Utils.mapfold_left type_eq E.empty b_body
     | Par ->
        let type_eq bound_env eq =
-         type_eq (E.merge_biased bound_env env) bound_env eq
+         type_eq (E.merge_biased ~winner:bound_env ~loser:env) bound_env eq
        in
        Warp.Utils.mapfold_left type_eq E.empty b_body
     | Rec ->
@@ -667,7 +667,7 @@ let type_phrase env phr =
            (fun ty -> if !Options.auto_const then Type.constant ty else ty)
            bound_env
        in
-       E.merge_biased bound_env env, T.PDef block
+       E.merge_biased ~winner:bound_env ~loser:env, T.PDef block
     | S.PDecl { id; ty; } ->
        E.add id ty env, T.PDecl { id; ty; }
   in

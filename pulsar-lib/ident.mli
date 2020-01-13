@@ -62,6 +62,7 @@ val equal : t -> t -> bool
 module Set :
   sig
     include Set.S with type elt = t
+    val unions : t list -> t
     val print : Format.formatter -> t -> unit
   end
 

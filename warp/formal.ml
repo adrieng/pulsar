@@ -68,7 +68,7 @@ let omega =
 let zero_one =
   let prefix = Word.singleton 0 in
   let ppattern = Word.singleton 1 in
-  periodic (Periodic.pattern ~prefix ~ppattern)
+  periodic (Periodic.pattern ~prefix ~ppattern ())
 
 let on ck1 ck2 =
   let res = On (ck1, ck2) in

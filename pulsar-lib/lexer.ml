@@ -265,8 +265,9 @@ let lexeme_ascii ctx =
   let n = Array.length a in
   let s = Bytes.make n '?' in
   for i = 0 to n - 1 do
-    if not (Warp.Utils.is_ascii a.(i)) then failwith "non-ascii character";
-    Bytes.set s i (Char.chr a.(i))
+    let c = Uchar.to_int a.(i) in
+    if not (Warp.Utils.is_ascii c) then failwith "non-ascii character";
+    Bytes.set s i (Char.chr c)
   done;
   Bytes.to_string s
 
@@ -288,10 +289,10 @@ let lexeme_bool ctx =
 let lexeme_char ctx =
   let a = lexeme_uarray ctx in
   assert (Array.length a = 3);
-  assert (a.(0) = Char.code '\'');
-  assert (a.(2) = Char.code '\'');
-  if not (Warp.Utils.is_ascii a.(1)) then bad_token ctx;
-  Char.chr a.(1)
+  assert (a.(0) = Uchar.of_char '\'');
+  assert (a.(2) = Uchar.of_char '\'');
+  if not (Uchar.is_char a.(1)) then bad_token ctx;
+  Uchar.to_char a.(1)
 
 let lexeme_int ctx =
   int_of_string (lexeme_ascii ctx)

@@ -49,7 +49,7 @@ let extremal ?(prefix = Word.empty) ext =
     v = Ext ext;
   }
 
-let pattern ?(prefix = Word.empty) ~ppattern =
+let pattern ?(prefix = Word.empty) ~ppattern () =
   if Word.is_empty ppattern
   then invalid_arg "pattern: empty periodic pattern";
   if Word.has_null_weight ppattern
@@ -64,7 +64,7 @@ let singleton ?(prefix = Word.empty) en =
   | Enat.Fin 0 ->
      extremal ~prefix Zero
   | Enat.Fin n ->
-     pattern ~prefix ~ppattern:(Word.singleton 0)
+     pattern ~prefix ~ppattern:(Word.singleton n) ()
   | Enat.Inf ->
      extremal ~prefix Omega
 
@@ -135,13 +135,13 @@ let eval p ii =
        end
 
 let one =
-  pattern (Word.singleton 1)
+  pattern ~ppattern:(Word.singleton 1) ()
 
 let zero =
   extremal Zero
 
 let zero_one =
-  pattern ~prefix:(Word.singleton 0) ~ppattern:(Word.singleton 1)
+  pattern ~prefix:(Word.singleton 0) ~ppattern:(Word.singleton 1) ()
 
 let omega =
   extremal Omega
@@ -315,8 +315,6 @@ let hyper_period p q =
   in
   Utils.lcm (len p.v) (len q.v)
 
-exception FoundOmega of Word.t
-
 let div p q =
   let rec loop res sum i max =
     if i = max
@@ -368,7 +366,7 @@ let div p q =
      let v_n = hyper_period p q in
      let prefix, sum = loop Word.empty 0 0 u_n in
      let ppattern, _ = loop Word.empty sum u_n (u_n + v_n) in
-     pattern ~prefix ~ppattern
+     pattern ~prefix ~ppattern ()
 
 let period_weight p =
   match p.v with

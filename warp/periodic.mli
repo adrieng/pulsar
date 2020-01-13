@@ -30,4 +30,6 @@ include Warp_sig.S with type t := t
 
 val extremal : ?prefix:Word.t -> extremal -> t
 
-val pattern : ?prefix:Word.t -> ppattern:Word.t -> t
+val pattern : ?prefix:Word.t -> ppattern:Word.t -> unit -> t
+
+val weight : t -> Enat.t

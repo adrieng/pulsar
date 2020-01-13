@@ -49,7 +49,7 @@ module Vars(T : Source_tree_sig.Tree with type Id.t = Ident.t) =
       let locals = vars_pats eq_params in
       S.diff (free_vars_exp eq_rhs) locals
 
-    and free_vars_block { b_kind; b_body; } =
+    and free_vars_block { b_kind; b_body; _ } =
       let free_vars_eqs eqs =
         let union vars eq = S.union vars @@ free_vars_eq eq in
         List.fold_left union S.empty eqs
@@ -62,11 +62,13 @@ module Vars(T : Source_tree_sig.Tree with type Id.t = Ident.t) =
       let open Source_tree_annot.BlockKind in
       match b_kind with
       | Seq ->
-         let add_eq (bound, free) eq =
+         let add_eq (bound, occ) eq =
            let new_bound = vars_pat eq.eq_lhs in
-           S.union bound new_bound, S.diff (free_vars_eq eq) bound
+           let new_occ = free_vars_eq eq in
+           S.union bound new_bound, S.union new_occ occ
          in
-         List.fold_left add_eq (S.empty, S.empty) b_body
+         let bound, uses = List.fold_left add_eq (S.empty, S.empty) b_body in
+         bound, S.diff uses bound
 
       | Par ->
          bound_vars_block (), free_vars_eqs b_body
@@ -106,7 +108,7 @@ struct
        [ `Pat p; `Exp e; ]
     | EApp (e1, e2) | ECons (e1, e2) | EPair (e1, e2) ->
        [ `Exp e1; `Exp e2; ]
-    | EAnnot { exp = e; _ } | EBy { body = e; } ->
+    | EAnnot { exp = e; _ } | EBy { body = e; _ } ->
        [ `Exp e; ]
     | ELet { block; body; } | EWhere { body; block; } ->
        [ `Exp body; `Block block; ]

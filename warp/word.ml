@@ -41,17 +41,17 @@ let rec print_short fmt w =
        print_short w
        j
 
-let rec print_full fmt w =
+let rec _print_full fmt w =
   let open Print in
   match w.desc with
   | Single i ->
      Format.fprintf fmt "%d" i
   | Concat w_l ->
      Format.fprintf fmt "{ @[%a@] }"
-       (pp_list print_full) w_l
+       (pp_list _print_full) w_l
   | Power (w, j) ->
      Format.fprintf fmt "%a^%d"
-       print_full w
+       _print_full w
        j
 
 let print =
@@ -71,7 +71,7 @@ let singleton m =
     weight = m;
   }
 
-let rec concat w_l =
+let concat w_l =
   let rec simplify racc w_l =
     match w_l with
     | [] ->
@@ -137,7 +137,7 @@ let rec split_at n w =
           let w', w'' = split_at n' w in
           concat [power w i'; w'], concat [w''; power w (i - i' - 1)]
 
-let rec drop n w =
+let drop n w =
   snd (split_at n w)
 
 let rotate w =
@@ -163,7 +163,7 @@ let rec at w i =
      m
   | Concat w_l ->
      at_l w_l i
-  | Power (w, j) ->
+  | Power (w, _) ->
      at w (i mod w.length)
 
 and at_l w_l i =
@@ -231,7 +231,7 @@ let to_seq w k =
     | Concat w_l ->
        List.iter iter w_l
     | Power (w, n) ->
-       for i = 1 to n do
+       for _ = 1 to n do
          iter w
        done
   in

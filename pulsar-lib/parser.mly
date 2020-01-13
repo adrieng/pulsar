@@ -94,7 +94,7 @@
     {
       Raw_tree.T.b_kind;
       Raw_tree.T.b_body;
-      Raw_tree.T.b_loc = Loc.of_lexing_pos_pair start stop;
+      Raw_tree.T.b_loc = Loc.of_lexing_pos_pair ~start ~stop;
     }
 
   let make_where start stop body block =
@@ -108,7 +108,7 @@
        This cannot be done cleanly in the lexer. *)
     if Warp.Word.has_null_weight ppattern
     then Warp.Periodic.(extremal ~prefix Zero)
-    else Warp.Periodic.pattern ~prefix ~ppattern
+    else Warp.Periodic.pattern ~prefix ~ppattern ()
 
   let make_const start stop c =
     make_exp start stop (Raw_tree.T.EConst c)
@@ -137,13 +137,6 @@
        e
     | e' :: e_l ->
        make_app_l (Raw_tree.make_app e e') e_l
-
-  let make_coe start stop desc =
-    {
-      Raw_tree.T.c_desc = desc;
-      Raw_tree.T.c_loc = Loc.of_lexing_pos_pair ~start ~stop;
-      Raw_tree.T.c_ann = ();
-    }
 
   let seq start stop (c1, c2) =
     make_coe start stop (CSeq (c1, c2))

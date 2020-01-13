@@ -42,7 +42,7 @@ let print_pos fmt { lnum; cnum; } =
 
 let dummy_pos = { lnum = -1 ; cnum = -1; }
 
-let pos_of_lexing_pos { Lexing.pos_lnum; Lexing.pos_bol; Lexing.pos_cnum; } =
+let pos_of_lexing_pos { Lexing.pos_lnum; Lexing.pos_bol; Lexing.pos_cnum; _ } =
   { lnum = pos_lnum + 1; cnum = pos_cnum - pos_bol; }
 
 type t =

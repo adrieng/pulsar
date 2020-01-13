@@ -131,10 +131,10 @@ and shrink_warp p c =
      (cseq (cwarped (p, c1), cwarped (p, c2))).c_desc
 
   | CProd (c1, c2) ->
-     let c1 = cinvertible src Dist in
-     let c2 = cprod (cwarped (p, c1), cwarped (p, c2)) in
-     let c3 = cinvertible c2.c_ann.dst Fact in
-     (cseqs [c1; c2; c3]).c_desc
+     let c1' = cinvertible src Dist in
+     let c2' = cprod (cwarped (p, c1), cwarped (p, c2)) in
+     let c3' = cinvertible c2.c_ann.dst Fact in
+     (cseqs [c1'; c2'; c3']).c_desc
 
   | CWarped (q, c) ->
      let c1 = cinvertible src (Concat (p, q)) in
@@ -179,7 +179,6 @@ and cid ?loc ty =
 and cseq (c1, c2) =
   let src, _ = ty_of c1 in
   let _, dst = ty_of c2 in
-  let open CoeAnnot in
   {
     c_desc = if !Options.auto_shrink then shrink_seq c1 c2 else CSeq (c1, c2);
     c_loc = Loc.join c1.c_loc c2.c_loc;
@@ -243,13 +242,13 @@ and cdelay ty (p, q) =
 let seq_ctx ctx ctx' =
   let ctx = Ident.Env.of_list ctx in
   let ctx' = Ident.Env.of_list ctx' in
-  let seq id c c' =
+  let seq _ c c' =
     match c, c' with
     | None, None -> None
     | Some c, None | None, Some c -> Some c
     | Some c, Some c' -> Some (cseq (c, c'))
   in
-  List.filter (fun (v, c) -> c.c_desc <> CInvertible Invertible.Id)
+  List.filter (fun (_, c) -> c.c_desc <> CInvertible Invertible.Id)
   @@ Ident.Env.to_list
   @@ Ident.Env.merge seq ctx ctx'
 

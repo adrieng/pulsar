@@ -31,7 +31,7 @@ let string_of_base bty =
 let print_base fmt bty =
   Format.fprintf fmt "%s" (string_of_base bty)
 
-let rec compare_base bty1 bty2 =
+let compare_base bty1 bty2 =
   if bty1 == bty2 then 0
   else
     let tag_to_int bty =
@@ -110,7 +110,7 @@ let rec normalize ty =
 
   let rec push p ty =
     match ty with
-    | Base bty ->
+    | Base _ ->
      (* TODO we could simplify 0(3 2 0)*int to 0(1)*int. *)
       if Warp.Formal.(one <= p) then ty else box p ty (* FIXME *)
     | Stream ty ->

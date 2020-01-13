@@ -136,7 +136,7 @@ let dst_ty i ty =
        let ty1, ty2 = get_prod ty in
        let p, ty1 = get_warped ty1 in
        let q, ty2 = get_warped ty2 in
-       Type.(Prod (Warped (p, ty1), Warped (p, ty2)))
+       Type.(Prod (Warped (p, ty1), Warped (q, ty2)))
     | Infl ->
        ignore @@ get_base ty;
        Type.Warped (Warp.Formal.omega, ty)

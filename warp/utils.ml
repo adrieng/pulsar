@@ -284,8 +284,9 @@ sig
     unit
   exception Non_disjoint of key
   val disjoint_union : 'a t -> 'a t -> 'a t
+
   (** [merge_biased_left ~winner ~loser] merges [winner] and [loser], preferring
-  the bindings in [winner] in case of duplication. *)
+      the bindings in [winner] in case of duplication. *)
   val merge_biased : winner:'a t -> loser:'a t -> 'a t
 
   val to_list : 'a t -> (key * 'a) list
@@ -353,7 +354,7 @@ module Env = MakeMap(OrderedString)
 module Int_set = Set.Make(OrderedInt)
 module Int_map = MakeMap(OrderedInt)
 
-let time_call ?(name = "") f x =
+let time_call f x =
   let start = Unix.gettimeofday () in
   let r = f x in
   let stop = Unix.gettimeofday () in

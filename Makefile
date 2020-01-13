@@ -6,7 +6,7 @@ TESTS=$(subst .pul,.res,$(wildcard examples/*.pul) $(wildcard tests/*.pul))
 .PHONY: all clean watch test
 
 all:
-	jbuilder build @install warp/warp.cma # warp.cma for toplevel use
+	dune build @install warp/warp.cma # warp.cma for toplevel use
 	[ -h $(PULSAR) ] || ln -s _build/install/default/bin/pulsar $(PULSAR)
 	[ -h $(BEAM) ] || ln -s _build/install/default/bin/pulsar-beam $(BEAM)
 

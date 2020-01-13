@@ -99,7 +99,7 @@ let scope_var env v loc =
        try S.EVar (S.VLocal (E.find id env))
        with Not_found -> unbound_identifier id loc
      end
-  | R.VExternal n ->
+  | R.VExternal _ ->
      assert false
 
 let rec scope_exp env e =

@@ -288,7 +288,7 @@ struct
       print_res_ty eq_ty
       print_exp eq_rhs
 
-  and print_block fmt { b_kind; b_body; } =
+  and print_block fmt { b_kind; b_body; _ } =
     let pp_sep fmt () = Format.fprintf fmt ";@;@;" in
     Format.fprintf fmt "@[<v>%a@ {@[<v 2>%a@]@,}@]"
       BlockKind.print b_kind
@@ -455,8 +455,8 @@ struct
         Warp.Utils.compare_int (tag_to_int ed1) (tag_to_int ed2)
 
   and compare_eq
-      { eq_lhs = p1; eq_ty = ty1; eq_rhs = e1; }
-      { eq_lhs = p2; eq_ty = ty2; eq_rhs = e2; } =
+      { eq_lhs = p1; eq_ty = ty1; eq_rhs = e1; _ }
+      { eq_lhs = p2; eq_ty = ty2; eq_rhs = e2; _ } =
     Warp.Utils.compare_both
       (compare_pat p1 p2)
       (fun () ->
@@ -518,7 +518,7 @@ struct
         f_annot : FileAnnot.t;
       }
 
-  let print_file fmt { f_name; f_phrases; _ } =
+  let print_file fmt { f_phrases; _ } =
     Warp.Print.pp_list
       ~pp_left:(fun fmt () -> Format.fprintf fmt "@\n")
       ~pp_sep:(fun fmt () -> Format.fprintf fmt "@\n@\n")
@@ -529,8 +529,8 @@ struct
     ()
 
   let compare_file
-      { f_name = n1; f_phrases = body1; }
-      { f_name = n2; f_phrases = body2; } =
+      { f_name = n1; f_phrases = body1; _ }
+      { f_name = n2; f_phrases = body2; _ } =
     Warp.Utils.compare_both
       (Warp.Utils.compare_string n1 n2)
       (fun () -> Warp.Utils.compare_list compare_phr body1 body2)

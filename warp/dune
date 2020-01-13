@@ -1,0 +1,7 @@
+(library
+ (libraries unix str)
+ (name warp))
+
+(env
+  (dev
+    (flags (:standard -w -32))))

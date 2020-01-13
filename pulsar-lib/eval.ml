@@ -124,17 +124,8 @@ let rec extend env p v =
   | _ ->
      tag_error_pattern p v
 
-let rec extend_nil env p =
-  match p.p_desc with
-  | PVar x ->
-     Ident.Env.add x Vnil env
-
-  | PPair (p1, p2) | PCons (p1, p2) ->
-     extend_nil (extend_nil env p1) p2
-
-  | PAnnot (p, _) ->
-     extend_nil env p
-
+let extend_nil env p =
+  extend env p Vnil
 
 let rec extend env p v =
   match p.p_desc, v with
@@ -187,7 +178,7 @@ let eval_inv n c i v =
   | Decat (p, q), Vwarp (pq, v) when Formal.(equal (on p q) pq) ->
      v
 
-  | Dist, Vwarp (p, v) when (Formal.eval p (Enat.Fin n) = Enat.Fin 0) ->
+  | Dist, Vwarp (p, _) when (Formal.eval p (Enat.Fin n) = Enat.Fin 0) ->
      Vpair (Vwarp (p, Vnil), Vwarp (p, Vnil))
 
   | Dist, Vwarp (p, Vpair (v1, v2)) ->
@@ -310,9 +301,9 @@ and eval_exp n (e : exp) env =
         begin match v1 with
         | Vclo (p, e, env') ->
            let v2 = eval_exp n e2 env in
-           let env = restrict_env n env in
-           let env = extend env p v2 in
-           eval_exp n e env
+           let env' = restrict_env n env' in
+           let env' = extend env' p v2 in
+           eval_exp n e env'
         | _ ->
            tag_error_expression e1 "function expected"
         end
@@ -342,7 +333,7 @@ and eval_exp n (e : exp) env =
      | EAnnot { exp; _ } ->
         eval_exp n exp env
 
-     | ESub { ctx; exp; res; } ->
+     | ESub { ctx; res; _ } ->
         let env = eval_coe_env n ctx env in
         let v = eval_exp n e env in
         eval_coe n res v

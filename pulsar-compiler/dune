@@ -1,0 +1,5 @@
+(executable
+ (name pulsar)
+ (public_name pulsar)
+ (package pulsar-compiler)
+ (libraries pulsar))

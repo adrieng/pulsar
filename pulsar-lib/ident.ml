@@ -33,31 +33,31 @@ let make_ctx () =
     available_name_nums = Hashtbl.create 1000;
   }
 
-let _current_ctx = ref (make_ctx ())
+let current_ctx = ref (make_ctx ())
 
-let get_current_ctx () = !_current_ctx
+let get_current_ctx () = !current_ctx
 
-let set_current_ctx ctx = _current_ctx := ctx
+let set_current_ctx ctx = current_ctx := ctx
 
 let reset_ctx () = set_current_ctx (make_ctx ())
 
 let make_ident kind name =
   let available_name_num =
-    try Hashtbl.find !_current_ctx.available_name_nums name
+    try Hashtbl.find !current_ctx.available_name_nums name
     with Not_found ->
       let r = ref 0 in
-      Hashtbl.add !_current_ctx.available_name_nums name r;
+      Hashtbl.add !current_ctx.available_name_nums name r;
       r
   in
   let id =
     {
-      num = !_current_ctx.global_cpt;
+      num = !current_ctx.global_cpt;
       name = name;
       name_num = !available_name_num;
       kind = kind;
     }
   in
-  !_current_ctx.global_cpt <- !_current_ctx.global_cpt + 1;
+  !current_ctx.global_cpt <- !current_ctx.global_cpt + 1;
   incr available_name_num;
   id
 
@@ -110,7 +110,8 @@ struct
   let unions ss =
     let rec loop acc ss =
       match ss with
-      | [] -> acc
+      | [] ->
+         acc
       | s :: ss ->
          loop (union acc s) ss
     in
