@@ -13,7 +13,7 @@
 
 module U = Warp.Utils
 
-type json = Yojson.Basic.json
+type json = Yojson.Basic.t
 
 type decoding_error = { reason : string; json : json; }
 
@@ -82,7 +82,7 @@ struct
   let to_json req =
     let tag, value =
       match req with
-      | Show { pos; kind; } ->
+      | Show { pos; kind; _ } ->
          let kind =
            match kind with
            | `Type ->

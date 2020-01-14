@@ -11,7 +11,6 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
-open Flow
 open Message
 
 module U = Warp.Utils
@@ -32,7 +31,7 @@ let diag_callback diag =
   Process.diagnoses := diag :: !Process.diagnoses;
   ()
 
-let rec do_req req_str =
+let do_req req_str =
   let resp =
     match decode req_str with
     | U.Left req ->

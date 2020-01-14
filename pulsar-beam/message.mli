@@ -11,7 +11,7 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
-type json = Yojson.Basic.json
+type json = Yojson.Basic.t
 
 type decoding_error = { reason : string; json : json; }
 
