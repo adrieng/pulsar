@@ -222,9 +222,9 @@ let find_rank ?(eq = (=)) x l =
 
 let compare_both c k = if c <> 0 then c else k ()
 
-let compare_string (x : string) (y : string) = Pervasives.compare x y
+let compare_string (x : string) (y : string) = Stdlib.compare x y
 
-let compare_int (x : int) (y : int) = Pervasives.compare x y
+let compare_int (x : int) (y : int) = Stdlib.compare x y
 
 let compare_bool x y =
   let tag_to_int x =
@@ -236,11 +236,11 @@ let compare_bool x y =
   | true, true | false, false -> 0
   | (true | false), _ -> compare_int (tag_to_int x) (tag_to_int y)
 
-let compare_char (x : char) (y : char) = Pervasives.compare x y
+let compare_char (x : char) (y : char) = Stdlib.compare x y
 
-let compare_float (x : float) (y : float) = Pervasives.compare x y
+let compare_float (x : float) (y : float) = Stdlib.compare x y
 
-let compare_nativeint x y = Pervasives.compare x y
+let compare_nativeint x y = Stdlib.compare x y
 
 let compare_opt compare x y =
   let tag_of_opt opt =
@@ -567,7 +567,7 @@ struct
   let print fmt s =
     Format.fprintf fmt "%s" s
   let compare (s1 : string) (s2 : string) =
-    Pervasives.compare s1 s2
+    Stdlib.compare s1 s2
 end
 
 let mod_b1 x y = succ (pred x mod y)

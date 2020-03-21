@@ -28,7 +28,7 @@ let print fmt ii =
      Format.fprintf fmt "%d" i
 
 let compare (ii1 : t) (ii2 : t) =
-  Pervasives.compare ii1 ii2
+  Stdlib.compare ii1 ii2
 
 let equal ii1 ii2 =
   match ii1, ii2 with

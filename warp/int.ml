@@ -39,9 +39,9 @@ let ( > ) = ( > )
 
 let ( = ) i1 i2 = Nativeint.compare i1 i2 = 0
 
-let min = Pervasives.min
+let min = Stdlib.min
 
-let max = Pervasives.max
+let max = Stdlib.max
 
 let of_bool b = if b then one else zero
 
@@ -51,7 +51,7 @@ let print fmt i = Format.fprintf fmt "%nd" i
 
 let equal = (=)
 
-let compare = Pervasives.compare
+let compare = Stdlib.compare
 
 let hash = Hashtbl.hash
 

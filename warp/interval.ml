@@ -72,4 +72,4 @@ let div { l = a; u = b; } { l = c; u = d; } =
     let ac = a / c and ad = a / d and bc = b / c and bd = b / d in
     make (min (min ac ad) (min bc bd)) (max (max ac ad) (max bc bd))
 
-let compare = Pervasives.compare
+let compare = Stdlib.compare
