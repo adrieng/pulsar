@@ -11,3 +11,8 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
+open Core
+
+let _ =
+  print_string "Hello Pulsar world!\n";
+  exit 0

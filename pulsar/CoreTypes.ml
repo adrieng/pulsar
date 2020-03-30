@@ -11,3 +11,7 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
+module TyVar = Ident.Make(Wdr.Ext.String)
+
+type ty =
+  Tvar of TyVar.t

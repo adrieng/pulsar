@@ -11,3 +11,9 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
+let debug =
+  ref false
+
+let pprint_located pp x =
+  let with_loc = !debug in
+  Loc.pprint_located pp ~with_loc x

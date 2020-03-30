@@ -1,20 +1,28 @@
-opam-version: "1.2"
-name: "pulsar-lib"
-version: "0.0"
+opam-version: "2.0"
+name: "pulsar"
+version: "0.1"
 maintainer: "Adrien Guatto <adrien@guatto.org>"
 authors: "Adrien Guatto <adrien@guatto.org>"
-homepage: "https://github.com/adrieng/pulsar"
+homepage: "http://github.com/adrieng/pulsar"
 bug-reports: "https://github.com/adrieng/pulsar/issues"
-license: "GPL-3"
-dev-repo: "https://github.com/adrieng/pulsar"
+license: "GPL-3.0"
+dev-repo: "git://git@github.com:adrieng/pulsar.git"
 build: [
+  ["dune" "subst"] {pinned}
   ["dune" "build" "-p" name "-j" jobs]
 ]
-depends: [
-  "base-unix"
-  "dune" {build & >= "1.0"}
-  "ocamlfind" {build}
-  "sedlex" {build}
-  "menhir"
+install: [
+  ["dune" "install" "-p" name]
 ]
-available: ocaml-version >= "4.03.0"
+remove: ["ocamlfind" "remove" name]
+depends: [
+  "ocaml" {>= "4.08.0"}
+  "dune" {build & >= "1.1"}
+  "ocamlfind"
+  "pprint"
+]
+synopsis: "Implementation of a temporal functional language"
+description: """
+This package provides a compiler for an experimental functional language with
+temporal features.
+"""

@@ -11,3 +11,36 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
+module Make(Name : Wdr.ExtSigs.OrderedPrintableHashed0) = struct
+  module H = Hashtbl.Make(Name)
+
+  let ht =
+    H.create 100
+
+  type t =
+    {
+      id : int;
+      name : Name.t;
+    }
+
+  let equal x y =
+    x.id = y.id
+
+  let hash x =
+    Hashtbl.hash x.id
+
+  let fresh name =
+    let ver =
+      try H.find ht name
+      with Not_found -> let r = ref 0 in H.add ht name r; r
+    in
+    let id = !ver in
+    incr ver;
+    { id; name; }
+
+  let name x =
+    x.name
+
+  let print { name; id; } =
+    PPrint.(Name.print name ^^ underscore ^^ OCaml.int id)
+end

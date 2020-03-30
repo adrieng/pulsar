@@ -1,0 +1,7 @@
+(executable
+        (name pulsar)
+        (libraries pprint wdr))
+
+(install
+        (section bin)
+        (files (pulsar.exe as pulsar)))

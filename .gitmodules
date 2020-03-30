@@ -1,0 +1,3 @@
+[submodule "wdr"]
+	path = wdr
+	url = git@github.com:adrieng/wdr.git

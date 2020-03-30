@@ -11,3 +11,23 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
+module Id = Ident.Make(Wdr.Ext.String)
+
+type wvar = Id.t
+
+type t =
+  {
+    w_desc : desc;
+    w_loc : Loc.t;
+  }
+
+and desc =
+  | Wvar of wvar
+  | Won of t * t
+  | Wlr of t * t
+  | Wrr of t * t
+  | Winf of t * t
+  | Wsup of t * t
+
+let print _ =
+  failwith "TODO"
