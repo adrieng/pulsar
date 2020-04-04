@@ -11,29 +11,83 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
-module Id = Ident.Make(Wdr.Ext.String)
+type ty = CoreTypes.ty
 
 type pat =
   {
     p_desc : pat_desc;
-    p_type : CoreTypes.ty;
+    p_type : ty;
     p_loc : Loc.t;
   }
 
 and pat_desc =
-  | Pvar of Id.t
+  | Pid of Var.id
   | Ptuple of pat list
+  | Pshut of CoreWarp.t * pat
+  | Pconstr of Var.cid * pat list
 
 type exp =
   {
     e_desc : exp_desc;
-    e_type : CoreTypes.ty;
+    e_type : ty;
     e_loc : Loc.t;
   }
 
 and exp_desc =
-  | Evar of Id.t
+  | Evar of Var.id
   | Efun of pat list * exp
   | Eapp of exp * exp
+  | Etuple of exp list
   | Eshut of CoreWarp.t * exp
   | Eopen of CoreWarp.t * exp
+  | Ecase of exp * branch list
+  | Elet of pat * exp * exp
+
+and branch =
+  {
+    b_pat : pat;
+    b_body : exp;
+    b_loc : Loc.t;
+  }
+
+type kind_def =
+  {
+    kdef_id : Var.kid;
+    kdef_body : CoreTypes.kind;
+    kdef_loc : Loc.t;
+  }
+
+type ty_def =
+  {
+    tydef_id : Var.tyid;
+    tydef_kind : CoreTypes.kind option;
+    tydef_body : CoreTypes.ty;
+    tydef_loc : Loc.t;
+  }
+
+type ty_decl =
+  {
+    tydecl_def : Var.tyid;
+    tydecl_kind : CoreTypes.kind;
+    tydecl_loc : Loc.t;
+  }
+
+type val_decl =
+  {
+    valdecl_id : Var.id;
+    valdecl_type : CoreTypes.ty;
+    valdecl_loc : Loc.t;
+  }
+
+type val_def =
+  {
+    valdef_id : Var.id;
+    valdef_type : CoreTypes.ty option;
+    valdef_body : exp;
+    valdef_loc : Loc.t;
+  }
+
+type modsig =
+  {
+    m_name : string;
+  }

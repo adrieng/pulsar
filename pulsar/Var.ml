@@ -11,29 +11,11 @@
  * FOR A PARTICULAR PURPOSE. See the LICENSE file in the top-level directory.
  *)
 
-type warp = CoreWarp.t
+module Kind = Ident.Make(Wdr.Ext.String)
+module Ty = Ident.Make(Wdr.Ext.String)
+module Term = Ident.Make(Wdr.Ext.String)
 
-type kind =
-  {
-    k_desc : kind_desc;
-    k_loc : Loc.t;
-  }
-
-and kind_desc =
-  | Kvar of Var.kid
-  | Kforall of Var.kid option * kind * kind
-  | Kapp of kind * kind
-  | Kmod of warp * kind
-
-type ty =
-  {
-    ty_desc : ty_desc;
-    ty_kind : kind;
-    ty_loc : Loc.t;
-  }
-
-and ty_desc =
-  | Tvar of Var.tyid
-  | Twarp of CoreWarp.t
-  | Tdata of Var.tyid * ty list
-  | Tshut of warp * ty
+type kid = Kind.t
+type tyid = Term.t
+type id = Ty.t
+type cid = C of id
