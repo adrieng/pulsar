@@ -34,6 +34,9 @@ type ty =
 
 and ty_desc =
   | Tvar of Var.tyid
+  | Tdata of Var.dtyid
   | Twarp of CoreWarp.t
-  | Tdata of Var.tyid * ty list
+  | Tforall of Var.tyid * kind * ty
+  | Tapp of ty * ty
   | Tshut of warp * ty
+  | Topen of warp * ty

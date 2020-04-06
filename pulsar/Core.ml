@@ -40,14 +40,32 @@ and exp_desc =
   | Etuple of exp list
   | Eshut of CoreWarp.t * exp
   | Eopen of CoreWarp.t * exp
-  | Ecase of exp * branch list
-  | Elet of pat * exp * exp
+  | Ecase of exp * branches
+  | Elet of eqs * exp
+  | Ewhere of exp * eqs
+
+and branches =
+  branch list
 
 and branch =
   {
     b_pat : pat;
     b_body : exp;
     b_loc : Loc.t;
+  }
+
+and eq =
+  {
+    eq_lhs : pat;
+    eq_rhs : exp;
+    eq_loc : Loc.t;
+  }
+
+and eqs =
+  {
+    eqs_binding : [`Seq | `Rec | `Par];
+    eqs_body : eq list;
+    eqs_loc : Loc.t;
   }
 
 type kind_def =
@@ -65,18 +83,18 @@ type ty_def =
     tydef_loc : Loc.t;
   }
 
-type ty_decl =
+type ty_dec =
   {
-    tydecl_def : Var.tyid;
-    tydecl_kind : CoreTypes.kind;
-    tydecl_loc : Loc.t;
+    tydec_def : Var.tyid;
+    tydec_kind : CoreTypes.kind;
+    tydec_loc : Loc.t;
   }
 
-type val_decl =
+type val_dec =
   {
-    valdecl_id : Var.id;
-    valdecl_type : CoreTypes.ty;
-    valdecl_loc : Loc.t;
+    valdec_id : Var.id;
+    valdec_type : CoreTypes.ty;
+    valdec_loc : Loc.t;
   }
 
 type val_def =
@@ -87,7 +105,25 @@ type val_def =
     valdef_loc : Loc.t;
   }
 
+type modsig_phrase =
+  [
+  | `KDef of kind_def
+  | `TDec of ty_dec
+  | `TDef of ty_def
+  | `VDec of val_dec
+  ]
+
+type modstruct_phrase =
+  [ modsig_phrase | `VDef of val_def ]
+
 type modsig =
   {
     m_name : string;
+    m_contents : modsig_phrase list;
+  }
+
+type modstruct =
+  {
+    m_name : string;
+    m_contents : modstruct_phrase list;
   }

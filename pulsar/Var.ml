@@ -13,9 +13,11 @@
 
 module Kind = Ident.Make(Wdr.Ext.String)
 module Ty = Ident.Make(Wdr.Ext.String)
+module DTy = Ident.Make(Wdr.Ext.String)
 module Term = Ident.Make(Wdr.Ext.String)
 
 type kid = Kind.t
-type tyid = Term.t
-type id = Ty.t
+type tyid = Ty.t
+type dtyid = DTy.t
+type id = Term.t
 type cid = C of id
