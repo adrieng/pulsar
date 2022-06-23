@@ -15,7 +15,6 @@ depends: [
   "base-unix"
   "dune" {build & >= "1.0"}
   "ocamlfind" {build}
-  "pulsar-lib"
   "yojson" {>= "1.4.0"}
 ]
 available: ocaml-version >= "4.03.0"
