@@ -1,7 +1,7 @@
 opam-version: "1.2"
-name: "pulsar-compiler"
+name: "pulsar-lib"
 version: "0.0"
-synopsis: "Experimental language with temporal modalities (compiler)"
+synopsis: "Experimental language with temporal modalities (base libraries)"
 maintainer: "Adrien Guatto <adrien@guatto.org>"
 authors: "Adrien Guatto <adrien@guatto.org>"
 homepage: "https://github.com/adrieng/pulsar"
@@ -16,5 +16,6 @@ depends: [
   "dune" {build & >= "1.0"}
   "ocamlfind" {build}
   "pulsar-lib"
+  "yojson" {>= "1.4.0"}
 ]
 available: ocaml-version >= "4.03.0"

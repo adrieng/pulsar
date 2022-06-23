@@ -1,12 +1,13 @@
 opam-version: "1.2"
 name: "pulsar-beam"
 version: "0.0"
+synopsis: "Experimental language with temporal modalities"
 maintainer: "Adrien Guatto <adrien@guatto.org>"
 authors: "Adrien Guatto <adrien@guatto.org>"
 homepage: "https://github.com/adrieng/pulsar"
 bug-reports: "https://github.com/adrieng/pulsar/issues"
-license: "GPL-3"
-dev-repo: "https://github.com/adrieng/pulsar"
+license: "GPL-3.0-or-later"
+dev-repo: "git://github.com:adrieng/pulsar.git"
 build: [
   ["dune" "build" "-p" name "-j" jobs]
 ]
@@ -15,6 +16,6 @@ depends: [
   "dune" {build & >= "1.0"}
   "ocamlfind" {build}
   "pulsar-lib"
-  "yojson" >= "1.4.0"
+  "yojson" {>= "1.4.0"}
 ]
 available: ocaml-version >= "4.03.0"
