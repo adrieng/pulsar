@@ -566,8 +566,23 @@ type token =
   | INT of int | OMEGA
   | CARET | LPAREN | RPAREN | LBRACE | RBRACE | EOF
 
+let string_of_token = function
+  | INT _ -> "INT"
+  | OMEGA -> "OMEGA"
+  | CARET -> "CARET"
+  | LPAREN -> "LPAREN"
+  | RPAREN -> "RPAREN"
+  | LBRACE -> "LBRACE"
+  | RBRACE -> "RBRACE"
+  | EOF -> "EOF"
+
 let of_string s =
-  let syntax_error () = invalid_arg "Periodic.of_string: syntax error" in
+  let syntax_error reason =
+    invalid_arg (Printf.sprintf "Periodic.of_string: syntax error (%s)" reason)
+  in
+  let unexpected_token tok =
+    syntax_error ("unexpected token " ^ string_of_token tok)
+  in
 
   let lexeme_string lexbuf =
     let a = Sedlexing.lexeme lexbuf in
@@ -589,7 +604,7 @@ let of_string s =
     | '}' -> RBRACE
     | 'w' | 0x03C9 -> OMEGA
     | eof -> EOF
-    | _ -> syntax_error ()
+    | _ -> syntax_error ("unknown character " ^ lexeme_string lexbuf)
   in
 
   let next, peek =
@@ -603,7 +618,13 @@ let of_string s =
                | Some tok -> tok)
   in
   let drop () = ignore (next ()) in
-  let check tok = if next () <> tok then syntax_error () in
+  let check expected =
+    let actual = next () in
+    if actual <> expected
+    then syntax_error (Printf.sprintf "expected %s got %s"
+                         (string_of_token expected)
+                         (string_of_token actual))
+  in
 
   let rec word () =
     match peek () with
@@ -627,10 +648,10 @@ let of_string s =
             let u = word () in
             check RBRACE;
             u
-         | CARET | EOF ->
+         | CARET | LPAREN | EOF ->
             Word.empty
-         | RBRACE | LPAREN | RPAREN | OMEGA ->
-            syntax_error ()
+         | (RBRACE | RPAREN | OMEGA as tok) ->
+            unexpected_token tok
        in
 
        let u = list () in
@@ -643,12 +664,12 @@ let of_string s =
           | _ ->
              Word.(u ^^ word ())
           end
-       | _ ->
-          syntax_error ()
+       | tok ->
+          unexpected_token tok
        end
 
-    | CARET | RBRACE | RPAREN | EOF | OMEGA ->
-       syntax_error ()
+    | CARET | RBRACE | RPAREN | EOF | OMEGA as tok ->
+       unexpected_token tok
   in
 
   let prefix = word () in
