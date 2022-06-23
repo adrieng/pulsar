@@ -37,7 +37,7 @@ let print_period fmt per =
      Word.print fmt w
 
 let print fmt p =
-  Format.fprintf fmt "`%a(%a)"
+  Format.fprintf fmt "%a(%a)"
     Word.print p.u
     print_period p.v
 

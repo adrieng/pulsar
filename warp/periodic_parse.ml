@@ -13,6 +13,11 @@ n * Foundation, either version 3 of the License, or (at your option) any later
 
 open Parse
 
+let utf8_string_of_uchar_array a =
+  let b = Buffer.create (Array.length a) in
+  Array.iter (Buffer.add_utf_8_uchar b) a;
+  Buffer.contents b
+
 let string_of_token = function
   | LINT _ -> "INT"
   | OMEGA -> "OMEGA"
@@ -29,11 +34,18 @@ let syntax_error reason =
 let unexpected_token tok =
   syntax_error ("unexpected token " ^ string_of_token tok)
 
+let invalid_character lexbuf =
+  let reason =
+    match Sedlexing.next lexbuf with
+    | None -> "unknown character"
+    | Some c ->
+       let s = utf8_string_of_uchar_array [| c |] in
+       Printf.sprintf "invalid character '%s'" s
+  in
+  syntax_error reason
+
 let lexeme_string lexbuf =
-  let a = Sedlexing.lexeme lexbuf in
-  let b = Buffer.create (Array.length a) in
-  Array.iter (Buffer.add_utf_8_uchar b) a;
-  Buffer.contents b
+  utf8_string_of_uchar_array (Sedlexing.lexeme lexbuf)
 
 let lexeme_int lexbuf = lexeme_string lexbuf |> int_of_string
 
@@ -49,7 +61,7 @@ let rec token lexbuf =
   | '}' -> RBRACE
   | 'w' | 0x03C9 -> OMEGA
   | eof -> EOF
-  | _ -> syntax_error ("unknown character " ^ lexeme_string lexbuf)
+  | _ -> invalid_character lexbuf
 
 let of_string s =
   let lexbuf = Sedlexing.Utf8.from_string s in
