@@ -33,3 +33,5 @@ val extremal : ?prefix:Word.t -> extremal -> t
 val pattern : ?prefix:Word.t -> ppattern:Word.t -> unit -> t
 
 val weight : t -> Enat.t
+
+val of_string : string -> t

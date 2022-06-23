@@ -561,3 +561,103 @@ let size p q =
      if r1 <> r2
      then Enat.Inf
      else loop (Enat.Fin 0) (Enat.Fin 0) 0 (hyper_prefix p q + hyper_period p q)
+
+type token =
+  | INT of int | OMEGA
+  | CARET | LPAREN | RPAREN | LBRACE | RBRACE | EOF
+
+let of_string s =
+  let syntax_error () = invalid_arg "Periodic.of_string: syntax error" in
+
+  let lexeme_string lexbuf =
+    let a = Sedlexing.lexeme lexbuf in
+    let b = Buffer.create (Array.length a) in
+    Array.iter (Buffer.add_utf_8_uchar b) a;
+    Buffer.contents b
+  in
+
+  let lexeme_int lexbuf = lexeme_string lexbuf |> int_of_string in
+
+  let rec token lexbuf =
+    match%sedlex lexbuf with
+    | white_space -> token lexbuf
+    | Plus '0'..'9' -> INT (lexeme_int lexbuf)
+    | '(' -> LPAREN
+    | ')' -> RPAREN
+    | '^' -> CARET
+    | '{' -> LBRACE
+    | '}' -> RBRACE
+    | 'w' | 0x03C9 -> OMEGA
+    | eof -> EOF
+    | _ -> syntax_error ()
+  in
+
+  let next, peek =
+    let r = ref None in
+    let lexbuf = Sedlexing.Utf8.from_string s in
+    (fun () -> match !r with
+               | None -> token lexbuf
+               | Some tok -> r := None; tok),
+    (fun () -> match !r with
+               | None -> let tok = token lexbuf in r := Some tok; tok
+               | Some tok -> tok)
+  in
+  let drop () = ignore (next ()) in
+  let check tok = if next () <> tok then syntax_error () in
+
+  let rec word () =
+    match peek () with
+    | LBRACE ->
+       drop ();
+       let u = word () in
+       check RBRACE;
+       u
+
+    | LPAREN ->
+       Word.empty
+
+    | INT _ ->
+       let rec list () =
+         match peek () with
+         | INT i ->
+            drop ();
+            Word.(singleton i ^^ list ())
+         | LBRACE ->
+            drop ();
+            let u = word () in
+            check RBRACE;
+            u
+         | CARET | EOF ->
+            Word.empty
+         | RBRACE | LPAREN | RPAREN | OMEGA ->
+            syntax_error ()
+       in
+
+       let u = list () in
+       begin match peek () with
+       | CARET ->
+          drop ();
+          begin match next () with
+          | INT i ->
+             Word.power u i
+          | _ ->
+             Word.(u ^^ word ())
+          end
+       | _ ->
+          syntax_error ()
+       end
+
+    | CARET | RBRACE | RPAREN | EOF | OMEGA ->
+       syntax_error ()
+  in
+
+  let prefix = word () in
+  check LPAREN;
+  let w =
+    match peek () with
+    | OMEGA -> drop (); extremal ~prefix Omega
+    | _ -> pattern ~prefix ~ppattern:(word ()) ()
+  in
+  check RPAREN;
+  check EOF;
+  w

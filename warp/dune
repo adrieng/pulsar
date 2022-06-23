@@ -1,7 +1,8 @@
 (library
- (libraries unix str)
+ (libraries unix str sedlex)
  (name warp)
- (public_name warp))
+ (public_name warp)
+ (preprocess (per_module ((pps sedlex.ppx) periodic))))
 
 (env
   (dev
