@@ -1,6 +1,7 @@
 (library
  (libraries unix str)
- (name warp))
+ (name warp)
+ (public_name warp))
 
 (env
   (dev
