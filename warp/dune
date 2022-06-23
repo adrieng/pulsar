@@ -1,9 +1,10 @@
 (library
- (libraries unix str sedlex)
+ (libraries unix str sedlex menhirLib)
  (name warp)
  (public_name warp)
- (preprocess (per_module ((pps sedlex.ppx) periodic))))
+ (private_modules parse)
+ (preprocess (per_module ((pps sedlex.ppx) periodic_parse))))
 
-(env
-  (dev
-    (flags (:standard -w -32))))
+(menhir (modules parse) (flags --explain --table))
+
+(env (dev (flags (:standard -w -32))))
