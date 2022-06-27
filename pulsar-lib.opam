@@ -16,5 +16,6 @@ depends: [
   "dune" {build & >= "1.0"}
   "ocamlfind" {build}
   "yojson" {>= "1.4.0"}
+  "warp"
 ]
 available: ocaml-version >= "4.03.0"
