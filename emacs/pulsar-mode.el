@@ -429,7 +429,7 @@
   :group 'pulsar
 
   (setq-local comment-start "(*")
-  (setq-local comment-start "*)")
+  (setq-local comment-stop "*)")
 
   ;; Interactive features
   (make-local-variable 'pulsar--show-overlay)
