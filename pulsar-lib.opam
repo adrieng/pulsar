@@ -17,5 +17,6 @@ depends: [
   "ocamlfind" {build}
   "yojson" {>= "1.4.0"}
   "warp"
+  "sedlex"
 ]
 available: ocaml-version >= "4.03.0"
